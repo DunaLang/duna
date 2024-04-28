@@ -1,0 +1,29 @@
+proc quickSort<T>(T[]* @arr, usize inicio, usize fim) {
+  if (inicio < fim) {
+    usize p = partition(@arr, inicio, fim);
+    quickSort(@arr, inicio, p - 1);
+    quickSort(@arr, p + 1, fim);
+  }
+}
+
+func partition<T>(T[]* @arr, usize inicio, usize fim) usize {
+  T pivot = @arr[fim];
+  usize i = inicio - 1;
+
+  for (usize j = inicio; j < fim -1; j++) {
+    if (@arr[j] < pivot) {
+      i += 1;
+      T temp = @arr[i];
+      @arr[i] = @arr[j];
+      @arr[j] = temp;
+    }
+  }
+
+  if (pivot < @arr[i + 1]) {
+    T temp = @arr[i + 1];
+    @arr[i + 1] = @arr[fim];
+    @arr[fim] = temp;
+  }
+
+  return i + 1;
+}
