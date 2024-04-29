@@ -1,5 +1,5 @@
 CC = clang
-C_FLAGS = -Iinclude
+C_FLAGS = -Iinclude -Wall -Wextra
 
 dune: lex
 	$(CC) $(C_FLAGS) lex.yy.c 

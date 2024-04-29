@@ -21,6 +21,10 @@ int charPos=1;
 
 %}
 
+%option nounput
+%option noinput
+%option noyywrap
+
 intLiteral    [0-9]+
 floatLiteral  [0-9]+.[0-9]+
 stringLiteral \"[^\n"]+\"
@@ -136,29 +140,35 @@ identifier    [@a-zA-Z][a-zA-Z0-9]*
 "false" {
     ADJ; printf("false\n"); return FALSE; }
 
-{intLiteral}    { ADJ; printf("int(%s)\n", yytext); yylval.ival=atoi(yytext); return INTEGER_LITERAL; }
-{floatLiteral}  { ADJ; printf("float(%s)\n", yytext); yylval.fval=atof(yytext); return FLOAT_LITERAL; }
-{stringLiteral} { ADJ; printf("str(%s)\n", yytext); yylval.sval=String(yytext); return STRING_LITERAL; }
-{identifier}    { ADJ; printf("id(%s)\n", yytext); yylval.identifier=yytext; return IDENTIFIER; }
+{intLiteral}    { ADJ; yylval.ival=atoi(yytext); printf("int(%ld)\n", yylval.ival); return INTEGER_LITERAL; }
+{floatLiteral}  { ADJ; yylval.fval=atof(yytext); printf("float(%f)\n", yylval.fval); return FLOAT_LITERAL; }
+{stringLiteral} { ADJ; yylval.sval=String(yytext); printf("str(%s)\n", yylval.sval); return STRING_LITERAL; }
+{identifier}    { ADJ; yylval.identifier=yytext; printf("id(%s)\n", yylval.identifier); return IDENTIFIER; }
+
+<<EOF>> { printf("EOF\n"); yyterminate(); }
 
 . { printf("Unrecognized character: %s\n", yytext); }
 
 %%
 
-int yywrap(void) {
-    return 0;
-}
-
 int main(int argc, char const *argv[])
 {
     argv++, argc--;
 
-    if (argc == 1) {
-        yyin = fopen(argv[0], "r");
+    if (argc != 1)
+    {
+        printf("Usage:\n\tdune <file_path>\n");
+        return -1;
     }
 
-    while (!yywrap()) {
-        yylex();
+    yyin = fopen(argv[0], "r");
+
+    while (yywrap())
+    {
+        if (yylex() == END_OF_FILE)
+        {
+            break;
+        }
     }
 
     return 0;

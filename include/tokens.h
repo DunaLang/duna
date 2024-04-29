@@ -2,6 +2,8 @@
 
 enum TokenKind
 {
+    END_OF_FILE = 0,
+
     EQUALITY,
     EQUALS,
     LESS_THAN_EQUALS,
