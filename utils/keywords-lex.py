@@ -1,5 +1,3 @@
-DEBUG = True
-
 for symbol, name in [
     ("==", "equality"),
     ("=", "equals"),
@@ -21,11 +19,7 @@ for symbol, name in [
     ("*", "asterisk"),
     ("/", "slash"),
 ]:
-    print(f'"{symbol.lower()}" {{')
-    if DEBUG:
-        print(f'    ADJ; printf("{name.upper()}\\n"); return {name.upper()}; }}')
-    else:
-        print(f"    ADJ; return {name.upper()}; }}")
+    print(f'"{symbol.lower()}" {{printf("{name.upper()}\\n");}}')
 
 print()
 
@@ -63,11 +57,8 @@ for identifier in [
     "char",
     "true",
     "false",
+    "not",
+    "and",
+    "or"
 ]:
-    print(f'"{identifier.lower()}" {{')
-    if DEBUG:
-        print(
-            f'    ADJ; printf("{identifier.upper()}\\n"); return {identifier.upper()}; }}'
-        )
-    else:
-        print(f"    ADJ; return {identifier.upper()}; }}")
+    print(f'"{identifier.lower()}" {{ printf("{identifier.upper()}\\n"); }}')
