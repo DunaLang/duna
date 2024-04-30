@@ -1,10 +1,12 @@
-CC = clang
+CC = gcc
 C_FLAGS = -Iinclude -Wall -Wextra
 
-dune: lex
-	$(CC) $(C_FLAGS) lex.yy.c 
+duna: lex
+	$(CC) $(C_FLAGS) lex.yy.c -o duna
 lex:
-	lex src/dune.lex
+	lex src/duna.lex
+run: duna
+	./duna teste.duna 
 
 clean:
-	rm -f a.out lex.yy.c
+	rm -f duna lex.yy.c
