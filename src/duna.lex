@@ -35,110 +35,110 @@ identifier    [@a-zA-Z][a-zA-Z0-9]*
 [ \t\n]
 
 "==" {
-    ADJ; printf("==\n"); return EQUALITY; }
+    ADJ; printf("EQUALITY\n"); return EQUALITY; }
 "=" {
-    ADJ; printf("=\n"); return EQUALS; }
+    ADJ; printf("EQUALS\n"); return EQUALS; }
 "<=" {
-    ADJ; printf("<=\n"); return LESS_THAN_EQUALS; }
+    ADJ; printf("LESS_THAN_EQUALS\n"); return LESS_THAN_EQUALS; }
 ">=" {
-    ADJ; printf(">=\n"); return MORE_THAN_EQUALS; }
+    ADJ; printf("MORE_THAN_EQUALS\n"); return MORE_THAN_EQUALS; }
 "<" {
-    ADJ; printf("<\n"); return LESS_THAN; }
+    ADJ; printf("LESS_THAN\n"); return LESS_THAN; }
 ">" {
-    ADJ; printf(">\n"); return MORE_THAN; }
+    ADJ; printf("MORE_THAN\n"); return MORE_THAN; }
 "(" {
-    ADJ; printf("(\n"); return LEFT_PAREN; }
+    ADJ; printf("LEFT_PAREN\n"); return LEFT_PAREN; }
 ")" {
-    ADJ; printf(")\n"); return RIGHT_PAREN; }
+    ADJ; printf("RIGHT_PAREN\n"); return RIGHT_PAREN; }
 "[" {
-    ADJ; printf("[\n"); return LEFT_BRACE; }
+    ADJ; printf("LEFT_BRACE\n"); return LEFT_BRACE; }
 "]" {
-    ADJ; printf("]\n"); return RIGHT_BRACE; }
+    ADJ; printf("RIGHT_BRACE\n"); return RIGHT_BRACE; }
 "{" {
-    ADJ; printf("{\n"); return LEFT_BRACKET; }
+    ADJ; printf("LEFT_BRACKET\n"); return LEFT_BRACKET; }
 "}" {
-    ADJ; printf("}\n"); return RIGHT_BRACKET; }
+    ADJ; printf("RIGHT_BRACKET\n"); return RIGHT_BRACKET; }
 "." {
-    ADJ; printf(".\n"); return DOT; }
+    ADJ; printf("DOT\n"); return DOT; }
 "," {
-    ADJ; printf(",\n"); return COMMA; }
+    ADJ; printf("COMMA\n"); return COMMA; }
 ";" {
-    ADJ; printf(";\n"); return SEMICOLON; }
+    ADJ; printf("SEMICOLON\n"); return SEMICOLON; }
 "+" {
-    ADJ; printf("+\n"); return PLUS; }
+    ADJ; printf("PLUS\n"); return PLUS; }
 "-" {
-    ADJ; printf("-\n"); return MINUS; }
+    ADJ; printf("MINUS\n"); return MINUS; }
 "*" {
-    ADJ; printf("*\n"); return ASTERISK; }
+    ADJ; printf("ASTERISK\n"); return ASTERISK; }
 "/" {
-    ADJ; printf("/\n"); return SLASH; }
+    ADJ; printf("SLASH\n"); return SLASH; }
 
 "if" {
-    ADJ; printf("if\n"); return IF; }
+    ADJ; printf("IF\n"); return IF; }
 "else" {
-    ADJ; printf("else\n"); return ELSE; }
+    ADJ; printf("ELSE\n"); return ELSE; }
 "while" {
-    ADJ; printf("while\n"); return WHILE; }
+    ADJ; printf("WHILE\n"); return WHILE; }
 "for" {
-    ADJ; printf("for\n"); return FOR; }
+    ADJ; printf("FOR\n"); return FOR; }
 "foreach" {
-    ADJ; printf("foreach\n"); return FOREACH; }
+    ADJ; printf("FOREACH\n"); return FOREACH; }
 "func" {
-    ADJ; printf("func\n"); return FUNC; }
+    ADJ; printf("FUNC\n"); return FUNC; }
 "proc" {
-    ADJ; printf("proc\n"); return PROC; }
+    ADJ; printf("PROC\n"); return PROC; }
 "return" {
-    ADJ; printf("return\n"); return RETURN; }
+    ADJ; printf("RETURN\n"); return RETURN; }
 "break" {
-    ADJ; printf("break\n"); return BREAK; }
+    ADJ; printf("BREAK\n"); return BREAK; }
 "continue" {
-    ADJ; printf("continue\n"); return CONTINUE; }
+    ADJ; printf("CONTINUE\n"); return CONTINUE; }
 "match" {
-    ADJ; printf("match\n"); return MATCH; }
+    ADJ; printf("MATCH\n"); return MATCH; }
 "enum" {
-    ADJ; printf("enum\n"); return ENUM; }
+    ADJ; printf("ENUM\n"); return ENUM; }
 "union" {
-    ADJ; printf("union\n"); return UNION; }
+    ADJ; printf("UNION\n"); return UNION; }
 "struct" {
-    ADJ; printf("struct\n"); return STRUCT; }
+    ADJ; printf("STRUCT\n"); return STRUCT; }
 "tuple" {
-    ADJ; printf("tuple\n"); return TUPLE; }
+    ADJ; printf("TUPLE\n"); return TUPLE; }
 "const" {
-    ADJ; printf("const\n"); return CONST; }
+    ADJ; printf("CONST\n"); return CONST; }
 "static" {
-    ADJ; printf("static\n"); return STATIC; }
+    ADJ; printf("STATIC\n"); return STATIC; }
 "usize" {
-    ADJ; printf("usize\n"); return USIZE; }
+    ADJ; printf("USIZE\n"); return USIZE; }
 "u8" {
-    ADJ; printf("u8\n"); return U8; }
+    ADJ; printf("U8\n"); return U8; }
 "u16" {
-    ADJ; printf("u16\n"); return U16; }
+    ADJ; printf("U16\n"); return U16; }
 "u32" {
-    ADJ; printf("u32\n"); return U32; }
+    ADJ; printf("U32\n"); return U32; }
 "u64" {
-    ADJ; printf("u64\n"); return U64; }
+    ADJ; printf("U64\n"); return U64; }
 "i8" {
-    ADJ; printf("i8\n"); return I8; }
+    ADJ; printf("I8\n"); return I8; }
 "i16" {
-    ADJ; printf("i16\n"); return I16; }
+    ADJ; printf("I16\n"); return I16; }
 "i32" {
-    ADJ; printf("i32\n"); return I32; }
+    ADJ; printf("I32\n"); return I32; }
 "i64" {
-    ADJ; printf("i64\n"); return I64; }
+    ADJ; printf("I64\n"); return I64; }
 "f32" {
-    ADJ; printf("f32\n"); return F32; }
+    ADJ; printf("F32\n"); return F32; }
 "f64" {
-    ADJ; printf("f64\n"); return F64; }
+    ADJ; printf("F64\n"); return F64; }
 "bool" {
-    ADJ; printf("bool\n"); return BOOL; }
+    ADJ; printf("BOOL\n"); return BOOL; }
 "string" {
-    ADJ; printf("string\n"); return STRING; }
+    ADJ; printf("STRING\n"); return STRING; }
 "char" {
-    ADJ; printf("char\n"); return CHAR; }
+    ADJ; printf("CHAR\n"); return CHAR; }
 "true" {
-    ADJ; printf("true\n"); return TRUE; }
+    ADJ; printf("TRUE\n"); return TRUE; }
 "false" {
-    ADJ; printf("false\n"); return FALSE; }
+    ADJ; printf("FALSE\n"); return FALSE; }
 
 {intLiteral}    { ADJ; yylval.ival=atoi(yytext); printf("int(%ld)\n", yylval.ival); return INTEGER_LITERAL; }
 {floatLiteral}  { ADJ; yylval.fval=atof(yytext); printf("float(%f)\n", yylval.fval); return FLOAT_LITERAL; }

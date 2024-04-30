@@ -23,7 +23,7 @@ for symbol, name in [
 ]:
     print(f'"{symbol.lower()}" {{')
     if DEBUG:
-        print(f'    ADJ; printf("{symbol.lower()}\\n"); return {name.upper()}; }}')
+        print(f'    ADJ; printf("{name.upper()}\\n"); return {name.upper()}; }}')
     else:
         print(f"    ADJ; return {name.upper()}; }}")
 
@@ -67,7 +67,7 @@ for identifier in [
     print(f'"{identifier.lower()}" {{')
     if DEBUG:
         print(
-            f'    ADJ; printf("{identifier.lower()}\\n"); return {identifier.upper()}; }}'
+            f'    ADJ; printf("{identifier.upper()}\\n"); return {identifier.upper()}; }}'
         )
     else:
         print(f"    ADJ; return {identifier.upper()}; }}")
