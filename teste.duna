@@ -1,3 +1,8 @@
+/*
+  Implementacao do algoritmo Quick Sort
+  utilizando a linguagem de programacao Duna
+*/
+
 proc quickSort<T>(T[]* @arr, usize inicio, usize fim) {
   if (inicio < fim) {
     // Uma particao criada 1

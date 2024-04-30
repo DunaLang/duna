@@ -76,6 +76,7 @@ identifier    [@a-zA-Z][a-zA-Z0-9]*
 {identifier}    { printf("IDENT(%s)\n", yytext); }
 
 "//".*\n {printf("COMMENT(%s)\n", yytext);}
+(\/\*([^*]|[\r\n]|(\*+([^*\/]|[\r\n])))*\*+\/)|(\/\/.*) {printf("COMMENT(%s).\n", yytext);}
 
 . { printf("Unrecognized character: %s\n", yytext); }
 
