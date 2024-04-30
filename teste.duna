@@ -3,6 +3,12 @@
   utilizando a linguagem de programacao Duna
 */
 
+char c1 = 'e';
+char c2 = '*';
+char c3 = '?';
+char c4 = '/';
+f32 f2 = 12.34;
+
 proc quickSort<T>(T[]* @arr, usize inicio, usize fim) {
   if (inicio < fim) {
     // Uma particao criada 1

@@ -7,6 +7,7 @@
 intLiteral    [0-9]+
 floatLiteral  [0-9]+.[0-9]+
 stringLiteral \"[^\n"]+\"
+charLiteral \'[^\\']\'
 identifier    [@a-zA-Z][a-zA-Z0-9]*
 
 %%
@@ -73,6 +74,7 @@ identifier    [@a-zA-Z][a-zA-Z0-9]*
 {intLiteral}    { printf("INTEGER(%s)\n", yytext); }
 {floatLiteral}  { printf("FLOAT(%s)\n", yytext); }
 {stringLiteral} { printf("STRING(%s)\n", yytext); }
+{charLiteral}   { printf("CHAR(%s)\n", yytext); }
 {identifier}    { printf("IDENT(%s)\n", yytext); }
 
 "//".*\n {printf("COMMENT(%s)\n", yytext);}
