@@ -1,11 +1,13 @@
 proc quickSort<T>(T[]* @arr, usize inicio, usize fim) {
   if (inicio < fim) {
+    // Uma particao criada 1
     usize p = partition(@arr, inicio, fim);
     quickSort(@arr, inicio, p - 1);
     quickSort(@arr, p + 1, fim);
   }
 }
 
+// Uma particao criada 2
 func partition<T>(T[]* @arr, usize inicio, usize fim) usize {
   T pivot = @arr[fim];
   usize i = inicio - 1;
@@ -27,3 +29,4 @@ func partition<T>(T[]* @arr, usize inicio, usize fim) usize {
 
   return i + 1;
 }
+
