@@ -1,105 +1,91 @@
 %{
-#include <stdbool.h>
-#include <stdint.h>
+  #include <stdio.h>
+  #include "y.tab.h"
+  // Para tipos é melhor: {yylval.sValue = strdup("u8"); return TYPE;} ?
+  extern int yyerror (char *msg);
 %}
 
 
 intLiteral    [0-9]+
 floatLiteral  [0-9]+.[0-9]+
 stringLiteral \"[^\n"]+\"
-charLiteral \'[^\\']\'
+charLiteral   \'[^\\']\'
 identifier    [@a-zA-Z][a-zA-Z0-9]*
+commentary       (\/\*([^*]|[\r\n]|(\*+([^*\/]|[\r\n])))*\*+\/)|(\/\/.*) 
 
 %%
 
-[ \t\n]
+[ \t]   {}
+[\n]    {yylineno++;}
 
-"==" {printf("EQUALITY\n");}
-"=" {printf("EQUALS\n");}
-"<=" {printf("LESS_THAN_EQUALS\n");}
-">=" {printf("MORE_THAN_EQUALS\n");}
-"<" {printf("LESS_THAN\n");}
-">" {printf("MORE_THAN\n");}
-"(" {printf("LEFT_PAREN\n");}
-")" {printf("RIGHT_PAREN\n");}
-"[" {printf("LEFT_BRACE\n");}
-"]" {printf("RIGHT_BRACE\n");}
-"{" {printf("LEFT_BRACKET\n");}
-"}" {printf("RIGHT_BRACKET\n");}
-"." {printf("DOT\n");}
-"," {printf("COMMA\n");}
-";" {printf("SEMICOLON\n");}
-"+" {printf("PLUS\n");}
-"-" {printf("MINUS\n");}
-"*" {printf("ASTERISK\n");}
-"/" {printf("SLASH\n");}
+"="   { printf("TOKEN(%s)\n", yytext); return(ASSIGN);}
+"=="   { printf("TOKEN(%s)\n", yytext); return(EQUALITY);}
+"<="   { printf("TOKEN(%s)\n", yytext); return(LESS_THAN_EQUALS);}
+">="   { printf("TOKEN(%s)\n", yytext); return(MORE_THAN_EQUALS);}
+"<"   { printf("TOKEN(%s)\n", yytext); return(LESS_THAN);}
+">"   { printf("TOKEN(%s)\n", yytext); return(MORE_THAN);}
+"("   { printf("TOKEN(%s)\n", yytext); return(yytext[0]);}
+")"   { printf("TOKEN(%s)\n", yytext); return(yytext[0]);}
+"["   { printf("TOKEN(%s)\n", yytext); return(yytext[0]);}
+"]"   { printf("TOKEN(%s)\n", yytext); return(yytext[0]);}
+"{"   { printf("TOKEN(%s)\n", yytext); return(yytext[0]);}
+"}"   { printf("TOKEN(%s)\n", yytext); return(yytext[0]);}
+"."   { printf("TOKEN(%s)\n", yytext); return(yytext[0]);}
+","   { printf("TOKEN(%s)\n", yytext); return(yytext[0]);}
+";"   { printf("TOKEN(%s)\n", yytext); return(yytext[0]);}
+"+"   { printf("TOKEN(%s)\n", yytext); return(yytext[0]);}
+"-"   { printf("TOKEN(%s)\n", yytext); return(yytext[0]);}
+"*"   { printf("TOKEN(%s)\n", yytext); return(yytext[0]);}
+"/"   { printf("TOKEN(%s)\n", yytext); return(yytext[0]);}
 
-"if" { printf("IF\n"); }
-"else" { printf("ELSE\n"); }
-"while" { printf("WHILE\n"); }
-"for" { printf("FOR\n"); }
-"foreach" { printf("FOREACH\n"); }
-"func" { printf("FUNC\n"); }
-"proc" { printf("PROC\n"); }
-"return" { printf("RETURN\n"); }
-"break" { printf("BREAK\n"); }
-"continue" { printf("CONTINUE\n"); }
-"match" { printf("MATCH\n"); }
-"enum" { printf("ENUM\n"); }
-"union" { printf("UNION\n"); }
-"struct" { printf("STRUCT\n"); }
-"tuple" { printf("TUPLE\n"); }
-"const" { printf("CONST\n"); }
-"static" { printf("STATIC\n"); }
-"usize" { printf("USIZE\n"); }
-"u8" { printf("U8\n"); }
-"u16" { printf("U16\n"); }
-"u32" { printf("U32\n"); }
-"u64" { printf("U64\n"); }
-"i8" { printf("I8\n"); }
-"i16" { printf("I16\n"); }
-"i32" { printf("I32\n"); }
-"i64" { printf("I64\n"); }
-"f32" { printf("F32\n"); }
-"f64" { printf("F64\n"); }
-"bool" { printf("BOOL\n"); }
-"string" { printf("STRING\n"); }
-"char" { printf("CHAR\n"); }
-"true" { printf("TRUE\n"); }
-"false" { printf("FALSE\n"); }
-"not" { printf("NOT\n");}
-"and" { printf("AND\n");}
-"or" { printf("OR\n");}
+"if"          { printf("TOKEN(%s)\n", yytext); return(IF); }
+"else"          { printf("TOKEN(%s)\n", yytext); return(ELSE); }
+"while"          { printf("TOKEN(%s)\n", yytext); return(WHILE); }
+"for"          { printf("TOKEN(%s)\n", yytext); return(FOR); }
+"foreach"          { printf("TOKEN(%s)\n", yytext); return(FOREACH); }
+"func"          { printf("TOKEN(%s)\n", yytext); return(FUNC); }
+"proc"          { printf("TOKEN(%s)\n", yytext); return(PROC); }
+"return"          { printf("TOKEN(%s)\n", yytext); return(RETURN); }
+"break"          { printf("TOKEN(%s)\n", yytext); return(BREAK); }
+"continue"          { printf("TOKEN(%s)\n", yytext); return(CONTINUE); }
+"match"          { printf("TOKEN(%s)\n", yytext); return(MATCH); }
+"enum"          { printf("TOKEN(%s)\n", yytext); return(ENUM); }
+"union"          { printf("TOKEN(%s)\n", yytext); return(UNION); }
+"struct"          { printf("TOKEN(%s)\n", yytext); return(STRUCT); }
+"tuple"          { printf("TOKEN(%s)\n", yytext); return(TUPLE); }
+"const"          { printf("TOKEN(%s)\n", yytext); return(CONST); }
+"static"          { printf("TOKEN(%s)\n", yytext); return(STATIC); }
+"usize"          { printf("TOKEN(%s)\n", yytext); return(USIZE); }
+"u8"          { printf("TOKEN(%s)\n", yytext); return(U8); }
+"u16"          { printf("TOKEN(%s)\n", yytext); return(U16); }
+"u32"          { printf("TOKEN(%s)\n", yytext); return(U32); }
+"u64"          { printf("TOKEN(%s)\n", yytext); return(U64); }
+"i8"          { printf("TOKEN(%s)\n", yytext); return(I8); }
+"i16"          { printf("TOKEN(%s)\n", yytext); return(I16); }
+"i32"          { printf("TOKEN(%s)\n", yytext); return(I32); }
+"i64"          { printf("TOKEN(%s)\n", yytext); return(I64); }
+"f32"          { printf("TOKEN(%s)\n", yytext); return(F32); }
+"f64"          { printf("TOKEN(%s)\n", yytext); return(F64); }
+"bool"          { printf("TOKEN(%s)\n", yytext); return(BOOL); }
+"string"          { printf("TOKEN(%s)\n", yytext); return(STRING); }
+"char"          { printf("TOKEN(%s)\n", yytext); return(CHAR); }
+"true"          { printf("TOKEN(%s)\n", yytext); return(TRUE); }
+"false"          { printf("TOKEN(%s)\n", yytext); return(FALSE); }
+"not"          { printf("TOKEN(%s)\n", yytext); return(NOT); }
+"and"          { printf("TOKEN(%s)\n", yytext); return(AND); }
+"or"          { printf("TOKEN(%s)\n", yytext); return(OR); }
 
-{intLiteral}    { printf("INTEGER(%s)\n", yytext); }
-{floatLiteral}  { printf("FLOAT(%s)\n", yytext); }
-{stringLiteral} { printf("STRING(%s)\n", yytext); }
-{charLiteral}   { printf("CHAR(%s)\n", yytext); }
-{identifier}    { printf("IDENT(%s)\n", yytext); }
+{intLiteral}    { yylval.iValue = atoi(yytext); return INT_LITERAL; }
+{floatLiteral}  { yylval.fValue = atof(yytext); return FLOAT_LITERAL; }
+{stringLiteral} { yylval.sValue = strdup(yytext); return STRING_LITERAL; }
+{charLiteral}   { yylval.cValue = yytext[1]; return CHAR_LITERAL; }
+{identifier}    { yylval.sValue = strdup(yytext); printf("ID(%s)\n", yytext); return IDENTIFIER;}
+{commentary}    { /* TODO Implementar contagem de linha*/}
 
-"//".*\n {printf("COMMENT(%s)\n", yytext);}
-(\/\*([^*]|[\r\n]|(\*+([^*\/]|[\r\n])))*\*+\/)|(\/\/.*) {printf("COMMENT(%s).\n", yytext);}
-
-. { printf("Unrecognized character: %s\n", yytext); }
+. {yyerror("Unrecognized character"); }
 
 %%
 
 #ifndef yywrap
     int yywrap(void) {return 1;}
 #endif
-
-int main(int argc, char const *argv[])
-{
-    argv++, argc--;
-
-    if (argc != 1)
-    {
-        printf("Usage:\n\tdune <file_path>\n");
-        return -1;
-    }
-
-    yyin = fopen(argv[0], "r");
-
-    yylex();
-    return 0;
-}

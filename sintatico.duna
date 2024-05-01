@@ -1,0 +1,8 @@
+/*
+  Declaração e atribuição de uma variável
+  utilizando a linguagem de programacao Duna
+*/
+i16 num = 10;
+
+// teste é uma string
+string teste = "ola mundo";
