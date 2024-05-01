@@ -20,10 +20,10 @@ identifier    [@a-zA-Z][a-zA-Z0-9]*
 "="  { printf("ASSIGN\n"); }
 "("  { printf("LEFT_PAREN\n"); }
 ")"  { printf("RIGHT_PAREN\n"); }
-"["  { printf("LEFT_BRACE\n"); }
-"]"  { printf("RIGHT_BRACE\n"); }
-"{"  { printf("LEFT_BRACKET\n"); }
-"}"  { printf("RIGHT_BRACKET\n"); }
+"["  { printf("LEFT_BRACKET\n"); }
+"]"  { printf("RIGHT_BRACKET\n"); }
+"{"  { printf("LEFT_BRACE\n"); }
+"}"  { printf("RIGHT_BRACE\n"); }
 "."  { printf("DOT\n"); }
 ","  { printf("COMMA\n"); }
 ";"  { printf("SEMICOLON\n"); }
