@@ -1,6 +1,5 @@
 %{
-#include <stdbool.h>
-#include <stdint.h>
+#include <stdio.h>
 %}
 
 intLiteral    [0-9]+
