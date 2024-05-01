@@ -13,11 +13,11 @@ identifier    [@a-zA-Z][a-zA-Z0-9]*
 [ \t\n] ;
 
 "==" { printf("EQUALITY\n"); }
-"="  { printf("EQUALS\n"); }
 "<=" { printf("LESS_THAN_EQUALS\n"); }
 ">=" { printf("MORE_THAN_EQUALS\n"); }
 "<"  { printf("LESS_THAN\n"); }
 ">"  { printf("MORE_THAN\n"); }
+"="  { printf("ASSIGN\n"); }
 "("  { printf("LEFT_PAREN\n"); }
 ")"  { printf("RIGHT_PAREN\n"); }
 "["  { printf("LEFT_BRACE\n"); }
@@ -43,6 +43,7 @@ identifier    [@a-zA-Z][a-zA-Z0-9]*
 "break"    { printf("BREAK\n"); }
 "continue" { printf("CONTINUE\n"); }
 "match"    { printf("MATCH\n"); }
+"default"  { printf("DEFAULT\n"); }
 "enum"     { printf("ENUM\n"); }
 "union"    { printf("UNION\n"); }
 "struct"   { printf("STRUCT\n"); }
@@ -68,6 +69,10 @@ identifier    [@a-zA-Z][a-zA-Z0-9]*
 "not"      { printf("NOT\n"); }
 "and"      { printf("AND\n"); }
 "or"       { printf("OR\n"); }
+"typedef"  { printf("TYPEDEF\n"); }
+"new"      { printf("NEW\n"); }
+"free"     { printf("FREE\n"); }
+"print"    { printf("PRINT\n"); }
 
 {intLiteral}    { printf("INTEGER(%s)\n", yytext); }
 {floatLiteral}  { printf("FLOAT(%s)\n", yytext); }
