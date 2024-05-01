@@ -3,73 +3,72 @@
 #include <stdint.h>
 %}
 
-
 intLiteral    [0-9]+
 floatLiteral  [0-9]+.[0-9]+
 stringLiteral \"[^\n"]+\"
-charLiteral \'[^\\']\'
+charLiteral   \'[^\\']\'
 identifier    [@a-zA-Z][a-zA-Z0-9]*
 
 %%
 
-[ \t\n]
+[ \t\n] ;
 
-"==" {printf("EQUALITY\n");}
-"=" {printf("EQUALS\n");}
-"<=" {printf("LESS_THAN_EQUALS\n");}
-">=" {printf("MORE_THAN_EQUALS\n");}
-"<" {printf("LESS_THAN\n");}
-">" {printf("MORE_THAN\n");}
-"(" {printf("LEFT_PAREN\n");}
-")" {printf("RIGHT_PAREN\n");}
-"[" {printf("LEFT_BRACE\n");}
-"]" {printf("RIGHT_BRACE\n");}
-"{" {printf("LEFT_BRACKET\n");}
-"}" {printf("RIGHT_BRACKET\n");}
-"." {printf("DOT\n");}
-"," {printf("COMMA\n");}
-";" {printf("SEMICOLON\n");}
-"+" {printf("PLUS\n");}
-"-" {printf("MINUS\n");}
-"*" {printf("ASTERISK\n");}
-"/" {printf("SLASH\n");}
+"==" { printf("EQUALITY\n"); }
+"="  { printf("EQUALS\n"); }
+"<=" { printf("LESS_THAN_EQUALS\n"); }
+">=" { printf("MORE_THAN_EQUALS\n"); }
+"<"  { printf("LESS_THAN\n"); }
+">"  { printf("MORE_THAN\n"); }
+"("  { printf("LEFT_PAREN\n"); }
+")"  { printf("RIGHT_PAREN\n"); }
+"["  { printf("LEFT_BRACE\n"); }
+"]"  { printf("RIGHT_BRACE\n"); }
+"{"  { printf("LEFT_BRACKET\n"); }
+"}"  { printf("RIGHT_BRACKET\n"); }
+"."  { printf("DOT\n"); }
+","  { printf("COMMA\n"); }
+";"  { printf("SEMICOLON\n"); }
+"+"  { printf("PLUS\n"); }
+"-"  { printf("MINUS\n"); }
+"*"  { printf("ASTERISK\n"); }
+"/"  { printf("SLASH\n"); }
 
-"if" { printf("IF\n"); }
-"else" { printf("ELSE\n"); }
-"while" { printf("WHILE\n"); }
-"for" { printf("FOR\n"); }
-"foreach" { printf("FOREACH\n"); }
-"func" { printf("FUNC\n"); }
-"proc" { printf("PROC\n"); }
-"return" { printf("RETURN\n"); }
-"break" { printf("BREAK\n"); }
+"if"       { printf("IF\n"); }
+"else"     { printf("ELSE\n"); }
+"while"    { printf("WHILE\n"); }
+"for"      { printf("FOR\n"); }
+"foreach"  { printf("FOREACH\n"); }
+"func"     { printf("FUNC\n"); }
+"proc"     { printf("PROC\n"); }
+"return"   { printf("RETURN\n"); }
+"break"    { printf("BREAK\n"); }
 "continue" { printf("CONTINUE\n"); }
-"match" { printf("MATCH\n"); }
-"enum" { printf("ENUM\n"); }
-"union" { printf("UNION\n"); }
-"struct" { printf("STRUCT\n"); }
-"tuple" { printf("TUPLE\n"); }
-"const" { printf("CONST\n"); }
-"static" { printf("STATIC\n"); }
-"usize" { printf("USIZE\n"); }
-"u8" { printf("U8\n"); }
-"u16" { printf("U16\n"); }
-"u32" { printf("U32\n"); }
-"u64" { printf("U64\n"); }
-"i8" { printf("I8\n"); }
-"i16" { printf("I16\n"); }
-"i32" { printf("I32\n"); }
-"i64" { printf("I64\n"); }
-"f32" { printf("F32\n"); }
-"f64" { printf("F64\n"); }
-"bool" { printf("BOOL\n"); }
-"string" { printf("STRING\n"); }
-"char" { printf("CHAR\n"); }
-"true" { printf("TRUE\n"); }
-"false" { printf("FALSE\n"); }
-"not" { printf("NOT\n");}
-"and" { printf("AND\n");}
-"or" { printf("OR\n");}
+"match"    { printf("MATCH\n"); }
+"enum"     { printf("ENUM\n"); }
+"union"    { printf("UNION\n"); }
+"struct"   { printf("STRUCT\n"); }
+"tuple"    { printf("TUPLE\n"); }
+"const"    { printf("CONST\n"); }
+"static"   { printf("STATIC\n"); }
+"usize"    { printf("USIZE\n"); }
+"u8"       { printf("U8\n"); }
+"u16"      { printf("U16\n"); }
+"u32"      { printf("U32\n"); }
+"u64"      { printf("U64\n"); }
+"i8"       { printf("I8\n"); }
+"i16"      { printf("I16\n"); }
+"i32"      { printf("I32\n"); }
+"i64"      { printf("I64\n"); }
+"f32"      { printf("F32\n"); }
+"f64"      { printf("F64\n"); }
+"bool"     { printf("BOOL\n"); }
+"string"   { printf("STRING\n"); }
+"char"     { printf("CHAR\n"); }
+"true"     { printf("TRUE\n"); }
+"false"    { printf("FALSE\n"); }
+"not"      { printf("NOT\n"); }
+"and"      { printf("AND\n"); }
+"or"       { printf("OR\n"); }
 
 {intLiteral}    { printf("INTEGER(%s)\n", yytext); }
 {floatLiteral}  { printf("FLOAT(%s)\n", yytext); }
@@ -77,8 +76,8 @@ identifier    [@a-zA-Z][a-zA-Z0-9]*
 {charLiteral}   { printf("CHAR(%s)\n", yytext); }
 {identifier}    { printf("IDENT(%s)\n", yytext); }
 
-"//".*\n {printf("COMMENT(%s)\n", yytext);}
-(\/\*([^*]|[\r\n]|(\*+([^*\/]|[\r\n])))*\*+\/)|(\/\/.*) {printf("COMMENT(%s).\n", yytext);}
+"//".*\n ;
+(\/\*([^*]|[\r\n]|(\*+([^*\/]|[\r\n])))*\*+\/)|(\/\/.*) ;
 
 . { printf("Unrecognized character: %s\n", yytext); }
 
