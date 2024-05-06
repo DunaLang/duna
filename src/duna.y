@@ -34,65 +34,106 @@ extern FILE * yyin;
 %start program
 
 %%
-program : statements {}
+program : declarations ;
+
+declarations : declaration
+  | declaration declarations
   ;
 
-statements : statement    {}
-  | statements statement {}
+declaration : varDecl
+  | typedef
+  | proc
+  | func
+  | enum
+  | union
+  | struct
+  | tuple
   ;
 
-statement : varDecl ';' {}
-  | assignment ';'      {}
-  | typedef ';'         {}
-  | break ';'           {}
-  | continue ';'        {}
-  | return ';'          {}
-  | if                  {}
-  | while               {}
-  | foreach             {}
-  | struct ';'          {}
-  | union ';'           {}
-  | proc                {}
-  | func                {}
+varDecl : type IDENTIFIER          { printf(">>> Var declaration v1\n"); }
+  | type assignment                { printf(">>> Var declaration v2\n"); }
+  | typequalifiers type IDENTIFIER { printf(">>> Var declaration v3\n"); }
+  | typequalifiers type assignment { printf(">>> Var declaration v4\n"); }
+
+typedef : TYPEDEF type IDENTIFIER ';' ;
+
+proc : PROC IDENTIFIER '(' ')' block
+  | PROC IDENTIFIER '(' params ')' block
+  | PROC IDENTIFIER '<' types '>' '(' ')' block
+  | PROC IDENTIFIER '<' types '>' '(' params ')' block
   ;
 
-break : BREAK;
-continue : CONTINUE;
-return : RETURN | RETURN expr;
-
-fields : field ';'
-  | fields field ';'
+func : FUNC IDENTIFIER '(' ')' ':' type block
+  | FUNC IDENTIFIER '(' params ')' ':' type block
+  | FUNC IDENTIFIER '<' ids '>' '(' ')' ':' type block
+  | FUNC IDENTIFIER '<' ids '>' '(' params ')' ':' type block
   ;
 
-params : field
-  | params ',' field
+enum : ENUM IDENTIFIER '{' enumDef '}'
+  | ENUM IDENTIFIER '<' type '>' '{' enumDef '}'
   ;
 
-field : type id;
-
-func : FUNC id '(' ')' ':' type block                     {printf(">>> Func v1\n");}
-  | FUNC id '<' types '>' '(' ')' ':' type block          {printf(">>> Func v2 (precisa disso?)\n");}
-  | FUNC id '(' params ')' ':' type block                 {printf(">>> Func v3\n");}
-  | FUNC id '<' types '>' '(' params ')' ':' type block   {printf(">>> Func v4\n");}
+enumDef : IDENTIFIER
+  | IDENTIFIER ','
+  | IDENTIFIER '=' expr
+  | IDENTIFIER '=' expr ','
+  | IDENTIFIER '=' expr ',' enumDef
   ;
 
-proc : PROC id '(' ')' block                          {printf(">>> Proc v1\n");}
-  | PROC id '(' params ')' block                      {printf(">>> Proc v2\n");}
-  | PROC id '<' types '>' '(' params ')' block        {printf(">>> Proc v3\n");}
+union : UNION IDENTIFIER '{' fields '}'                       {printf(">>> Union\n");}
   ;
 
-union : UNION id '{' fields '}'                       {printf(">>> Union\n");}
+struct : STRUCT IDENTIFIER '{' fields '}'                     {printf(">>> Struct v1\n");}
+  | STRUCT IDENTIFIER '<' types '>' '{' fields '}'            {printf(">>> Struct v2\n");}
   ;
 
-struct : STRUCT id '{' fields '}'                     {printf(">>> Struct v1\n");}
-  | STRUCT id '<' types '>' '{' fields '}'            {printf(">>> Struct v2\n");}
+tuple : TUPLE IDENTIFIER '{' types '}'                     {printf(">>> Struct v1\n");}
+  | TUPLE IDENTIFIER '<' types '>' '{' types '}'            {printf(">>> Struct v2\n");}
   ;
 
-foreach : FOREACH '(' type id ':' id ')' block        {printf(">>> Foreach v1\n");}
-  | FOREACH '('typequalifier type id ':' id ')' block {printf(">>> Foreach v2\n");}
+ids : IDENTIFIER
+  | IDENTIFIER ',' ids
+  ;
+
+
+statements : statement
+  | statement statements
+  ;
+
+statement : varDecl ';'
+  | assignment ';'
+  | while
+  | for
+  | foreach
+  | BREAK ';'
+  | CONTINUE ';'
+  | return ';'
+  | if
+  ;
+
+assignment : IDENTIFIER '=' literal        {printf(">>> Assignment v1\n");}
+  | IDENTIFIER '=' IDENTIFIER                      {printf(">>> Assignment v2\n");}
+  /* | IDENTIFIER '=' expr                    {printf(">>> Assignment v3\n");} */
   ;
 
 while : WHILE '(' expr ')' block            {printf(">>> While\n");}
+  ;
+
+for : FOR '(' statement expr statement ')' block
+  | FOR '(' ';' ';' ')' block
+  | FOR '(' ';' ';' statement ')' block
+  | FOR '(' ';' expr ';' ')' block
+  | FOR '(' ';' expr ';' statement ')' block
+  | FOR '(' statement ';' ';' ')' block
+  | FOR '(' statement ';' expr ';' ')' block
+  ;
+
+foreach : FOREACH '(' type IDENTIFIER ':' IDENTIFIER ')' block        {printf(">>> Foreach v1\n");}
+  | FOREACH '('typequalifier type IDENTIFIER ':' IDENTIFIER ')' block {printf(">>> Foreach v2\n");}
+  ;
+
+return : RETURN
+  | RETURN expr
   ;
 
 if : IF '(' expr ')' block                   {printf(">>> If v1\n");}
@@ -108,15 +149,15 @@ elseifs : elseif
 elseif : ELSE IF '(' expr ')' block
   ;
 
-varDecl : type id                  {printf(">>> Var declaration v1\n");}
-  | type assignment                {printf(">>> Var declaration v2\n");}
-  | typequalifiers type id         {printf(">>> Var declaration v3\n");}
-  | typequalifiers type assignment {printf(">>> Var declaration v4\n");}
-
-assignment : id '=' literal        {printf(">>> Assignment v1\n");}
-  | id '=' id                      {printf(">>> Assignment v2\n");}
-  /* | id '=' expr                    {printf(">>> Assignment v3\n");} */
+fields : field ';'
+  | field ';' fields
   ;
+
+params : field
+  | field ',' params
+  ;
+
+field : type IDENTIFIER;
 
 typequalifiers : typequalifier
   | typequalifier typequalifiers
@@ -126,45 +167,42 @@ typequalifier : CONST
   | STATIC
   ;
 
-typedef : TYPEDEF type id 
-  ;
-
 types : type
   | types ',' type
   ;
 
 type : USIZE 
-  | U8 {}
-  | U16 {}
-  | U32 {}
-  | U64 {}
-  | I8 {}
-  | I16 {}
-  | I32 {}
-  | I64 {}
-  | F32 {}
-  | F64 {}
-  | BOOL {}
-  | STRING {}
-  | CHAR {}
+  | U8
+  | U16
+  | U32
+  | U64
+  | I8
+  | I16
+  | I32
+  | I64
+  | F32
+  | F64
+  | BOOL
+  | STRING
+  | CHAR
   | type '[' ']'
   | type '*'
-  | id {}
+  | IDENTIFIER
   ;
 
 expr : BOOLEAN_LITERAL;
 
-literal : INT_LITERAL {}
-  | FLOAT_LITERAL {}
-  | STRING_LITERAL {}
-  | CHAR_LITERAL {}
-  | BOOLEAN_LITERAL {}
+literal : INT_LITERAL
+  | FLOAT_LITERAL
+  | STRING_LITERAL
+  | CHAR_LITERAL
+  | BOOLEAN_LITERAL
   ;
 
 block : '{' '}'
   | '{' statements '}'
   ;
-id : IDENTIFIER {};
+
 %%
 
 int yyerror(char* msg) {
