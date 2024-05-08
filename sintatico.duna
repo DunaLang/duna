@@ -1,77 +1,4 @@
-/*
-  Declaração e atribuição de uma variável
-  utilizando a linguagem de programacao Duna
-*/
-// Declaração v1
-i16 num;
-bool a;
-// Declaração v2
-bool b = false;
-
-// Atribuição v1
-a = true;
-// Atribuição v2
-b = a;
-
-// Testando ponteiros e arrays
-i32* @ptr;
-i16[] arr;
-
-// Declaração v3
-static string msg;
-
-// Declaração v4
-const i16 idade = 23;
-
-// Multiqualifier declaração v4
-const static bool isOpen = false;
-
-// Testando typedef
 typedef i16 int;
-int maioridade = 18;
-
-// If v1
-if(true) {
-  maioridade = 21;
-}
-
-// If v2
-if(false) {
-  int yy = 2;
-} else if(true) {
-  //
-}
-
-// If v3
-if(true) {
-  //
-}
-else {
-  b = false;
-}
-
-// If v4
-if(true) {
-  //
-}
-else if (false) {
-  b = false;
-}
-else if (false) {
-  //
-}
-else {
-  //
-}
-
-// While
-while(true) {}
-
-// Foreach v1
-foreach(i16 element2 : arr) {}
-
-// Foreach v2
-foreach(const i16 element : arr) {}
 
 // Struct v1
 struct Pessoa {
@@ -87,22 +14,25 @@ struct Calculadora <T>{
 
 // Union
 union yylval {
-    i32 iValue;    
-    f32 fValue;
-    string sValue;
-    char cValue;
+  i32 iValue;    
+  f32 fValue;
+  string sValue;
+  char cValue;
 }
 
 // Proc v1
 proc testeSintatico () {}
+
 // Proc v2
 proc testeComParam (i16 i) {
   i16 x = i;
 }
+
 proc testeComParams (i16 i, bool isTrue) {
   i16 x = i;
   if(true) {}
 }
+
 // Proc v3 - Templates
 proc testeTemplate <T, U>(T param1, U param2) {}
 
@@ -118,3 +48,75 @@ func equals(string msg, string msg2) : bool {}
 // Func v4
 func soma <T>(T n1, T n2) : T {}
 
+// Proc main
+proc main() {
+  // Declaração v1
+  i16 num;
+  bool a;
+  // Declaração v2
+  bool b = false;
+
+  // Atribuição v1
+  a = true;
+  // Atribuição v2
+  b = a;
+
+  // Testando ponteiros e arrays
+  i32* @ptr;
+  i16[] arr;
+
+  // Declaração v3
+  static string msg;
+
+  // Declaração v4
+  const i16 idade = 23;
+
+  // Multiqualifier declaração v4
+  const static bool isOpen = false;
+
+  // Testando typedef
+  int maioridade = 18;
+
+  // If v1
+  if(true) {
+    maioridade = 21;
+  }
+
+  // If v2
+  if(false) {
+    int yy = 2;
+  } else if(true) {
+    //
+  }
+
+  // If v3
+  if(true) {
+    //
+  }
+  else {
+    b = false;
+  }
+
+  // If v4
+  if(true) {
+    //
+  }
+  else if (false) {
+    b = false;
+  }
+  else if (false) {
+    //
+  }
+  else {
+    //
+  }
+
+  // While
+  while(true) {}
+
+  // Foreach v1
+  foreach(i16 element2 : arr) {}
+
+  // Foreach v2
+  foreach(const i16 element : arr) {}
+}
