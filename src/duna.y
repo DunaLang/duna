@@ -48,6 +48,7 @@ declaration : varDecl
   | union
   | struct
   | tuple
+  | statement
   ;
 
 varDecl : type IDENTIFIER          { printf(">>> Var declaration v1\n"); }
