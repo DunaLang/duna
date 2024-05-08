@@ -77,13 +77,13 @@ foreach(const i16 element : arr) {}
 struct Pessoa {
   string nome;
   int idade;
-};
+}
 
 // Struct v2
 struct Calculadora <T>{
   T n1;
   T n2;
-};
+}
 
 // Union
 union yylval {
@@ -91,7 +91,7 @@ union yylval {
     f32 fValue;
     string sValue;
     char cValue;
-};
+}
 
 // Proc v1
 proc testeSintatico () {}
