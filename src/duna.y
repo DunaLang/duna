@@ -28,7 +28,7 @@ extern FILE * yyin;
 %token MATCH ENUM UNION STRUCT TUPLE CONST STATIC
 %token USIZE U8 U16 U32 U64 I8 I16 I32 I64 F32 F64 BOOL STRING CHAR TYPEDEF
 %token NOT AND OR NEW DELETE PRINT
-%token EQUALITY DIFFERENT ASSIGN LESS_THAN_EQUALS MORE_THAN_EQUALS
+%token EQUALITY INEQUALITY LESS_THAN_EQUALS MORE_THAN_EQUALS EQUALS_ARROW INCREMENT DECREMENT DOUBLE_COLON
 %token <sValue> IDENTIFIER
 
 %start program
@@ -50,10 +50,10 @@ declaration : varDecl
   | tuple
   ;
 
-varDecl : type IDENTIFIER          { printf(">>> Var declaration v1\n"); }
-  | type assignment                { printf(">>> Var declaration v2\n"); }
-  | typequalifiers type IDENTIFIER { printf(">>> Var declaration v3\n"); }
-  | typequalifiers type assignment { printf(">>> Var declaration v4\n"); }
+varDecl : type IDENTIFIER ';'
+  | type IDENTIFIER '=' expr ';'
+  | typequalifiers type IDENTIFIER ';'
+  | typequalifiers type IDENTIFIER '=' expr ';'
 
 typedef : TYPEDEF type IDENTIFIER ';' ;
 
@@ -69,15 +69,15 @@ func : FUNC IDENTIFIER '(' ')' ':' type block
   | FUNC IDENTIFIER '<' ids '>' '(' params ')' ':' type block
   ;
 
-enum : ENUM IDENTIFIER '{' enumDef '}'
-  | ENUM IDENTIFIER '<' type '>' '{' enumDef '}'
+enum : ENUM IDENTIFIER '{' enumValues '}'
+  | ENUM IDENTIFIER '<' type '>' '{' enumValues '}'
   ;
 
-enumDef : IDENTIFIER
+enumValues : IDENTIFIER
   | IDENTIFIER ','
-  | IDENTIFIER '=' expr
-  | IDENTIFIER '=' expr ','
-  | IDENTIFIER '=' expr ',' enumDef
+  | IDENTIFIER '=' INT_LITERAL
+  | IDENTIFIER '=' INT_LITERAL ','
+  | enumValues IDENTIFIER '=' INT_LITERAL ','
   ;
 
 union : UNION IDENTIFIER '{' fields '}'                       {printf(">>> Union\n");}
@@ -92,48 +92,61 @@ tuple : TUPLE IDENTIFIER '{' types '}'                     {printf(">>> Struct v
   ;
 
 ids : IDENTIFIER
-  | IDENTIFIER ',' ids
+  | ids ',' IDENTIFIER
   ;
-
 
 statements : statement
-  | statement statements
+  | statements statement
   ;
 
-statement : varDecl ';'
-  | assignment ';'
+statement : varDecl
+  | assignment
   | while
   | for
   | foreach
   | BREAK ';'
   | CONTINUE ';'
-  | return ';'
+  | PRINT expr ';'
+  | DELETE expr ';'
+  | match
+  | return
   | if
   ;
 
-assignment : IDENTIFIER '=' literal        {printf(">>> Assignment v1\n");}
-  | IDENTIFIER '=' IDENTIFIER                      {printf(">>> Assignment v2\n");}
-  /* | IDENTIFIER '=' expr                    {printf(">>> Assignment v3\n");} */
-  ;
+assignment : IDENTIFIER '=' expr ';' { printf(">>> Assignment\n"); } ;
 
 while : WHILE '(' expr ')' block            {printf(">>> While\n");}
   ;
 
-for : FOR '(' statement expr statement ')' block
-  | FOR '(' ';' ';' ')' block
-  | FOR '(' ';' ';' statement ')' block
-  | FOR '(' ';' expr ';' ')' block
-  | FOR '(' ';' expr ';' statement ')' block
-  | FOR '(' statement ';' ';' ')' block
-  | FOR '(' statement ';' expr ';' ')' block
+for : FOR '(' forHeader ')' block ;
+forHeader : ';' ';'
+  | statement expr statement
+  | ';' expr ';' statement
+  | ';' ';' statement
+  | statement ';' ';'
+  | statement ';' expr ';'
+  | ';' expr ';'
   ;
 
 foreach : FOREACH '(' type IDENTIFIER ':' IDENTIFIER ')' block        {printf(">>> Foreach v1\n");}
-  | FOREACH '('typequalifier type IDENTIFIER ':' IDENTIFIER ')' block {printf(">>> Foreach v2\n");}
+  | FOREACH '(' typequalifier type IDENTIFIER ':' IDENTIFIER ')' block {printf(">>> Foreach v2\n");}
   ;
 
-return : RETURN
-  | RETURN expr
+match : MATCH '(' expr ')' '{' matchCases '}'
+  | MATCH '(' expr ')' '{' matchCases ',' '}'
+  ;
+matchCases : matchCase
+  | matchCases ',' matchCase
+  ;
+matchCase : matchLeft EQUALS_ARROW matchRight ;
+matchLeft : multipleMatchLeft | '_' ;
+multipleMatchLeft : literal
+  | multipleMatchLeft '|' literal
+  ;
+matchRight : block | statement ;
+
+return : RETURN ';'
+  | RETURN expr ';'
   ;
 
 if : IF '(' expr ')' block                   {printf(">>> If v1\n");}
@@ -143,24 +156,24 @@ if : IF '(' expr ')' block                   {printf(">>> If v1\n");}
   ;
 
 elseifs : elseif
-  | elseifs elseif 
+  | elseifs elseif
   ;
 
 elseif : ELSE IF '(' expr ')' block
   ;
 
 fields : field ';'
-  | field ';' fields
+  | fields field ';'
   ;
 
 params : field
-  | field ',' params
+  | params ',' field
   ;
 
 field : type IDENTIFIER;
 
 typequalifiers : typequalifier
-  | typequalifier typequalifiers
+  | typequalifiers typequalifier
   ;
 
 typequalifier : CONST
@@ -171,7 +184,7 @@ types : type
   | types ',' type
   ;
 
-type : USIZE 
+type : USIZE
   | U8
   | U16
   | U32
@@ -185,18 +198,121 @@ type : USIZE
   | BOOL
   | STRING
   | CHAR
-  | type '[' ']'
-  | type '*'
   | IDENTIFIER
+  | type '[' ']'
+  /* | type '*' */
   ;
 
-expr : BOOLEAN_LITERAL;
+expr : logicalOr ;
 
-literal : INT_LITERAL
-  | FLOAT_LITERAL
+logicalOr : logicalOr OR logicalAnd
+  | logicalAnd
+  ;
+
+logicalAnd : logicalAnd AND comparison
+  | comparison
+  ;
+
+comparison : comparison '<' equality
+  | comparison '>' equality
+  | comparison LESS_THAN_EQUALS equality
+  | comparison MORE_THAN_EQUALS equality
+  | equality
+  ;
+
+equality : equality EQUALITY term
+  | equality INEQUALITY term
+  | term
+  ;
+
+term : term '+' factor
+  | term '-' factor
+  | factor
+  ;
+
+factor : factor '*' cast
+  | factor '/' cast
+  | factor '%' cast 
+  | cast
+  ;
+
+cast : '(' type ')' addressOf
+  | addressOf
+  ;
+
+addressOf : '&' dereference
+  | dereference
+  ;
+
+dereference : '*' negation
+  | negation
+  ;
+
+negation : NOT unary
+  | unary
+  ;
+
+unary : INCREMENT primary
+  | DECREMENT primary
+  | primary INCREMENT
+  | primary DECREMENT
+  | '+' primary
+  | '-' primary
+  | '#' primary
+  | primary
+  ;
+
+primary : literal
+  | IDENTIFIER
+  | subprogramCall
+  | NEW type
+  /* | '(' expr ')' */
+  /* | arrayIndex */
+  | arrayDef
+  | enumDef
+  | compoundTypeDef
+  /* | tupleDef */
+  /* | fieldAccess */
+  ;
+
+literal : CHAR_LITERAL
   | STRING_LITERAL
-  | CHAR_LITERAL
+  | FLOAT_LITERAL
+  | INT_LITERAL
   | BOOLEAN_LITERAL
+  ;
+
+arrayIndex : arrayDef '[' expr ']'
+  | IDENTIFIER '[' expr ']'
+  ;
+
+subprogramCall : IDENTIFIER '(' ')'
+  | IDENTIFIER '<' ids '>' '(' ')'
+  | IDENTIFIER '(' arguments ')'
+  | IDENTIFIER '<' ids '>' '(' arguments ')'
+  ;
+arguments : expr | arguments ',' expr ;
+
+arrayDef : '[' ']' | '[' commaSeparatedExpr ']' ;
+commaSeparatedExpr : expr
+  | expr ','
+  | expr ',' commaSeparatedExpr
+  ;
+
+enumDef : IDENTIFIER DOUBLE_COLON IDENTIFIER ;
+
+compoundTypeDef : type '{' '}'
+  | type '{' compoundTypeFields '}'
+  ;
+compoundTypeFields : type ':' expr
+  | type ':' expr ','
+  | type ':' expr ',' compoundTypeFields
+  ;
+
+tupleDef : '<' commaSeparatedExpr '>' ;
+
+fieldAccess : expr '.' IDENTIFIER 
+  | expr
   ;
 
 block : '{' '}'

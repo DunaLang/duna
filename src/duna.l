@@ -22,9 +22,13 @@ commentary       (\/\*([^*]|[\r\n]|(\*+([^*\/]|[\r\n])))*\*+\/)|(\/\/.*)
 [\n]    {yylineno++;}
 
 "=="   { printf("TOKEN(%s)\n", yytext); return(EQUALITY);}
-"!="   { printf("TOKEN(%s)\n", yytext); return(DIFFERENT);}
+"!="   { printf("TOKEN(%s)\n", yytext); return(INEQUALITY);}
 "<="   { printf("TOKEN(%s)\n", yytext); return(LESS_THAN_EQUALS);}
 ">="   { printf("TOKEN(%s)\n", yytext); return(MORE_THAN_EQUALS);}
+"=>"   { printf("TOKEN(%s)\n", yytext); return(EQUALS_ARROW);}
+"++"   { printf("TOKEN(%s)\n", yytext); return(INCREMENT);}
+"--"   { printf("TOKEN(%s)\n", yytext); return(DECREMENT);}
+"::"   { printf("TOKEN(%s)\n", yytext); return(DOUBLE_COLON);}
 
 "="   { printf("TOKEN(%s)\n", yytext); return(yytext[0]);}
 "<"   { printf("TOKEN(%s)\n", yytext); return(yytext[0]);}
