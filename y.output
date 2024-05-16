@@ -1,0 +1,5797 @@
+Nonterminals useless in grammar
+
+    ids
+    arrayIndex
+    tupleDef
+    fieldAccess
+
+
+Terminals unused in grammar
+
+    '.'
+
+
+Rules useless in grammar
+
+  171 ids: IDENTIFIER
+  172    | ids ',' IDENTIFIER
+
+  173 arrayIndex: arrayDef '[' expr ']'
+  174           | IDENTIFIER '[' expr ']'
+
+  175 tupleDef: '<' commaSeparatedExpr '>'
+
+  176 fieldAccess: expr '.' IDENTIFIER
+  177            | expr
+
+
+Grammar
+
+    0 $accept: program $end
+
+    1 program: declarations
+
+    2 declarations: declaration
+    3             | declaration declarations
+
+    4 declaration: varDecl
+    5            | typedef
+    6            | proc
+    7            | func
+    8            | enum
+    9            | union
+   10            | struct
+   11            | tuple
+
+   12 varDecl: type IDENTIFIER ';'
+   13        | type IDENTIFIER '=' expr ';'
+   14        | typequalifiers type IDENTIFIER ';'
+   15        | typequalifiers type IDENTIFIER '=' expr ';'
+
+   16 typedef: TYPEDEF type IDENTIFIER ';'
+
+   17 proc: PROC IDENTIFIER '(' ')' block
+   18     | PROC IDENTIFIER '(' params ')' block
+
+   19 func: FUNC IDENTIFIER '(' ')' ':' type block
+   20     | FUNC IDENTIFIER '(' params ')' ':' type block
+
+   21 enum: ENUM IDENTIFIER '{' enumValues '}'
+   22     | ENUM IDENTIFIER '<' type '>' '{' enumValues '}'
+
+   23 enumValues: IDENTIFIER
+   24           | IDENTIFIER ','
+   25           | IDENTIFIER '=' INT_LITERAL
+   26           | IDENTIFIER '=' INT_LITERAL ','
+   27           | enumValues IDENTIFIER '=' INT_LITERAL ','
+
+   28 union: UNION IDENTIFIER '{' fields '}'
+
+   29 struct: STRUCT IDENTIFIER '{' fields '}'
+   30       | STRUCT IDENTIFIER '<' types '>' '{' fields '}'
+
+   31 tuple: TUPLE IDENTIFIER '{' types '}'
+   32      | TUPLE IDENTIFIER '<' types '>' '{' types '}'
+
+   33 statements: statement
+   34           | statements statement
+
+   35 statement: varDecl
+   36          | assignment
+   37          | while
+   38          | for
+   39          | foreach
+   40          | BREAK ';'
+   41          | CONTINUE ';'
+   42          | PRINT expr ';'
+   43          | DELETE expr ';'
+   44          | match
+   45          | return
+   46          | if
+
+   47 assignment: IDENTIFIER '=' expr ';'
+
+   48 while: WHILE '(' expr ')' block
+
+   49 for: FOR '(' forHeader ')' block
+
+   50 forHeader: ';' ';'
+   51          | statement expr statement
+   52          | ';' expr ';' statement
+   53          | ';' ';' statement
+   54          | statement ';' ';'
+   55          | statement ';' expr ';'
+   56          | ';' expr ';'
+
+   57 foreach: FOREACH '(' type IDENTIFIER ':' IDENTIFIER ')' block
+   58        | FOREACH '(' typequalifier type IDENTIFIER ':' IDENTIFIER ')' block
+
+   59 match: MATCH '(' expr ')' '{' matchCases '}'
+   60      | MATCH '(' expr ')' '{' matchCases ',' '}'
+
+   61 matchCases: matchCase
+   62           | matchCases ',' matchCase
+
+   63 matchCase: matchLeft EQUALS_ARROW matchRight
+
+   64 matchLeft: multipleMatchLeft
+   65          | '_'
+
+   66 multipleMatchLeft: literal
+   67                  | multipleMatchLeft '|' literal
+
+   68 matchRight: block
+   69           | statement
+
+   70 return: RETURN ';'
+   71       | RETURN expr ';'
+
+   72 if: IF '(' expr ')' block
+   73   | IF '(' expr ')' block elseifs
+   74   | IF '(' expr ')' block ELSE block
+   75   | IF '(' expr ')' block elseifs ELSE block
+
+   76 elseifs: elseif
+   77        | elseifs elseif
+
+   78 elseif: ELSE IF '(' expr ')' block
+
+   79 fields: field ';'
+   80       | fields field ';'
+
+   81 params: field
+   82       | params ',' field
+
+   83 field: type IDENTIFIER
+
+   84 typequalifiers: typequalifier
+   85               | typequalifiers typequalifier
+
+   86 typequalifier: CONST
+   87              | STATIC
+
+   88 types: type
+   89      | types ',' type
+
+   90 type: USIZE
+   91     | U8
+   92     | U16
+   93     | U32
+   94     | U64
+   95     | I8
+   96     | I16
+   97     | I32
+   98     | I64
+   99     | F32
+  100     | F64
+  101     | BOOL
+  102     | STRING
+  103     | CHAR
+  104     | IDENTIFIER
+  105     | type '[' ']'
+
+  106 expr: logicalOr
+
+  107 logicalOr: logicalOr OR logicalAnd
+  108          | logicalAnd
+
+  109 logicalAnd: logicalAnd AND comparison
+  110           | comparison
+
+  111 comparison: comparison '<' equality
+  112           | comparison '>' equality
+  113           | comparison LESS_THAN_EQUALS equality
+  114           | comparison MORE_THAN_EQUALS equality
+  115           | equality
+
+  116 equality: equality EQUALITY term
+  117         | equality INEQUALITY term
+  118         | term
+
+  119 term: term '+' factor
+  120     | term '-' factor
+  121     | factor
+
+  122 factor: factor '*' cast
+  123       | factor '/' cast
+  124       | factor '%' cast
+  125       | cast
+
+  126 cast: '(' type ')' addressOf
+  127     | addressOf
+
+  128 addressOf: '&' dereference
+  129          | dereference
+
+  130 dereference: '*' negation
+  131            | negation
+
+  132 negation: NOT unary
+  133         | unary
+
+  134 unary: INCREMENT primary
+  135      | DECREMENT primary
+  136      | primary INCREMENT
+  137      | primary DECREMENT
+  138      | '+' primary
+  139      | '-' primary
+  140      | '#' primary
+  141      | primary
+
+  142 primary: literal
+  143        | IDENTIFIER
+  144        | subprogramCall
+  145        | NEW type
+  146        | arrayDef
+  147        | enumDef
+  148        | compoundTypeDef
+
+  149 literal: CHAR_LITERAL
+  150        | STRING_LITERAL
+  151        | FLOAT_LITERAL
+  152        | INT_LITERAL
+  153        | BOOLEAN_LITERAL
+
+  154 subprogramCall: IDENTIFIER '(' ')'
+  155               | IDENTIFIER '(' arguments ')'
+
+  156 arguments: expr
+  157          | arguments ',' expr
+
+  158 arrayDef: '[' ']'
+  159         | '[' commaSeparatedExpr ']'
+
+  160 commaSeparatedExpr: expr
+  161                   | expr ','
+  162                   | expr ',' commaSeparatedExpr
+
+  163 enumDef: IDENTIFIER DOUBLE_COLON IDENTIFIER
+
+  164 compoundTypeDef: type '{' '}'
+  165                | type '{' compoundTypeFields '}'
+
+  166 compoundTypeFields: type ':' expr
+  167                   | type ':' expr ','
+  168                   | type ':' expr ',' compoundTypeFields
+
+  169 block: '{' '}'
+  170      | '{' statements '}'
+
+
+Terminals, with rules where they appear
+
+    $end (0) 0
+    '#' (35) 140
+    '%' (37) 124
+    '&' (38) 128
+    '(' (40) 17 18 19 20 48 49 57 58 59 60 72 73 74 75 78 126 154 155
+    ')' (41) 17 18 19 20 48 49 57 58 59 60 72 73 74 75 78 126 154 155
+    '*' (42) 122 130
+    '+' (43) 119 138
+    ',' (44) 24 26 27 60 62 82 89 157 161 162 167 168
+    '-' (45) 120 139
+    '.' (46)
+    '/' (47) 123
+    ':' (58) 19 20 57 58 166 167 168
+    ';' (59) 12 13 14 15 16 40 41 42 43 47 50 52 53 54 55 56 70 71 79 80
+    '<' (60) 22 30 32 111
+    '=' (61) 13 15 25 26 27 47
+    '>' (62) 22 30 32 112
+    '[' (91) 105 158 159
+    ']' (93) 105 158 159
+    '_' (95) 65
+    '{' (123) 21 22 28 29 30 31 32 59 60 164 165 169 170
+    '|' (124) 67
+    '}' (125) 21 22 28 29 30 31 32 59 60 164 165 169 170
+    error (256)
+    INT_LITERAL <iValue> (258) 25 26 27 152
+    FLOAT_LITERAL <fValue> (259) 151
+    STRING_LITERAL <sValue> (260) 150
+    CHAR_LITERAL <cValue> (261) 149
+    BOOLEAN_LITERAL <iValue> (262) 153
+    IF (263) 72 73 74 75 78
+    ELSE (264) 74 75 78
+    WHILE (265) 48
+    FOR (266) 49
+    FOREACH (267) 57 58
+    FUNC (268) 19 20
+    PROC (269) 17 18
+    RETURN (270) 70 71
+    BREAK (271) 40
+    CONTINUE (272) 41
+    MATCH (273) 59 60
+    ENUM (274) 21 22
+    UNION (275) 28
+    STRUCT (276) 29 30
+    TUPLE (277) 31 32
+    CONST (278) 86
+    STATIC (279) 87
+    USIZE (280) 90
+    U8 (281) 91
+    U16 (282) 92
+    U32 (283) 93
+    U64 (284) 94
+    I8 (285) 95
+    I16 (286) 96
+    I32 (287) 97
+    I64 (288) 98
+    F32 (289) 99
+    F64 (290) 100
+    BOOL (291) 101
+    STRING (292) 102
+    CHAR (293) 103
+    TYPEDEF (294) 16
+    NOT (295) 132
+    AND (296) 109
+    OR (297) 107
+    NEW (298) 145
+    DELETE (299) 43
+    PRINT (300) 42
+    EQUALITY (301) 116
+    INEQUALITY (302) 117
+    LESS_THAN_EQUALS (303) 113
+    MORE_THAN_EQUALS (304) 114
+    EQUALS_ARROW (305) 63
+    INCREMENT (306) 134 136
+    DECREMENT (307) 135 137
+    DOUBLE_COLON (308) 163
+    IDENTIFIER <sValue> (309) 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 47 57 58 83 104 143 154 155 163
+
+
+Nonterminals, with rules where they appear
+
+    $accept (77)
+        on left: 0
+    program (78)
+        on left: 1
+        on right: 0
+    declarations (79)
+        on left: 2 3
+        on right: 1 3
+    declaration (80)
+        on left: 4 5 6 7 8 9 10 11
+        on right: 2 3
+    varDecl (81)
+        on left: 12 13 14 15
+        on right: 4 35
+    typedef (82)
+        on left: 16
+        on right: 5
+    proc (83)
+        on left: 17 18
+        on right: 6
+    func (84)
+        on left: 19 20
+        on right: 7
+    enum (85)
+        on left: 21 22
+        on right: 8
+    enumValues (86)
+        on left: 23 24 25 26 27
+        on right: 21 22 27
+    union (87)
+        on left: 28
+        on right: 9
+    struct (88)
+        on left: 29 30
+        on right: 10
+    tuple (89)
+        on left: 31 32
+        on right: 11
+    statements (90)
+        on left: 33 34
+        on right: 34 170
+    statement (91)
+        on left: 35 36 37 38 39 40 41 42 43 44 45 46
+        on right: 33 34 51 52 53 54 55 69
+    assignment (92)
+        on left: 47
+        on right: 36
+    while (93)
+        on left: 48
+        on right: 37
+    for (94)
+        on left: 49
+        on right: 38
+    forHeader (95)
+        on left: 50 51 52 53 54 55 56
+        on right: 49
+    foreach (96)
+        on left: 57 58
+        on right: 39
+    match (97)
+        on left: 59 60
+        on right: 44
+    matchCases (98)
+        on left: 61 62
+        on right: 59 60 62
+    matchCase (99)
+        on left: 63
+        on right: 61 62
+    matchLeft (100)
+        on left: 64 65
+        on right: 63
+    multipleMatchLeft (101)
+        on left: 66 67
+        on right: 64 67
+    matchRight (102)
+        on left: 68 69
+        on right: 63
+    return (103)
+        on left: 70 71
+        on right: 45
+    if (104)
+        on left: 72 73 74 75
+        on right: 46
+    elseifs (105)
+        on left: 76 77
+        on right: 73 75 77
+    elseif (106)
+        on left: 78
+        on right: 76 77
+    fields (107)
+        on left: 79 80
+        on right: 28 29 30 80
+    params (108)
+        on left: 81 82
+        on right: 18 20 82
+    field (109)
+        on left: 83
+        on right: 79 80 81 82
+    typequalifiers (110)
+        on left: 84 85
+        on right: 14 15 85
+    typequalifier (111)
+        on left: 86 87
+        on right: 58 84 85
+    types (112)
+        on left: 88 89
+        on right: 30 31 32 89
+    type (113)
+        on left: 90 91 92 93 94 95 96 97 98 99 100 101 102 103 104 105
+        on right: 12 13 14 15 16 19 20 22 57 58 83 88 89 105 126 145 164 165 166 167 168
+    expr (114)
+        on left: 106
+        on right: 13 15 42 43 47 48 51 52 55 56 59 60 71 72 73 74 75 78 156 157 160 161 162 166 167 168
+    logicalOr (115)
+        on left: 107 108
+        on right: 106 107
+    logicalAnd (116)
+        on left: 109 110
+        on right: 107 108 109
+    comparison (117)
+        on left: 111 112 113 114 115
+        on right: 109 110 111 112 113 114
+    equality (118)
+        on left: 116 117 118
+        on right: 111 112 113 114 115 116 117
+    term (119)
+        on left: 119 120 121
+        on right: 116 117 118 119 120
+    factor (120)
+        on left: 122 123 124 125
+        on right: 119 120 121 122 123 124
+    cast (121)
+        on left: 126 127
+        on right: 122 123 124 125
+    addressOf (122)
+        on left: 128 129
+        on right: 126 127
+    dereference (123)
+        on left: 130 131
+        on right: 128 129
+    negation (124)
+        on left: 132 133
+        on right: 130 131
+    unary (125)
+        on left: 134 135 136 137 138 139 140 141
+        on right: 132 133
+    primary (126)
+        on left: 142 143 144 145 146 147 148
+        on right: 134 135 136 137 138 139 140 141
+    literal (127)
+        on left: 149 150 151 152 153
+        on right: 66 67 142
+    subprogramCall (128)
+        on left: 154 155
+        on right: 144
+    arguments (129)
+        on left: 156 157
+        on right: 155 157
+    arrayDef (130)
+        on left: 158 159
+        on right: 146
+    commaSeparatedExpr (131)
+        on left: 160 161 162
+        on right: 159 162
+    enumDef (132)
+        on left: 163
+        on right: 147
+    compoundTypeDef (133)
+        on left: 164 165
+        on right: 148
+    compoundTypeFields (134)
+        on left: 166 167 168
+        on right: 165 168
+    block (135)
+        on left: 169 170
+        on right: 17 18 19 20 48 49 57 58 68 72 73 74 75 78
+
+
+State 0
+
+    0 $accept: • program $end
+
+    FUNC        shift, and go to state 1
+    PROC        shift, and go to state 2
+    ENUM        shift, and go to state 3
+    UNION       shift, and go to state 4
+    STRUCT      shift, and go to state 5
+    TUPLE       shift, and go to state 6
+    CONST       shift, and go to state 7
+    STATIC      shift, and go to state 8
+    USIZE       shift, and go to state 9
+    U8          shift, and go to state 10
+    U16         shift, and go to state 11
+    U32         shift, and go to state 12
+    U64         shift, and go to state 13
+    I8          shift, and go to state 14
+    I16         shift, and go to state 15
+    I32         shift, and go to state 16
+    I64         shift, and go to state 17
+    F32         shift, and go to state 18
+    F64         shift, and go to state 19
+    BOOL        shift, and go to state 20
+    STRING      shift, and go to state 21
+    CHAR        shift, and go to state 22
+    TYPEDEF     shift, and go to state 23
+    IDENTIFIER  shift, and go to state 24
+
+    program         go to state 25
+    declarations    go to state 26
+    declaration     go to state 27
+    varDecl         go to state 28
+    typedef         go to state 29
+    proc            go to state 30
+    func            go to state 31
+    enum            go to state 32
+    union           go to state 33
+    struct          go to state 34
+    tuple           go to state 35
+    typequalifiers  go to state 36
+    typequalifier   go to state 37
+    type            go to state 38
+
+
+State 1
+
+   19 func: FUNC • IDENTIFIER '(' ')' ':' type block
+   20     | FUNC • IDENTIFIER '(' params ')' ':' type block
+
+    IDENTIFIER  shift, and go to state 39
+
+
+State 2
+
+   17 proc: PROC • IDENTIFIER '(' ')' block
+   18     | PROC • IDENTIFIER '(' params ')' block
+
+    IDENTIFIER  shift, and go to state 40
+
+
+State 3
+
+   21 enum: ENUM • IDENTIFIER '{' enumValues '}'
+   22     | ENUM • IDENTIFIER '<' type '>' '{' enumValues '}'
+
+    IDENTIFIER  shift, and go to state 41
+
+
+State 4
+
+   28 union: UNION • IDENTIFIER '{' fields '}'
+
+    IDENTIFIER  shift, and go to state 42
+
+
+State 5
+
+   29 struct: STRUCT • IDENTIFIER '{' fields '}'
+   30       | STRUCT • IDENTIFIER '<' types '>' '{' fields '}'
+
+    IDENTIFIER  shift, and go to state 43
+
+
+State 6
+
+   31 tuple: TUPLE • IDENTIFIER '{' types '}'
+   32      | TUPLE • IDENTIFIER '<' types '>' '{' types '}'
+
+    IDENTIFIER  shift, and go to state 44
+
+
+State 7
+
+   86 typequalifier: CONST •
+
+    $default  reduce using rule 86 (typequalifier)
+
+
+State 8
+
+   87 typequalifier: STATIC •
+
+    $default  reduce using rule 87 (typequalifier)
+
+
+State 9
+
+   90 type: USIZE •
+
+    $default  reduce using rule 90 (type)
+
+
+State 10
+
+   91 type: U8 •
+
+    $default  reduce using rule 91 (type)
+
+
+State 11
+
+   92 type: U16 •
+
+    $default  reduce using rule 92 (type)
+
+
+State 12
+
+   93 type: U32 •
+
+    $default  reduce using rule 93 (type)
+
+
+State 13
+
+   94 type: U64 •
+
+    $default  reduce using rule 94 (type)
+
+
+State 14
+
+   95 type: I8 •
+
+    $default  reduce using rule 95 (type)
+
+
+State 15
+
+   96 type: I16 •
+
+    $default  reduce using rule 96 (type)
+
+
+State 16
+
+   97 type: I32 •
+
+    $default  reduce using rule 97 (type)
+
+
+State 17
+
+   98 type: I64 •
+
+    $default  reduce using rule 98 (type)
+
+
+State 18
+
+   99 type: F32 •
+
+    $default  reduce using rule 99 (type)
+
+
+State 19
+
+  100 type: F64 •
+
+    $default  reduce using rule 100 (type)
+
+
+State 20
+
+  101 type: BOOL •
+
+    $default  reduce using rule 101 (type)
+
+
+State 21
+
+  102 type: STRING •
+
+    $default  reduce using rule 102 (type)
+
+
+State 22
+
+  103 type: CHAR •
+
+    $default  reduce using rule 103 (type)
+
+
+State 23
+
+   16 typedef: TYPEDEF • type IDENTIFIER ';'
+
+    USIZE       shift, and go to state 9
+    U8          shift, and go to state 10
+    U16         shift, and go to state 11
+    U32         shift, and go to state 12
+    U64         shift, and go to state 13
+    I8          shift, and go to state 14
+    I16         shift, and go to state 15
+    I32         shift, and go to state 16
+    I64         shift, and go to state 17
+    F32         shift, and go to state 18
+    F64         shift, and go to state 19
+    BOOL        shift, and go to state 20
+    STRING      shift, and go to state 21
+    CHAR        shift, and go to state 22
+    IDENTIFIER  shift, and go to state 24
+
+    type  go to state 45
+
+
+State 24
+
+  104 type: IDENTIFIER •
+
+    $default  reduce using rule 104 (type)
+
+
+State 25
+
+    0 $accept: program • $end
+
+    $end  shift, and go to state 46
+
+
+State 26
+
+    1 program: declarations •
+
+    $default  reduce using rule 1 (program)
+
+
+State 27
+
+    2 declarations: declaration •
+    3             | declaration • declarations
+
+    FUNC        shift, and go to state 1
+    PROC        shift, and go to state 2
+    ENUM        shift, and go to state 3
+    UNION       shift, and go to state 4
+    STRUCT      shift, and go to state 5
+    TUPLE       shift, and go to state 6
+    CONST       shift, and go to state 7
+    STATIC      shift, and go to state 8
+    USIZE       shift, and go to state 9
+    U8          shift, and go to state 10
+    U16         shift, and go to state 11
+    U32         shift, and go to state 12
+    U64         shift, and go to state 13
+    I8          shift, and go to state 14
+    I16         shift, and go to state 15
+    I32         shift, and go to state 16
+    I64         shift, and go to state 17
+    F32         shift, and go to state 18
+    F64         shift, and go to state 19
+    BOOL        shift, and go to state 20
+    STRING      shift, and go to state 21
+    CHAR        shift, and go to state 22
+    TYPEDEF     shift, and go to state 23
+    IDENTIFIER  shift, and go to state 24
+
+    $default  reduce using rule 2 (declarations)
+
+    declarations    go to state 47
+    declaration     go to state 27
+    varDecl         go to state 28
+    typedef         go to state 29
+    proc            go to state 30
+    func            go to state 31
+    enum            go to state 32
+    union           go to state 33
+    struct          go to state 34
+    tuple           go to state 35
+    typequalifiers  go to state 36
+    typequalifier   go to state 37
+    type            go to state 38
+
+
+State 28
+
+    4 declaration: varDecl •
+
+    $default  reduce using rule 4 (declaration)
+
+
+State 29
+
+    5 declaration: typedef •
+
+    $default  reduce using rule 5 (declaration)
+
+
+State 30
+
+    6 declaration: proc •
+
+    $default  reduce using rule 6 (declaration)
+
+
+State 31
+
+    7 declaration: func •
+
+    $default  reduce using rule 7 (declaration)
+
+
+State 32
+
+    8 declaration: enum •
+
+    $default  reduce using rule 8 (declaration)
+
+
+State 33
+
+    9 declaration: union •
+
+    $default  reduce using rule 9 (declaration)
+
+
+State 34
+
+   10 declaration: struct •
+
+    $default  reduce using rule 10 (declaration)
+
+
+State 35
+
+   11 declaration: tuple •
+
+    $default  reduce using rule 11 (declaration)
+
+
+State 36
+
+   14 varDecl: typequalifiers • type IDENTIFIER ';'
+   15        | typequalifiers • type IDENTIFIER '=' expr ';'
+   85 typequalifiers: typequalifiers • typequalifier
+
+    CONST       shift, and go to state 7
+    STATIC      shift, and go to state 8
+    USIZE       shift, and go to state 9
+    U8          shift, and go to state 10
+    U16         shift, and go to state 11
+    U32         shift, and go to state 12
+    U64         shift, and go to state 13
+    I8          shift, and go to state 14
+    I16         shift, and go to state 15
+    I32         shift, and go to state 16
+    I64         shift, and go to state 17
+    F32         shift, and go to state 18
+    F64         shift, and go to state 19
+    BOOL        shift, and go to state 20
+    STRING      shift, and go to state 21
+    CHAR        shift, and go to state 22
+    IDENTIFIER  shift, and go to state 24
+
+    typequalifier  go to state 48
+    type           go to state 49
+
+
+State 37
+
+   84 typequalifiers: typequalifier •
+
+    $default  reduce using rule 84 (typequalifiers)
+
+
+State 38
+
+   12 varDecl: type • IDENTIFIER ';'
+   13        | type • IDENTIFIER '=' expr ';'
+  105 type: type • '[' ']'
+
+    IDENTIFIER  shift, and go to state 50
+    '['         shift, and go to state 51
+
+
+State 39
+
+   19 func: FUNC IDENTIFIER • '(' ')' ':' type block
+   20     | FUNC IDENTIFIER • '(' params ')' ':' type block
+
+    '('  shift, and go to state 52
+
+
+State 40
+
+   17 proc: PROC IDENTIFIER • '(' ')' block
+   18     | PROC IDENTIFIER • '(' params ')' block
+
+    '('  shift, and go to state 53
+
+
+State 41
+
+   21 enum: ENUM IDENTIFIER • '{' enumValues '}'
+   22     | ENUM IDENTIFIER • '<' type '>' '{' enumValues '}'
+
+    '{'  shift, and go to state 54
+    '<'  shift, and go to state 55
+
+
+State 42
+
+   28 union: UNION IDENTIFIER • '{' fields '}'
+
+    '{'  shift, and go to state 56
+
+
+State 43
+
+   29 struct: STRUCT IDENTIFIER • '{' fields '}'
+   30       | STRUCT IDENTIFIER • '<' types '>' '{' fields '}'
+
+    '{'  shift, and go to state 57
+    '<'  shift, and go to state 58
+
+
+State 44
+
+   31 tuple: TUPLE IDENTIFIER • '{' types '}'
+   32      | TUPLE IDENTIFIER • '<' types '>' '{' types '}'
+
+    '{'  shift, and go to state 59
+    '<'  shift, and go to state 60
+
+
+State 45
+
+   16 typedef: TYPEDEF type • IDENTIFIER ';'
+  105 type: type • '[' ']'
+
+    IDENTIFIER  shift, and go to state 61
+    '['         shift, and go to state 51
+
+
+State 46
+
+    0 $accept: program $end •
+
+    $default  accept
+
+
+State 47
+
+    3 declarations: declaration declarations •
+
+    $default  reduce using rule 3 (declarations)
+
+
+State 48
+
+   85 typequalifiers: typequalifiers typequalifier •
+
+    $default  reduce using rule 85 (typequalifiers)
+
+
+State 49
+
+   14 varDecl: typequalifiers type • IDENTIFIER ';'
+   15        | typequalifiers type • IDENTIFIER '=' expr ';'
+  105 type: type • '[' ']'
+
+    IDENTIFIER  shift, and go to state 62
+    '['         shift, and go to state 51
+
+
+State 50
+
+   12 varDecl: type IDENTIFIER • ';'
+   13        | type IDENTIFIER • '=' expr ';'
+
+    ';'  shift, and go to state 63
+    '='  shift, and go to state 64
+
+
+State 51
+
+  105 type: type '[' • ']'
+
+    ']'  shift, and go to state 65
+
+
+State 52
+
+   19 func: FUNC IDENTIFIER '(' • ')' ':' type block
+   20     | FUNC IDENTIFIER '(' • params ')' ':' type block
+
+    USIZE       shift, and go to state 9
+    U8          shift, and go to state 10
+    U16         shift, and go to state 11
+    U32         shift, and go to state 12
+    U64         shift, and go to state 13
+    I8          shift, and go to state 14
+    I16         shift, and go to state 15
+    I32         shift, and go to state 16
+    I64         shift, and go to state 17
+    F32         shift, and go to state 18
+    F64         shift, and go to state 19
+    BOOL        shift, and go to state 20
+    STRING      shift, and go to state 21
+    CHAR        shift, and go to state 22
+    IDENTIFIER  shift, and go to state 24
+    ')'         shift, and go to state 66
+
+    params  go to state 67
+    field   go to state 68
+    type    go to state 69
+
+
+State 53
+
+   17 proc: PROC IDENTIFIER '(' • ')' block
+   18     | PROC IDENTIFIER '(' • params ')' block
+
+    USIZE       shift, and go to state 9
+    U8          shift, and go to state 10
+    U16         shift, and go to state 11
+    U32         shift, and go to state 12
+    U64         shift, and go to state 13
+    I8          shift, and go to state 14
+    I16         shift, and go to state 15
+    I32         shift, and go to state 16
+    I64         shift, and go to state 17
+    F32         shift, and go to state 18
+    F64         shift, and go to state 19
+    BOOL        shift, and go to state 20
+    STRING      shift, and go to state 21
+    CHAR        shift, and go to state 22
+    IDENTIFIER  shift, and go to state 24
+    ')'         shift, and go to state 70
+
+    params  go to state 71
+    field   go to state 68
+    type    go to state 69
+
+
+State 54
+
+   21 enum: ENUM IDENTIFIER '{' • enumValues '}'
+
+    IDENTIFIER  shift, and go to state 72
+
+    enumValues  go to state 73
+
+
+State 55
+
+   22 enum: ENUM IDENTIFIER '<' • type '>' '{' enumValues '}'
+
+    USIZE       shift, and go to state 9
+    U8          shift, and go to state 10
+    U16         shift, and go to state 11
+    U32         shift, and go to state 12
+    U64         shift, and go to state 13
+    I8          shift, and go to state 14
+    I16         shift, and go to state 15
+    I32         shift, and go to state 16
+    I64         shift, and go to state 17
+    F32         shift, and go to state 18
+    F64         shift, and go to state 19
+    BOOL        shift, and go to state 20
+    STRING      shift, and go to state 21
+    CHAR        shift, and go to state 22
+    IDENTIFIER  shift, and go to state 24
+
+    type  go to state 74
+
+
+State 56
+
+   28 union: UNION IDENTIFIER '{' • fields '}'
+
+    USIZE       shift, and go to state 9
+    U8          shift, and go to state 10
+    U16         shift, and go to state 11
+    U32         shift, and go to state 12
+    U64         shift, and go to state 13
+    I8          shift, and go to state 14
+    I16         shift, and go to state 15
+    I32         shift, and go to state 16
+    I64         shift, and go to state 17
+    F32         shift, and go to state 18
+    F64         shift, and go to state 19
+    BOOL        shift, and go to state 20
+    STRING      shift, and go to state 21
+    CHAR        shift, and go to state 22
+    IDENTIFIER  shift, and go to state 24
+
+    fields  go to state 75
+    field   go to state 76
+    type    go to state 69
+
+
+State 57
+
+   29 struct: STRUCT IDENTIFIER '{' • fields '}'
+
+    USIZE       shift, and go to state 9
+    U8          shift, and go to state 10
+    U16         shift, and go to state 11
+    U32         shift, and go to state 12
+    U64         shift, and go to state 13
+    I8          shift, and go to state 14
+    I16         shift, and go to state 15
+    I32         shift, and go to state 16
+    I64         shift, and go to state 17
+    F32         shift, and go to state 18
+    F64         shift, and go to state 19
+    BOOL        shift, and go to state 20
+    STRING      shift, and go to state 21
+    CHAR        shift, and go to state 22
+    IDENTIFIER  shift, and go to state 24
+
+    fields  go to state 77
+    field   go to state 76
+    type    go to state 69
+
+
+State 58
+
+   30 struct: STRUCT IDENTIFIER '<' • types '>' '{' fields '}'
+
+    USIZE       shift, and go to state 9
+    U8          shift, and go to state 10
+    U16         shift, and go to state 11
+    U32         shift, and go to state 12
+    U64         shift, and go to state 13
+    I8          shift, and go to state 14
+    I16         shift, and go to state 15
+    I32         shift, and go to state 16
+    I64         shift, and go to state 17
+    F32         shift, and go to state 18
+    F64         shift, and go to state 19
+    BOOL        shift, and go to state 20
+    STRING      shift, and go to state 21
+    CHAR        shift, and go to state 22
+    IDENTIFIER  shift, and go to state 24
+
+    types  go to state 78
+    type   go to state 79
+
+
+State 59
+
+   31 tuple: TUPLE IDENTIFIER '{' • types '}'
+
+    USIZE       shift, and go to state 9
+    U8          shift, and go to state 10
+    U16         shift, and go to state 11
+    U32         shift, and go to state 12
+    U64         shift, and go to state 13
+    I8          shift, and go to state 14
+    I16         shift, and go to state 15
+    I32         shift, and go to state 16
+    I64         shift, and go to state 17
+    F32         shift, and go to state 18
+    F64         shift, and go to state 19
+    BOOL        shift, and go to state 20
+    STRING      shift, and go to state 21
+    CHAR        shift, and go to state 22
+    IDENTIFIER  shift, and go to state 24
+
+    types  go to state 80
+    type   go to state 79
+
+
+State 60
+
+   32 tuple: TUPLE IDENTIFIER '<' • types '>' '{' types '}'
+
+    USIZE       shift, and go to state 9
+    U8          shift, and go to state 10
+    U16         shift, and go to state 11
+    U32         shift, and go to state 12
+    U64         shift, and go to state 13
+    I8          shift, and go to state 14
+    I16         shift, and go to state 15
+    I32         shift, and go to state 16
+    I64         shift, and go to state 17
+    F32         shift, and go to state 18
+    F64         shift, and go to state 19
+    BOOL        shift, and go to state 20
+    STRING      shift, and go to state 21
+    CHAR        shift, and go to state 22
+    IDENTIFIER  shift, and go to state 24
+
+    types  go to state 81
+    type   go to state 79
+
+
+State 61
+
+   16 typedef: TYPEDEF type IDENTIFIER • ';'
+
+    ';'  shift, and go to state 82
+
+
+State 62
+
+   14 varDecl: typequalifiers type IDENTIFIER • ';'
+   15        | typequalifiers type IDENTIFIER • '=' expr ';'
+
+    ';'  shift, and go to state 83
+    '='  shift, and go to state 84
+
+
+State 63
+
+   12 varDecl: type IDENTIFIER ';' •
+
+    $default  reduce using rule 12 (varDecl)
+
+
+State 64
+
+   13 varDecl: type IDENTIFIER '=' • expr ';'
+
+    INT_LITERAL      shift, and go to state 85
+    FLOAT_LITERAL    shift, and go to state 86
+    STRING_LITERAL   shift, and go to state 87
+    CHAR_LITERAL     shift, and go to state 88
+    BOOLEAN_LITERAL  shift, and go to state 89
+    USIZE            shift, and go to state 9
+    U8               shift, and go to state 10
+    U16              shift, and go to state 11
+    U32              shift, and go to state 12
+    U64              shift, and go to state 13
+    I8               shift, and go to state 14
+    I16              shift, and go to state 15
+    I32              shift, and go to state 16
+    I64              shift, and go to state 17
+    F32              shift, and go to state 18
+    F64              shift, and go to state 19
+    BOOL             shift, and go to state 20
+    STRING           shift, and go to state 21
+    CHAR             shift, and go to state 22
+    NOT              shift, and go to state 90
+    NEW              shift, and go to state 91
+    INCREMENT        shift, and go to state 92
+    DECREMENT        shift, and go to state 93
+    IDENTIFIER       shift, and go to state 94
+    '('              shift, and go to state 95
+    '['              shift, and go to state 96
+    '+'              shift, and go to state 97
+    '-'              shift, and go to state 98
+    '*'              shift, and go to state 99
+    '&'              shift, and go to state 100
+    '#'              shift, and go to state 101
+
+    type             go to state 102
+    expr             go to state 103
+    logicalOr        go to state 104
+    logicalAnd       go to state 105
+    comparison       go to state 106
+    equality         go to state 107
+    term             go to state 108
+    factor           go to state 109
+    cast             go to state 110
+    addressOf        go to state 111
+    dereference      go to state 112
+    negation         go to state 113
+    unary            go to state 114
+    primary          go to state 115
+    literal          go to state 116
+    subprogramCall   go to state 117
+    arrayDef         go to state 118
+    enumDef          go to state 119
+    compoundTypeDef  go to state 120
+
+
+State 65
+
+  105 type: type '[' ']' •
+
+    $default  reduce using rule 105 (type)
+
+
+State 66
+
+   19 func: FUNC IDENTIFIER '(' ')' • ':' type block
+
+    ':'  shift, and go to state 121
+
+
+State 67
+
+   20 func: FUNC IDENTIFIER '(' params • ')' ':' type block
+   82 params: params • ',' field
+
+    ')'  shift, and go to state 122
+    ','  shift, and go to state 123
+
+
+State 68
+
+   81 params: field •
+
+    $default  reduce using rule 81 (params)
+
+
+State 69
+
+   83 field: type • IDENTIFIER
+  105 type: type • '[' ']'
+
+    IDENTIFIER  shift, and go to state 124
+    '['         shift, and go to state 51
+
+
+State 70
+
+   17 proc: PROC IDENTIFIER '(' ')' • block
+
+    '{'  shift, and go to state 125
+
+    block  go to state 126
+
+
+State 71
+
+   18 proc: PROC IDENTIFIER '(' params • ')' block
+   82 params: params • ',' field
+
+    ')'  shift, and go to state 127
+    ','  shift, and go to state 123
+
+
+State 72
+
+   23 enumValues: IDENTIFIER •
+   24           | IDENTIFIER • ','
+   25           | IDENTIFIER • '=' INT_LITERAL
+   26           | IDENTIFIER • '=' INT_LITERAL ','
+
+    '='  shift, and go to state 128
+    ','  shift, and go to state 129
+
+    $default  reduce using rule 23 (enumValues)
+
+
+State 73
+
+   21 enum: ENUM IDENTIFIER '{' enumValues • '}'
+   27 enumValues: enumValues • IDENTIFIER '=' INT_LITERAL ','
+
+    IDENTIFIER  shift, and go to state 130
+    '}'         shift, and go to state 131
+
+
+State 74
+
+   22 enum: ENUM IDENTIFIER '<' type • '>' '{' enumValues '}'
+  105 type: type • '[' ']'
+
+    '>'  shift, and go to state 132
+    '['  shift, and go to state 51
+
+
+State 75
+
+   28 union: UNION IDENTIFIER '{' fields • '}'
+   80 fields: fields • field ';'
+
+    USIZE       shift, and go to state 9
+    U8          shift, and go to state 10
+    U16         shift, and go to state 11
+    U32         shift, and go to state 12
+    U64         shift, and go to state 13
+    I8          shift, and go to state 14
+    I16         shift, and go to state 15
+    I32         shift, and go to state 16
+    I64         shift, and go to state 17
+    F32         shift, and go to state 18
+    F64         shift, and go to state 19
+    BOOL        shift, and go to state 20
+    STRING      shift, and go to state 21
+    CHAR        shift, and go to state 22
+    IDENTIFIER  shift, and go to state 24
+    '}'         shift, and go to state 133
+
+    field  go to state 134
+    type   go to state 69
+
+
+State 76
+
+   79 fields: field • ';'
+
+    ';'  shift, and go to state 135
+
+
+State 77
+
+   29 struct: STRUCT IDENTIFIER '{' fields • '}'
+   80 fields: fields • field ';'
+
+    USIZE       shift, and go to state 9
+    U8          shift, and go to state 10
+    U16         shift, and go to state 11
+    U32         shift, and go to state 12
+    U64         shift, and go to state 13
+    I8          shift, and go to state 14
+    I16         shift, and go to state 15
+    I32         shift, and go to state 16
+    I64         shift, and go to state 17
+    F32         shift, and go to state 18
+    F64         shift, and go to state 19
+    BOOL        shift, and go to state 20
+    STRING      shift, and go to state 21
+    CHAR        shift, and go to state 22
+    IDENTIFIER  shift, and go to state 24
+    '}'         shift, and go to state 136
+
+    field  go to state 134
+    type   go to state 69
+
+
+State 78
+
+   30 struct: STRUCT IDENTIFIER '<' types • '>' '{' fields '}'
+   89 types: types • ',' type
+
+    '>'  shift, and go to state 137
+    ','  shift, and go to state 138
+
+
+State 79
+
+   88 types: type •
+  105 type: type • '[' ']'
+
+    '['  shift, and go to state 51
+
+    $default  reduce using rule 88 (types)
+
+
+State 80
+
+   31 tuple: TUPLE IDENTIFIER '{' types • '}'
+   89 types: types • ',' type
+
+    '}'  shift, and go to state 139
+    ','  shift, and go to state 138
+
+
+State 81
+
+   32 tuple: TUPLE IDENTIFIER '<' types • '>' '{' types '}'
+   89 types: types • ',' type
+
+    '>'  shift, and go to state 140
+    ','  shift, and go to state 138
+
+
+State 82
+
+   16 typedef: TYPEDEF type IDENTIFIER ';' •
+
+    $default  reduce using rule 16 (typedef)
+
+
+State 83
+
+   14 varDecl: typequalifiers type IDENTIFIER ';' •
+
+    $default  reduce using rule 14 (varDecl)
+
+
+State 84
+
+   15 varDecl: typequalifiers type IDENTIFIER '=' • expr ';'
+
+    INT_LITERAL      shift, and go to state 85
+    FLOAT_LITERAL    shift, and go to state 86
+    STRING_LITERAL   shift, and go to state 87
+    CHAR_LITERAL     shift, and go to state 88
+    BOOLEAN_LITERAL  shift, and go to state 89
+    USIZE            shift, and go to state 9
+    U8               shift, and go to state 10
+    U16              shift, and go to state 11
+    U32              shift, and go to state 12
+    U64              shift, and go to state 13
+    I8               shift, and go to state 14
+    I16              shift, and go to state 15
+    I32              shift, and go to state 16
+    I64              shift, and go to state 17
+    F32              shift, and go to state 18
+    F64              shift, and go to state 19
+    BOOL             shift, and go to state 20
+    STRING           shift, and go to state 21
+    CHAR             shift, and go to state 22
+    NOT              shift, and go to state 90
+    NEW              shift, and go to state 91
+    INCREMENT        shift, and go to state 92
+    DECREMENT        shift, and go to state 93
+    IDENTIFIER       shift, and go to state 94
+    '('              shift, and go to state 95
+    '['              shift, and go to state 96
+    '+'              shift, and go to state 97
+    '-'              shift, and go to state 98
+    '*'              shift, and go to state 99
+    '&'              shift, and go to state 100
+    '#'              shift, and go to state 101
+
+    type             go to state 102
+    expr             go to state 141
+    logicalOr        go to state 104
+    logicalAnd       go to state 105
+    comparison       go to state 106
+    equality         go to state 107
+    term             go to state 108
+    factor           go to state 109
+    cast             go to state 110
+    addressOf        go to state 111
+    dereference      go to state 112
+    negation         go to state 113
+    unary            go to state 114
+    primary          go to state 115
+    literal          go to state 116
+    subprogramCall   go to state 117
+    arrayDef         go to state 118
+    enumDef          go to state 119
+    compoundTypeDef  go to state 120
+
+
+State 85
+
+  152 literal: INT_LITERAL •
+
+    $default  reduce using rule 152 (literal)
+
+
+State 86
+
+  151 literal: FLOAT_LITERAL •
+
+    $default  reduce using rule 151 (literal)
+
+
+State 87
+
+  150 literal: STRING_LITERAL •
+
+    $default  reduce using rule 150 (literal)
+
+
+State 88
+
+  149 literal: CHAR_LITERAL •
+
+    $default  reduce using rule 149 (literal)
+
+
+State 89
+
+  153 literal: BOOLEAN_LITERAL •
+
+    $default  reduce using rule 153 (literal)
+
+
+State 90
+
+  132 negation: NOT • unary
+
+    INT_LITERAL      shift, and go to state 85
+    FLOAT_LITERAL    shift, and go to state 86
+    STRING_LITERAL   shift, and go to state 87
+    CHAR_LITERAL     shift, and go to state 88
+    BOOLEAN_LITERAL  shift, and go to state 89
+    USIZE            shift, and go to state 9
+    U8               shift, and go to state 10
+    U16              shift, and go to state 11
+    U32              shift, and go to state 12
+    U64              shift, and go to state 13
+    I8               shift, and go to state 14
+    I16              shift, and go to state 15
+    I32              shift, and go to state 16
+    I64              shift, and go to state 17
+    F32              shift, and go to state 18
+    F64              shift, and go to state 19
+    BOOL             shift, and go to state 20
+    STRING           shift, and go to state 21
+    CHAR             shift, and go to state 22
+    NEW              shift, and go to state 91
+    INCREMENT        shift, and go to state 92
+    DECREMENT        shift, and go to state 93
+    IDENTIFIER       shift, and go to state 94
+    '['              shift, and go to state 96
+    '+'              shift, and go to state 97
+    '-'              shift, and go to state 98
+    '#'              shift, and go to state 101
+
+    type             go to state 102
+    unary            go to state 142
+    primary          go to state 115
+    literal          go to state 116
+    subprogramCall   go to state 117
+    arrayDef         go to state 118
+    enumDef          go to state 119
+    compoundTypeDef  go to state 120
+
+
+State 91
+
+  145 primary: NEW • type
+
+    USIZE       shift, and go to state 9
+    U8          shift, and go to state 10
+    U16         shift, and go to state 11
+    U32         shift, and go to state 12
+    U64         shift, and go to state 13
+    I8          shift, and go to state 14
+    I16         shift, and go to state 15
+    I32         shift, and go to state 16
+    I64         shift, and go to state 17
+    F32         shift, and go to state 18
+    F64         shift, and go to state 19
+    BOOL        shift, and go to state 20
+    STRING      shift, and go to state 21
+    CHAR        shift, and go to state 22
+    IDENTIFIER  shift, and go to state 24
+
+    type  go to state 143
+
+
+State 92
+
+  134 unary: INCREMENT • primary
+
+    INT_LITERAL      shift, and go to state 85
+    FLOAT_LITERAL    shift, and go to state 86
+    STRING_LITERAL   shift, and go to state 87
+    CHAR_LITERAL     shift, and go to state 88
+    BOOLEAN_LITERAL  shift, and go to state 89
+    USIZE            shift, and go to state 9
+    U8               shift, and go to state 10
+    U16              shift, and go to state 11
+    U32              shift, and go to state 12
+    U64              shift, and go to state 13
+    I8               shift, and go to state 14
+    I16              shift, and go to state 15
+    I32              shift, and go to state 16
+    I64              shift, and go to state 17
+    F32              shift, and go to state 18
+    F64              shift, and go to state 19
+    BOOL             shift, and go to state 20
+    STRING           shift, and go to state 21
+    CHAR             shift, and go to state 22
+    NEW              shift, and go to state 91
+    IDENTIFIER       shift, and go to state 94
+    '['              shift, and go to state 96
+
+    type             go to state 102
+    primary          go to state 144
+    literal          go to state 116
+    subprogramCall   go to state 117
+    arrayDef         go to state 118
+    enumDef          go to state 119
+    compoundTypeDef  go to state 120
+
+
+State 93
+
+  135 unary: DECREMENT • primary
+
+    INT_LITERAL      shift, and go to state 85
+    FLOAT_LITERAL    shift, and go to state 86
+    STRING_LITERAL   shift, and go to state 87
+    CHAR_LITERAL     shift, and go to state 88
+    BOOLEAN_LITERAL  shift, and go to state 89
+    USIZE            shift, and go to state 9
+    U8               shift, and go to state 10
+    U16              shift, and go to state 11
+    U32              shift, and go to state 12
+    U64              shift, and go to state 13
+    I8               shift, and go to state 14
+    I16              shift, and go to state 15
+    I32              shift, and go to state 16
+    I64              shift, and go to state 17
+    F32              shift, and go to state 18
+    F64              shift, and go to state 19
+    BOOL             shift, and go to state 20
+    STRING           shift, and go to state 21
+    CHAR             shift, and go to state 22
+    NEW              shift, and go to state 91
+    IDENTIFIER       shift, and go to state 94
+    '['              shift, and go to state 96
+
+    type             go to state 102
+    primary          go to state 145
+    literal          go to state 116
+    subprogramCall   go to state 117
+    arrayDef         go to state 118
+    enumDef          go to state 119
+    compoundTypeDef  go to state 120
+
+
+State 94
+
+  104 type: IDENTIFIER •
+  143 primary: IDENTIFIER •
+  154 subprogramCall: IDENTIFIER • '(' ')'
+  155               | IDENTIFIER • '(' arguments ')'
+  163 enumDef: IDENTIFIER • DOUBLE_COLON IDENTIFIER
+
+    DOUBLE_COLON  shift, and go to state 146
+    '('           shift, and go to state 147
+
+    '{'       reduce using rule 104 (type)
+    '['       reduce using rule 104 (type)
+    $default  reduce using rule 143 (primary)
+
+
+State 95
+
+  126 cast: '(' • type ')' addressOf
+
+    USIZE       shift, and go to state 9
+    U8          shift, and go to state 10
+    U16         shift, and go to state 11
+    U32         shift, and go to state 12
+    U64         shift, and go to state 13
+    I8          shift, and go to state 14
+    I16         shift, and go to state 15
+    I32         shift, and go to state 16
+    I64         shift, and go to state 17
+    F32         shift, and go to state 18
+    F64         shift, and go to state 19
+    BOOL        shift, and go to state 20
+    STRING      shift, and go to state 21
+    CHAR        shift, and go to state 22
+    IDENTIFIER  shift, and go to state 24
+
+    type  go to state 148
+
+
+State 96
+
+  158 arrayDef: '[' • ']'
+  159         | '[' • commaSeparatedExpr ']'
+
+    INT_LITERAL      shift, and go to state 85
+    FLOAT_LITERAL    shift, and go to state 86
+    STRING_LITERAL   shift, and go to state 87
+    CHAR_LITERAL     shift, and go to state 88
+    BOOLEAN_LITERAL  shift, and go to state 89
+    USIZE            shift, and go to state 9
+    U8               shift, and go to state 10
+    U16              shift, and go to state 11
+    U32              shift, and go to state 12
+    U64              shift, and go to state 13
+    I8               shift, and go to state 14
+    I16              shift, and go to state 15
+    I32              shift, and go to state 16
+    I64              shift, and go to state 17
+    F32              shift, and go to state 18
+    F64              shift, and go to state 19
+    BOOL             shift, and go to state 20
+    STRING           shift, and go to state 21
+    CHAR             shift, and go to state 22
+    NOT              shift, and go to state 90
+    NEW              shift, and go to state 91
+    INCREMENT        shift, and go to state 92
+    DECREMENT        shift, and go to state 93
+    IDENTIFIER       shift, and go to state 94
+    '('              shift, and go to state 95
+    '['              shift, and go to state 96
+    ']'              shift, and go to state 149
+    '+'              shift, and go to state 97
+    '-'              shift, and go to state 98
+    '*'              shift, and go to state 99
+    '&'              shift, and go to state 100
+    '#'              shift, and go to state 101
+
+    type                go to state 102
+    expr                go to state 150
+    logicalOr           go to state 104
+    logicalAnd          go to state 105
+    comparison          go to state 106
+    equality            go to state 107
+    term                go to state 108
+    factor              go to state 109
+    cast                go to state 110
+    addressOf           go to state 111
+    dereference         go to state 112
+    negation            go to state 113
+    unary               go to state 114
+    primary             go to state 115
+    literal             go to state 116
+    subprogramCall      go to state 117
+    arrayDef            go to state 118
+    commaSeparatedExpr  go to state 151
+    enumDef             go to state 119
+    compoundTypeDef     go to state 120
+
+
+State 97
+
+  138 unary: '+' • primary
+
+    INT_LITERAL      shift, and go to state 85
+    FLOAT_LITERAL    shift, and go to state 86
+    STRING_LITERAL   shift, and go to state 87
+    CHAR_LITERAL     shift, and go to state 88
+    BOOLEAN_LITERAL  shift, and go to state 89
+    USIZE            shift, and go to state 9
+    U8               shift, and go to state 10
+    U16              shift, and go to state 11
+    U32              shift, and go to state 12
+    U64              shift, and go to state 13
+    I8               shift, and go to state 14
+    I16              shift, and go to state 15
+    I32              shift, and go to state 16
+    I64              shift, and go to state 17
+    F32              shift, and go to state 18
+    F64              shift, and go to state 19
+    BOOL             shift, and go to state 20
+    STRING           shift, and go to state 21
+    CHAR             shift, and go to state 22
+    NEW              shift, and go to state 91
+    IDENTIFIER       shift, and go to state 94
+    '['              shift, and go to state 96
+
+    type             go to state 102
+    primary          go to state 152
+    literal          go to state 116
+    subprogramCall   go to state 117
+    arrayDef         go to state 118
+    enumDef          go to state 119
+    compoundTypeDef  go to state 120
+
+
+State 98
+
+  139 unary: '-' • primary
+
+    INT_LITERAL      shift, and go to state 85
+    FLOAT_LITERAL    shift, and go to state 86
+    STRING_LITERAL   shift, and go to state 87
+    CHAR_LITERAL     shift, and go to state 88
+    BOOLEAN_LITERAL  shift, and go to state 89
+    USIZE            shift, and go to state 9
+    U8               shift, and go to state 10
+    U16              shift, and go to state 11
+    U32              shift, and go to state 12
+    U64              shift, and go to state 13
+    I8               shift, and go to state 14
+    I16              shift, and go to state 15
+    I32              shift, and go to state 16
+    I64              shift, and go to state 17
+    F32              shift, and go to state 18
+    F64              shift, and go to state 19
+    BOOL             shift, and go to state 20
+    STRING           shift, and go to state 21
+    CHAR             shift, and go to state 22
+    NEW              shift, and go to state 91
+    IDENTIFIER       shift, and go to state 94
+    '['              shift, and go to state 96
+
+    type             go to state 102
+    primary          go to state 153
+    literal          go to state 116
+    subprogramCall   go to state 117
+    arrayDef         go to state 118
+    enumDef          go to state 119
+    compoundTypeDef  go to state 120
+
+
+State 99
+
+  130 dereference: '*' • negation
+
+    INT_LITERAL      shift, and go to state 85
+    FLOAT_LITERAL    shift, and go to state 86
+    STRING_LITERAL   shift, and go to state 87
+    CHAR_LITERAL     shift, and go to state 88
+    BOOLEAN_LITERAL  shift, and go to state 89
+    USIZE            shift, and go to state 9
+    U8               shift, and go to state 10
+    U16              shift, and go to state 11
+    U32              shift, and go to state 12
+    U64              shift, and go to state 13
+    I8               shift, and go to state 14
+    I16              shift, and go to state 15
+    I32              shift, and go to state 16
+    I64              shift, and go to state 17
+    F32              shift, and go to state 18
+    F64              shift, and go to state 19
+    BOOL             shift, and go to state 20
+    STRING           shift, and go to state 21
+    CHAR             shift, and go to state 22
+    NOT              shift, and go to state 90
+    NEW              shift, and go to state 91
+    INCREMENT        shift, and go to state 92
+    DECREMENT        shift, and go to state 93
+    IDENTIFIER       shift, and go to state 94
+    '['              shift, and go to state 96
+    '+'              shift, and go to state 97
+    '-'              shift, and go to state 98
+    '#'              shift, and go to state 101
+
+    type             go to state 102
+    negation         go to state 154
+    unary            go to state 114
+    primary          go to state 115
+    literal          go to state 116
+    subprogramCall   go to state 117
+    arrayDef         go to state 118
+    enumDef          go to state 119
+    compoundTypeDef  go to state 120
+
+
+State 100
+
+  128 addressOf: '&' • dereference
+
+    INT_LITERAL      shift, and go to state 85
+    FLOAT_LITERAL    shift, and go to state 86
+    STRING_LITERAL   shift, and go to state 87
+    CHAR_LITERAL     shift, and go to state 88
+    BOOLEAN_LITERAL  shift, and go to state 89
+    USIZE            shift, and go to state 9
+    U8               shift, and go to state 10
+    U16              shift, and go to state 11
+    U32              shift, and go to state 12
+    U64              shift, and go to state 13
+    I8               shift, and go to state 14
+    I16              shift, and go to state 15
+    I32              shift, and go to state 16
+    I64              shift, and go to state 17
+    F32              shift, and go to state 18
+    F64              shift, and go to state 19
+    BOOL             shift, and go to state 20
+    STRING           shift, and go to state 21
+    CHAR             shift, and go to state 22
+    NOT              shift, and go to state 90
+    NEW              shift, and go to state 91
+    INCREMENT        shift, and go to state 92
+    DECREMENT        shift, and go to state 93
+    IDENTIFIER       shift, and go to state 94
+    '['              shift, and go to state 96
+    '+'              shift, and go to state 97
+    '-'              shift, and go to state 98
+    '*'              shift, and go to state 99
+    '#'              shift, and go to state 101
+
+    type             go to state 102
+    dereference      go to state 155
+    negation         go to state 113
+    unary            go to state 114
+    primary          go to state 115
+    literal          go to state 116
+    subprogramCall   go to state 117
+    arrayDef         go to state 118
+    enumDef          go to state 119
+    compoundTypeDef  go to state 120
+
+
+State 101
+
+  140 unary: '#' • primary
+
+    INT_LITERAL      shift, and go to state 85
+    FLOAT_LITERAL    shift, and go to state 86
+    STRING_LITERAL   shift, and go to state 87
+    CHAR_LITERAL     shift, and go to state 88
+    BOOLEAN_LITERAL  shift, and go to state 89
+    USIZE            shift, and go to state 9
+    U8               shift, and go to state 10
+    U16              shift, and go to state 11
+    U32              shift, and go to state 12
+    U64              shift, and go to state 13
+    I8               shift, and go to state 14
+    I16              shift, and go to state 15
+    I32              shift, and go to state 16
+    I64              shift, and go to state 17
+    F32              shift, and go to state 18
+    F64              shift, and go to state 19
+    BOOL             shift, and go to state 20
+    STRING           shift, and go to state 21
+    CHAR             shift, and go to state 22
+    NEW              shift, and go to state 91
+    IDENTIFIER       shift, and go to state 94
+    '['              shift, and go to state 96
+
+    type             go to state 102
+    primary          go to state 156
+    literal          go to state 116
+    subprogramCall   go to state 117
+    arrayDef         go to state 118
+    enumDef          go to state 119
+    compoundTypeDef  go to state 120
+
+
+State 102
+
+  105 type: type • '[' ']'
+  164 compoundTypeDef: type • '{' '}'
+  165                | type • '{' compoundTypeFields '}'
+
+    '{'  shift, and go to state 157
+    '['  shift, and go to state 51
+
+
+State 103
+
+   13 varDecl: type IDENTIFIER '=' expr • ';'
+
+    ';'  shift, and go to state 158
+
+
+State 104
+
+  106 expr: logicalOr •
+  107 logicalOr: logicalOr • OR logicalAnd
+
+    OR  shift, and go to state 159
+
+    $default  reduce using rule 106 (expr)
+
+
+State 105
+
+  108 logicalOr: logicalAnd •
+  109 logicalAnd: logicalAnd • AND comparison
+
+    AND  shift, and go to state 160
+
+    $default  reduce using rule 108 (logicalOr)
+
+
+State 106
+
+  110 logicalAnd: comparison •
+  111 comparison: comparison • '<' equality
+  112           | comparison • '>' equality
+  113           | comparison • LESS_THAN_EQUALS equality
+  114           | comparison • MORE_THAN_EQUALS equality
+
+    LESS_THAN_EQUALS  shift, and go to state 161
+    MORE_THAN_EQUALS  shift, and go to state 162
+    '<'               shift, and go to state 163
+    '>'               shift, and go to state 164
+
+    $default  reduce using rule 110 (logicalAnd)
+
+
+State 107
+
+  115 comparison: equality •
+  116 equality: equality • EQUALITY term
+  117         | equality • INEQUALITY term
+
+    EQUALITY    shift, and go to state 165
+    INEQUALITY  shift, and go to state 166
+
+    $default  reduce using rule 115 (comparison)
+
+
+State 108
+
+  118 equality: term •
+  119 term: term • '+' factor
+  120     | term • '-' factor
+
+    '+'  shift, and go to state 167
+    '-'  shift, and go to state 168
+
+    $default  reduce using rule 118 (equality)
+
+
+State 109
+
+  121 term: factor •
+  122 factor: factor • '*' cast
+  123       | factor • '/' cast
+  124       | factor • '%' cast
+
+    '*'  shift, and go to state 169
+    '/'  shift, and go to state 170
+    '%'  shift, and go to state 171
+
+    $default  reduce using rule 121 (term)
+
+
+State 110
+
+  125 factor: cast •
+
+    $default  reduce using rule 125 (factor)
+
+
+State 111
+
+  127 cast: addressOf •
+
+    $default  reduce using rule 127 (cast)
+
+
+State 112
+
+  129 addressOf: dereference •
+
+    $default  reduce using rule 129 (addressOf)
+
+
+State 113
+
+  131 dereference: negation •
+
+    $default  reduce using rule 131 (dereference)
+
+
+State 114
+
+  133 negation: unary •
+
+    $default  reduce using rule 133 (negation)
+
+
+State 115
+
+  136 unary: primary • INCREMENT
+  137      | primary • DECREMENT
+  141      | primary •
+
+    INCREMENT  shift, and go to state 172
+    DECREMENT  shift, and go to state 173
+
+    $default  reduce using rule 141 (unary)
+
+
+State 116
+
+  142 primary: literal •
+
+    $default  reduce using rule 142 (primary)
+
+
+State 117
+
+  144 primary: subprogramCall •
+
+    $default  reduce using rule 144 (primary)
+
+
+State 118
+
+  146 primary: arrayDef •
+
+    $default  reduce using rule 146 (primary)
+
+
+State 119
+
+  147 primary: enumDef •
+
+    $default  reduce using rule 147 (primary)
+
+
+State 120
+
+  148 primary: compoundTypeDef •
+
+    $default  reduce using rule 148 (primary)
+
+
+State 121
+
+   19 func: FUNC IDENTIFIER '(' ')' ':' • type block
+
+    USIZE       shift, and go to state 9
+    U8          shift, and go to state 10
+    U16         shift, and go to state 11
+    U32         shift, and go to state 12
+    U64         shift, and go to state 13
+    I8          shift, and go to state 14
+    I16         shift, and go to state 15
+    I32         shift, and go to state 16
+    I64         shift, and go to state 17
+    F32         shift, and go to state 18
+    F64         shift, and go to state 19
+    BOOL        shift, and go to state 20
+    STRING      shift, and go to state 21
+    CHAR        shift, and go to state 22
+    IDENTIFIER  shift, and go to state 24
+
+    type  go to state 174
+
+
+State 122
+
+   20 func: FUNC IDENTIFIER '(' params ')' • ':' type block
+
+    ':'  shift, and go to state 175
+
+
+State 123
+
+   82 params: params ',' • field
+
+    USIZE       shift, and go to state 9
+    U8          shift, and go to state 10
+    U16         shift, and go to state 11
+    U32         shift, and go to state 12
+    U64         shift, and go to state 13
+    I8          shift, and go to state 14
+    I16         shift, and go to state 15
+    I32         shift, and go to state 16
+    I64         shift, and go to state 17
+    F32         shift, and go to state 18
+    F64         shift, and go to state 19
+    BOOL        shift, and go to state 20
+    STRING      shift, and go to state 21
+    CHAR        shift, and go to state 22
+    IDENTIFIER  shift, and go to state 24
+
+    field  go to state 176
+    type   go to state 69
+
+
+State 124
+
+   83 field: type IDENTIFIER •
+
+    $default  reduce using rule 83 (field)
+
+
+State 125
+
+  169 block: '{' • '}'
+  170      | '{' • statements '}'
+
+    IF          shift, and go to state 177
+    WHILE       shift, and go to state 178
+    FOR         shift, and go to state 179
+    FOREACH     shift, and go to state 180
+    RETURN      shift, and go to state 181
+    BREAK       shift, and go to state 182
+    CONTINUE    shift, and go to state 183
+    MATCH       shift, and go to state 184
+    CONST       shift, and go to state 7
+    STATIC      shift, and go to state 8
+    USIZE       shift, and go to state 9
+    U8          shift, and go to state 10
+    U16         shift, and go to state 11
+    U32         shift, and go to state 12
+    U64         shift, and go to state 13
+    I8          shift, and go to state 14
+    I16         shift, and go to state 15
+    I32         shift, and go to state 16
+    I64         shift, and go to state 17
+    F32         shift, and go to state 18
+    F64         shift, and go to state 19
+    BOOL        shift, and go to state 20
+    STRING      shift, and go to state 21
+    CHAR        shift, and go to state 22
+    DELETE      shift, and go to state 185
+    PRINT       shift, and go to state 186
+    IDENTIFIER  shift, and go to state 187
+    '}'         shift, and go to state 188
+
+    varDecl         go to state 189
+    statements      go to state 190
+    statement       go to state 191
+    assignment      go to state 192
+    while           go to state 193
+    for             go to state 194
+    foreach         go to state 195
+    match           go to state 196
+    return          go to state 197
+    if              go to state 198
+    typequalifiers  go to state 36
+    typequalifier   go to state 37
+    type            go to state 38
+
+
+State 126
+
+   17 proc: PROC IDENTIFIER '(' ')' block •
+
+    $default  reduce using rule 17 (proc)
+
+
+State 127
+
+   18 proc: PROC IDENTIFIER '(' params ')' • block
+
+    '{'  shift, and go to state 125
+
+    block  go to state 199
+
+
+State 128
+
+   25 enumValues: IDENTIFIER '=' • INT_LITERAL
+   26           | IDENTIFIER '=' • INT_LITERAL ','
+
+    INT_LITERAL  shift, and go to state 200
+
+
+State 129
+
+   24 enumValues: IDENTIFIER ',' •
+
+    $default  reduce using rule 24 (enumValues)
+
+
+State 130
+
+   27 enumValues: enumValues IDENTIFIER • '=' INT_LITERAL ','
+
+    '='  shift, and go to state 201
+
+
+State 131
+
+   21 enum: ENUM IDENTIFIER '{' enumValues '}' •
+
+    $default  reduce using rule 21 (enum)
+
+
+State 132
+
+   22 enum: ENUM IDENTIFIER '<' type '>' • '{' enumValues '}'
+
+    '{'  shift, and go to state 202
+
+
+State 133
+
+   28 union: UNION IDENTIFIER '{' fields '}' •
+
+    $default  reduce using rule 28 (union)
+
+
+State 134
+
+   80 fields: fields field • ';'
+
+    ';'  shift, and go to state 203
+
+
+State 135
+
+   79 fields: field ';' •
+
+    $default  reduce using rule 79 (fields)
+
+
+State 136
+
+   29 struct: STRUCT IDENTIFIER '{' fields '}' •
+
+    $default  reduce using rule 29 (struct)
+
+
+State 137
+
+   30 struct: STRUCT IDENTIFIER '<' types '>' • '{' fields '}'
+
+    '{'  shift, and go to state 204
+
+
+State 138
+
+   89 types: types ',' • type
+
+    USIZE       shift, and go to state 9
+    U8          shift, and go to state 10
+    U16         shift, and go to state 11
+    U32         shift, and go to state 12
+    U64         shift, and go to state 13
+    I8          shift, and go to state 14
+    I16         shift, and go to state 15
+    I32         shift, and go to state 16
+    I64         shift, and go to state 17
+    F32         shift, and go to state 18
+    F64         shift, and go to state 19
+    BOOL        shift, and go to state 20
+    STRING      shift, and go to state 21
+    CHAR        shift, and go to state 22
+    IDENTIFIER  shift, and go to state 24
+
+    type  go to state 205
+
+
+State 139
+
+   31 tuple: TUPLE IDENTIFIER '{' types '}' •
+
+    $default  reduce using rule 31 (tuple)
+
+
+State 140
+
+   32 tuple: TUPLE IDENTIFIER '<' types '>' • '{' types '}'
+
+    '{'  shift, and go to state 206
+
+
+State 141
+
+   15 varDecl: typequalifiers type IDENTIFIER '=' expr • ';'
+
+    ';'  shift, and go to state 207
+
+
+State 142
+
+  132 negation: NOT unary •
+
+    $default  reduce using rule 132 (negation)
+
+
+State 143
+
+  105 type: type • '[' ']'
+  145 primary: NEW type •
+
+    '['  shift, and go to state 51
+
+    $default  reduce using rule 145 (primary)
+
+
+State 144
+
+  134 unary: INCREMENT primary •
+
+    $default  reduce using rule 134 (unary)
+
+
+State 145
+
+  135 unary: DECREMENT primary •
+
+    $default  reduce using rule 135 (unary)
+
+
+State 146
+
+  163 enumDef: IDENTIFIER DOUBLE_COLON • IDENTIFIER
+
+    IDENTIFIER  shift, and go to state 208
+
+
+State 147
+
+  154 subprogramCall: IDENTIFIER '(' • ')'
+  155               | IDENTIFIER '(' • arguments ')'
+
+    INT_LITERAL      shift, and go to state 85
+    FLOAT_LITERAL    shift, and go to state 86
+    STRING_LITERAL   shift, and go to state 87
+    CHAR_LITERAL     shift, and go to state 88
+    BOOLEAN_LITERAL  shift, and go to state 89
+    USIZE            shift, and go to state 9
+    U8               shift, and go to state 10
+    U16              shift, and go to state 11
+    U32              shift, and go to state 12
+    U64              shift, and go to state 13
+    I8               shift, and go to state 14
+    I16              shift, and go to state 15
+    I32              shift, and go to state 16
+    I64              shift, and go to state 17
+    F32              shift, and go to state 18
+    F64              shift, and go to state 19
+    BOOL             shift, and go to state 20
+    STRING           shift, and go to state 21
+    CHAR             shift, and go to state 22
+    NOT              shift, and go to state 90
+    NEW              shift, and go to state 91
+    INCREMENT        shift, and go to state 92
+    DECREMENT        shift, and go to state 93
+    IDENTIFIER       shift, and go to state 94
+    '('              shift, and go to state 95
+    ')'              shift, and go to state 209
+    '['              shift, and go to state 96
+    '+'              shift, and go to state 97
+    '-'              shift, and go to state 98
+    '*'              shift, and go to state 99
+    '&'              shift, and go to state 100
+    '#'              shift, and go to state 101
+
+    type             go to state 102
+    expr             go to state 210
+    logicalOr        go to state 104
+    logicalAnd       go to state 105
+    comparison       go to state 106
+    equality         go to state 107
+    term             go to state 108
+    factor           go to state 109
+    cast             go to state 110
+    addressOf        go to state 111
+    dereference      go to state 112
+    negation         go to state 113
+    unary            go to state 114
+    primary          go to state 115
+    literal          go to state 116
+    subprogramCall   go to state 117
+    arguments        go to state 211
+    arrayDef         go to state 118
+    enumDef          go to state 119
+    compoundTypeDef  go to state 120
+
+
+State 148
+
+  105 type: type • '[' ']'
+  126 cast: '(' type • ')' addressOf
+
+    ')'  shift, and go to state 212
+    '['  shift, and go to state 51
+
+
+State 149
+
+  158 arrayDef: '[' ']' •
+
+    $default  reduce using rule 158 (arrayDef)
+
+
+State 150
+
+  160 commaSeparatedExpr: expr •
+  161                   | expr • ','
+  162                   | expr • ',' commaSeparatedExpr
+
+    ','  shift, and go to state 213
+
+    $default  reduce using rule 160 (commaSeparatedExpr)
+
+
+State 151
+
+  159 arrayDef: '[' commaSeparatedExpr • ']'
+
+    ']'  shift, and go to state 214
+
+
+State 152
+
+  138 unary: '+' primary •
+
+    $default  reduce using rule 138 (unary)
+
+
+State 153
+
+  139 unary: '-' primary •
+
+    $default  reduce using rule 139 (unary)
+
+
+State 154
+
+  130 dereference: '*' negation •
+
+    $default  reduce using rule 130 (dereference)
+
+
+State 155
+
+  128 addressOf: '&' dereference •
+
+    $default  reduce using rule 128 (addressOf)
+
+
+State 156
+
+  140 unary: '#' primary •
+
+    $default  reduce using rule 140 (unary)
+
+
+State 157
+
+  164 compoundTypeDef: type '{' • '}'
+  165                | type '{' • compoundTypeFields '}'
+
+    USIZE       shift, and go to state 9
+    U8          shift, and go to state 10
+    U16         shift, and go to state 11
+    U32         shift, and go to state 12
+    U64         shift, and go to state 13
+    I8          shift, and go to state 14
+    I16         shift, and go to state 15
+    I32         shift, and go to state 16
+    I64         shift, and go to state 17
+    F32         shift, and go to state 18
+    F64         shift, and go to state 19
+    BOOL        shift, and go to state 20
+    STRING      shift, and go to state 21
+    CHAR        shift, and go to state 22
+    IDENTIFIER  shift, and go to state 24
+    '}'         shift, and go to state 215
+
+    type                go to state 216
+    compoundTypeFields  go to state 217
+
+
+State 158
+
+   13 varDecl: type IDENTIFIER '=' expr ';' •
+
+    $default  reduce using rule 13 (varDecl)
+
+
+State 159
+
+  107 logicalOr: logicalOr OR • logicalAnd
+
+    INT_LITERAL      shift, and go to state 85
+    FLOAT_LITERAL    shift, and go to state 86
+    STRING_LITERAL   shift, and go to state 87
+    CHAR_LITERAL     shift, and go to state 88
+    BOOLEAN_LITERAL  shift, and go to state 89
+    USIZE            shift, and go to state 9
+    U8               shift, and go to state 10
+    U16              shift, and go to state 11
+    U32              shift, and go to state 12
+    U64              shift, and go to state 13
+    I8               shift, and go to state 14
+    I16              shift, and go to state 15
+    I32              shift, and go to state 16
+    I64              shift, and go to state 17
+    F32              shift, and go to state 18
+    F64              shift, and go to state 19
+    BOOL             shift, and go to state 20
+    STRING           shift, and go to state 21
+    CHAR             shift, and go to state 22
+    NOT              shift, and go to state 90
+    NEW              shift, and go to state 91
+    INCREMENT        shift, and go to state 92
+    DECREMENT        shift, and go to state 93
+    IDENTIFIER       shift, and go to state 94
+    '('              shift, and go to state 95
+    '['              shift, and go to state 96
+    '+'              shift, and go to state 97
+    '-'              shift, and go to state 98
+    '*'              shift, and go to state 99
+    '&'              shift, and go to state 100
+    '#'              shift, and go to state 101
+
+    type             go to state 102
+    logicalAnd       go to state 218
+    comparison       go to state 106
+    equality         go to state 107
+    term             go to state 108
+    factor           go to state 109
+    cast             go to state 110
+    addressOf        go to state 111
+    dereference      go to state 112
+    negation         go to state 113
+    unary            go to state 114
+    primary          go to state 115
+    literal          go to state 116
+    subprogramCall   go to state 117
+    arrayDef         go to state 118
+    enumDef          go to state 119
+    compoundTypeDef  go to state 120
+
+
+State 160
+
+  109 logicalAnd: logicalAnd AND • comparison
+
+    INT_LITERAL      shift, and go to state 85
+    FLOAT_LITERAL    shift, and go to state 86
+    STRING_LITERAL   shift, and go to state 87
+    CHAR_LITERAL     shift, and go to state 88
+    BOOLEAN_LITERAL  shift, and go to state 89
+    USIZE            shift, and go to state 9
+    U8               shift, and go to state 10
+    U16              shift, and go to state 11
+    U32              shift, and go to state 12
+    U64              shift, and go to state 13
+    I8               shift, and go to state 14
+    I16              shift, and go to state 15
+    I32              shift, and go to state 16
+    I64              shift, and go to state 17
+    F32              shift, and go to state 18
+    F64              shift, and go to state 19
+    BOOL             shift, and go to state 20
+    STRING           shift, and go to state 21
+    CHAR             shift, and go to state 22
+    NOT              shift, and go to state 90
+    NEW              shift, and go to state 91
+    INCREMENT        shift, and go to state 92
+    DECREMENT        shift, and go to state 93
+    IDENTIFIER       shift, and go to state 94
+    '('              shift, and go to state 95
+    '['              shift, and go to state 96
+    '+'              shift, and go to state 97
+    '-'              shift, and go to state 98
+    '*'              shift, and go to state 99
+    '&'              shift, and go to state 100
+    '#'              shift, and go to state 101
+
+    type             go to state 102
+    comparison       go to state 219
+    equality         go to state 107
+    term             go to state 108
+    factor           go to state 109
+    cast             go to state 110
+    addressOf        go to state 111
+    dereference      go to state 112
+    negation         go to state 113
+    unary            go to state 114
+    primary          go to state 115
+    literal          go to state 116
+    subprogramCall   go to state 117
+    arrayDef         go to state 118
+    enumDef          go to state 119
+    compoundTypeDef  go to state 120
+
+
+State 161
+
+  113 comparison: comparison LESS_THAN_EQUALS • equality
+
+    INT_LITERAL      shift, and go to state 85
+    FLOAT_LITERAL    shift, and go to state 86
+    STRING_LITERAL   shift, and go to state 87
+    CHAR_LITERAL     shift, and go to state 88
+    BOOLEAN_LITERAL  shift, and go to state 89
+    USIZE            shift, and go to state 9
+    U8               shift, and go to state 10
+    U16              shift, and go to state 11
+    U32              shift, and go to state 12
+    U64              shift, and go to state 13
+    I8               shift, and go to state 14
+    I16              shift, and go to state 15
+    I32              shift, and go to state 16
+    I64              shift, and go to state 17
+    F32              shift, and go to state 18
+    F64              shift, and go to state 19
+    BOOL             shift, and go to state 20
+    STRING           shift, and go to state 21
+    CHAR             shift, and go to state 22
+    NOT              shift, and go to state 90
+    NEW              shift, and go to state 91
+    INCREMENT        shift, and go to state 92
+    DECREMENT        shift, and go to state 93
+    IDENTIFIER       shift, and go to state 94
+    '('              shift, and go to state 95
+    '['              shift, and go to state 96
+    '+'              shift, and go to state 97
+    '-'              shift, and go to state 98
+    '*'              shift, and go to state 99
+    '&'              shift, and go to state 100
+    '#'              shift, and go to state 101
+
+    type             go to state 102
+    equality         go to state 220
+    term             go to state 108
+    factor           go to state 109
+    cast             go to state 110
+    addressOf        go to state 111
+    dereference      go to state 112
+    negation         go to state 113
+    unary            go to state 114
+    primary          go to state 115
+    literal          go to state 116
+    subprogramCall   go to state 117
+    arrayDef         go to state 118
+    enumDef          go to state 119
+    compoundTypeDef  go to state 120
+
+
+State 162
+
+  114 comparison: comparison MORE_THAN_EQUALS • equality
+
+    INT_LITERAL      shift, and go to state 85
+    FLOAT_LITERAL    shift, and go to state 86
+    STRING_LITERAL   shift, and go to state 87
+    CHAR_LITERAL     shift, and go to state 88
+    BOOLEAN_LITERAL  shift, and go to state 89
+    USIZE            shift, and go to state 9
+    U8               shift, and go to state 10
+    U16              shift, and go to state 11
+    U32              shift, and go to state 12
+    U64              shift, and go to state 13
+    I8               shift, and go to state 14
+    I16              shift, and go to state 15
+    I32              shift, and go to state 16
+    I64              shift, and go to state 17
+    F32              shift, and go to state 18
+    F64              shift, and go to state 19
+    BOOL             shift, and go to state 20
+    STRING           shift, and go to state 21
+    CHAR             shift, and go to state 22
+    NOT              shift, and go to state 90
+    NEW              shift, and go to state 91
+    INCREMENT        shift, and go to state 92
+    DECREMENT        shift, and go to state 93
+    IDENTIFIER       shift, and go to state 94
+    '('              shift, and go to state 95
+    '['              shift, and go to state 96
+    '+'              shift, and go to state 97
+    '-'              shift, and go to state 98
+    '*'              shift, and go to state 99
+    '&'              shift, and go to state 100
+    '#'              shift, and go to state 101
+
+    type             go to state 102
+    equality         go to state 221
+    term             go to state 108
+    factor           go to state 109
+    cast             go to state 110
+    addressOf        go to state 111
+    dereference      go to state 112
+    negation         go to state 113
+    unary            go to state 114
+    primary          go to state 115
+    literal          go to state 116
+    subprogramCall   go to state 117
+    arrayDef         go to state 118
+    enumDef          go to state 119
+    compoundTypeDef  go to state 120
+
+
+State 163
+
+  111 comparison: comparison '<' • equality
+
+    INT_LITERAL      shift, and go to state 85
+    FLOAT_LITERAL    shift, and go to state 86
+    STRING_LITERAL   shift, and go to state 87
+    CHAR_LITERAL     shift, and go to state 88
+    BOOLEAN_LITERAL  shift, and go to state 89
+    USIZE            shift, and go to state 9
+    U8               shift, and go to state 10
+    U16              shift, and go to state 11
+    U32              shift, and go to state 12
+    U64              shift, and go to state 13
+    I8               shift, and go to state 14
+    I16              shift, and go to state 15
+    I32              shift, and go to state 16
+    I64              shift, and go to state 17
+    F32              shift, and go to state 18
+    F64              shift, and go to state 19
+    BOOL             shift, and go to state 20
+    STRING           shift, and go to state 21
+    CHAR             shift, and go to state 22
+    NOT              shift, and go to state 90
+    NEW              shift, and go to state 91
+    INCREMENT        shift, and go to state 92
+    DECREMENT        shift, and go to state 93
+    IDENTIFIER       shift, and go to state 94
+    '('              shift, and go to state 95
+    '['              shift, and go to state 96
+    '+'              shift, and go to state 97
+    '-'              shift, and go to state 98
+    '*'              shift, and go to state 99
+    '&'              shift, and go to state 100
+    '#'              shift, and go to state 101
+
+    type             go to state 102
+    equality         go to state 222
+    term             go to state 108
+    factor           go to state 109
+    cast             go to state 110
+    addressOf        go to state 111
+    dereference      go to state 112
+    negation         go to state 113
+    unary            go to state 114
+    primary          go to state 115
+    literal          go to state 116
+    subprogramCall   go to state 117
+    arrayDef         go to state 118
+    enumDef          go to state 119
+    compoundTypeDef  go to state 120
+
+
+State 164
+
+  112 comparison: comparison '>' • equality
+
+    INT_LITERAL      shift, and go to state 85
+    FLOAT_LITERAL    shift, and go to state 86
+    STRING_LITERAL   shift, and go to state 87
+    CHAR_LITERAL     shift, and go to state 88
+    BOOLEAN_LITERAL  shift, and go to state 89
+    USIZE            shift, and go to state 9
+    U8               shift, and go to state 10
+    U16              shift, and go to state 11
+    U32              shift, and go to state 12
+    U64              shift, and go to state 13
+    I8               shift, and go to state 14
+    I16              shift, and go to state 15
+    I32              shift, and go to state 16
+    I64              shift, and go to state 17
+    F32              shift, and go to state 18
+    F64              shift, and go to state 19
+    BOOL             shift, and go to state 20
+    STRING           shift, and go to state 21
+    CHAR             shift, and go to state 22
+    NOT              shift, and go to state 90
+    NEW              shift, and go to state 91
+    INCREMENT        shift, and go to state 92
+    DECREMENT        shift, and go to state 93
+    IDENTIFIER       shift, and go to state 94
+    '('              shift, and go to state 95
+    '['              shift, and go to state 96
+    '+'              shift, and go to state 97
+    '-'              shift, and go to state 98
+    '*'              shift, and go to state 99
+    '&'              shift, and go to state 100
+    '#'              shift, and go to state 101
+
+    type             go to state 102
+    equality         go to state 223
+    term             go to state 108
+    factor           go to state 109
+    cast             go to state 110
+    addressOf        go to state 111
+    dereference      go to state 112
+    negation         go to state 113
+    unary            go to state 114
+    primary          go to state 115
+    literal          go to state 116
+    subprogramCall   go to state 117
+    arrayDef         go to state 118
+    enumDef          go to state 119
+    compoundTypeDef  go to state 120
+
+
+State 165
+
+  116 equality: equality EQUALITY • term
+
+    INT_LITERAL      shift, and go to state 85
+    FLOAT_LITERAL    shift, and go to state 86
+    STRING_LITERAL   shift, and go to state 87
+    CHAR_LITERAL     shift, and go to state 88
+    BOOLEAN_LITERAL  shift, and go to state 89
+    USIZE            shift, and go to state 9
+    U8               shift, and go to state 10
+    U16              shift, and go to state 11
+    U32              shift, and go to state 12
+    U64              shift, and go to state 13
+    I8               shift, and go to state 14
+    I16              shift, and go to state 15
+    I32              shift, and go to state 16
+    I64              shift, and go to state 17
+    F32              shift, and go to state 18
+    F64              shift, and go to state 19
+    BOOL             shift, and go to state 20
+    STRING           shift, and go to state 21
+    CHAR             shift, and go to state 22
+    NOT              shift, and go to state 90
+    NEW              shift, and go to state 91
+    INCREMENT        shift, and go to state 92
+    DECREMENT        shift, and go to state 93
+    IDENTIFIER       shift, and go to state 94
+    '('              shift, and go to state 95
+    '['              shift, and go to state 96
+    '+'              shift, and go to state 97
+    '-'              shift, and go to state 98
+    '*'              shift, and go to state 99
+    '&'              shift, and go to state 100
+    '#'              shift, and go to state 101
+
+    type             go to state 102
+    term             go to state 224
+    factor           go to state 109
+    cast             go to state 110
+    addressOf        go to state 111
+    dereference      go to state 112
+    negation         go to state 113
+    unary            go to state 114
+    primary          go to state 115
+    literal          go to state 116
+    subprogramCall   go to state 117
+    arrayDef         go to state 118
+    enumDef          go to state 119
+    compoundTypeDef  go to state 120
+
+
+State 166
+
+  117 equality: equality INEQUALITY • term
+
+    INT_LITERAL      shift, and go to state 85
+    FLOAT_LITERAL    shift, and go to state 86
+    STRING_LITERAL   shift, and go to state 87
+    CHAR_LITERAL     shift, and go to state 88
+    BOOLEAN_LITERAL  shift, and go to state 89
+    USIZE            shift, and go to state 9
+    U8               shift, and go to state 10
+    U16              shift, and go to state 11
+    U32              shift, and go to state 12
+    U64              shift, and go to state 13
+    I8               shift, and go to state 14
+    I16              shift, and go to state 15
+    I32              shift, and go to state 16
+    I64              shift, and go to state 17
+    F32              shift, and go to state 18
+    F64              shift, and go to state 19
+    BOOL             shift, and go to state 20
+    STRING           shift, and go to state 21
+    CHAR             shift, and go to state 22
+    NOT              shift, and go to state 90
+    NEW              shift, and go to state 91
+    INCREMENT        shift, and go to state 92
+    DECREMENT        shift, and go to state 93
+    IDENTIFIER       shift, and go to state 94
+    '('              shift, and go to state 95
+    '['              shift, and go to state 96
+    '+'              shift, and go to state 97
+    '-'              shift, and go to state 98
+    '*'              shift, and go to state 99
+    '&'              shift, and go to state 100
+    '#'              shift, and go to state 101
+
+    type             go to state 102
+    term             go to state 225
+    factor           go to state 109
+    cast             go to state 110
+    addressOf        go to state 111
+    dereference      go to state 112
+    negation         go to state 113
+    unary            go to state 114
+    primary          go to state 115
+    literal          go to state 116
+    subprogramCall   go to state 117
+    arrayDef         go to state 118
+    enumDef          go to state 119
+    compoundTypeDef  go to state 120
+
+
+State 167
+
+  119 term: term '+' • factor
+
+    INT_LITERAL      shift, and go to state 85
+    FLOAT_LITERAL    shift, and go to state 86
+    STRING_LITERAL   shift, and go to state 87
+    CHAR_LITERAL     shift, and go to state 88
+    BOOLEAN_LITERAL  shift, and go to state 89
+    USIZE            shift, and go to state 9
+    U8               shift, and go to state 10
+    U16              shift, and go to state 11
+    U32              shift, and go to state 12
+    U64              shift, and go to state 13
+    I8               shift, and go to state 14
+    I16              shift, and go to state 15
+    I32              shift, and go to state 16
+    I64              shift, and go to state 17
+    F32              shift, and go to state 18
+    F64              shift, and go to state 19
+    BOOL             shift, and go to state 20
+    STRING           shift, and go to state 21
+    CHAR             shift, and go to state 22
+    NOT              shift, and go to state 90
+    NEW              shift, and go to state 91
+    INCREMENT        shift, and go to state 92
+    DECREMENT        shift, and go to state 93
+    IDENTIFIER       shift, and go to state 94
+    '('              shift, and go to state 95
+    '['              shift, and go to state 96
+    '+'              shift, and go to state 97
+    '-'              shift, and go to state 98
+    '*'              shift, and go to state 99
+    '&'              shift, and go to state 100
+    '#'              shift, and go to state 101
+
+    type             go to state 102
+    factor           go to state 226
+    cast             go to state 110
+    addressOf        go to state 111
+    dereference      go to state 112
+    negation         go to state 113
+    unary            go to state 114
+    primary          go to state 115
+    literal          go to state 116
+    subprogramCall   go to state 117
+    arrayDef         go to state 118
+    enumDef          go to state 119
+    compoundTypeDef  go to state 120
+
+
+State 168
+
+  120 term: term '-' • factor
+
+    INT_LITERAL      shift, and go to state 85
+    FLOAT_LITERAL    shift, and go to state 86
+    STRING_LITERAL   shift, and go to state 87
+    CHAR_LITERAL     shift, and go to state 88
+    BOOLEAN_LITERAL  shift, and go to state 89
+    USIZE            shift, and go to state 9
+    U8               shift, and go to state 10
+    U16              shift, and go to state 11
+    U32              shift, and go to state 12
+    U64              shift, and go to state 13
+    I8               shift, and go to state 14
+    I16              shift, and go to state 15
+    I32              shift, and go to state 16
+    I64              shift, and go to state 17
+    F32              shift, and go to state 18
+    F64              shift, and go to state 19
+    BOOL             shift, and go to state 20
+    STRING           shift, and go to state 21
+    CHAR             shift, and go to state 22
+    NOT              shift, and go to state 90
+    NEW              shift, and go to state 91
+    INCREMENT        shift, and go to state 92
+    DECREMENT        shift, and go to state 93
+    IDENTIFIER       shift, and go to state 94
+    '('              shift, and go to state 95
+    '['              shift, and go to state 96
+    '+'              shift, and go to state 97
+    '-'              shift, and go to state 98
+    '*'              shift, and go to state 99
+    '&'              shift, and go to state 100
+    '#'              shift, and go to state 101
+
+    type             go to state 102
+    factor           go to state 227
+    cast             go to state 110
+    addressOf        go to state 111
+    dereference      go to state 112
+    negation         go to state 113
+    unary            go to state 114
+    primary          go to state 115
+    literal          go to state 116
+    subprogramCall   go to state 117
+    arrayDef         go to state 118
+    enumDef          go to state 119
+    compoundTypeDef  go to state 120
+
+
+State 169
+
+  122 factor: factor '*' • cast
+
+    INT_LITERAL      shift, and go to state 85
+    FLOAT_LITERAL    shift, and go to state 86
+    STRING_LITERAL   shift, and go to state 87
+    CHAR_LITERAL     shift, and go to state 88
+    BOOLEAN_LITERAL  shift, and go to state 89
+    USIZE            shift, and go to state 9
+    U8               shift, and go to state 10
+    U16              shift, and go to state 11
+    U32              shift, and go to state 12
+    U64              shift, and go to state 13
+    I8               shift, and go to state 14
+    I16              shift, and go to state 15
+    I32              shift, and go to state 16
+    I64              shift, and go to state 17
+    F32              shift, and go to state 18
+    F64              shift, and go to state 19
+    BOOL             shift, and go to state 20
+    STRING           shift, and go to state 21
+    CHAR             shift, and go to state 22
+    NOT              shift, and go to state 90
+    NEW              shift, and go to state 91
+    INCREMENT        shift, and go to state 92
+    DECREMENT        shift, and go to state 93
+    IDENTIFIER       shift, and go to state 94
+    '('              shift, and go to state 95
+    '['              shift, and go to state 96
+    '+'              shift, and go to state 97
+    '-'              shift, and go to state 98
+    '*'              shift, and go to state 99
+    '&'              shift, and go to state 100
+    '#'              shift, and go to state 101
+
+    type             go to state 102
+    cast             go to state 228
+    addressOf        go to state 111
+    dereference      go to state 112
+    negation         go to state 113
+    unary            go to state 114
+    primary          go to state 115
+    literal          go to state 116
+    subprogramCall   go to state 117
+    arrayDef         go to state 118
+    enumDef          go to state 119
+    compoundTypeDef  go to state 120
+
+
+State 170
+
+  123 factor: factor '/' • cast
+
+    INT_LITERAL      shift, and go to state 85
+    FLOAT_LITERAL    shift, and go to state 86
+    STRING_LITERAL   shift, and go to state 87
+    CHAR_LITERAL     shift, and go to state 88
+    BOOLEAN_LITERAL  shift, and go to state 89
+    USIZE            shift, and go to state 9
+    U8               shift, and go to state 10
+    U16              shift, and go to state 11
+    U32              shift, and go to state 12
+    U64              shift, and go to state 13
+    I8               shift, and go to state 14
+    I16              shift, and go to state 15
+    I32              shift, and go to state 16
+    I64              shift, and go to state 17
+    F32              shift, and go to state 18
+    F64              shift, and go to state 19
+    BOOL             shift, and go to state 20
+    STRING           shift, and go to state 21
+    CHAR             shift, and go to state 22
+    NOT              shift, and go to state 90
+    NEW              shift, and go to state 91
+    INCREMENT        shift, and go to state 92
+    DECREMENT        shift, and go to state 93
+    IDENTIFIER       shift, and go to state 94
+    '('              shift, and go to state 95
+    '['              shift, and go to state 96
+    '+'              shift, and go to state 97
+    '-'              shift, and go to state 98
+    '*'              shift, and go to state 99
+    '&'              shift, and go to state 100
+    '#'              shift, and go to state 101
+
+    type             go to state 102
+    cast             go to state 229
+    addressOf        go to state 111
+    dereference      go to state 112
+    negation         go to state 113
+    unary            go to state 114
+    primary          go to state 115
+    literal          go to state 116
+    subprogramCall   go to state 117
+    arrayDef         go to state 118
+    enumDef          go to state 119
+    compoundTypeDef  go to state 120
+
+
+State 171
+
+  124 factor: factor '%' • cast
+
+    INT_LITERAL      shift, and go to state 85
+    FLOAT_LITERAL    shift, and go to state 86
+    STRING_LITERAL   shift, and go to state 87
+    CHAR_LITERAL     shift, and go to state 88
+    BOOLEAN_LITERAL  shift, and go to state 89
+    USIZE            shift, and go to state 9
+    U8               shift, and go to state 10
+    U16              shift, and go to state 11
+    U32              shift, and go to state 12
+    U64              shift, and go to state 13
+    I8               shift, and go to state 14
+    I16              shift, and go to state 15
+    I32              shift, and go to state 16
+    I64              shift, and go to state 17
+    F32              shift, and go to state 18
+    F64              shift, and go to state 19
+    BOOL             shift, and go to state 20
+    STRING           shift, and go to state 21
+    CHAR             shift, and go to state 22
+    NOT              shift, and go to state 90
+    NEW              shift, and go to state 91
+    INCREMENT        shift, and go to state 92
+    DECREMENT        shift, and go to state 93
+    IDENTIFIER       shift, and go to state 94
+    '('              shift, and go to state 95
+    '['              shift, and go to state 96
+    '+'              shift, and go to state 97
+    '-'              shift, and go to state 98
+    '*'              shift, and go to state 99
+    '&'              shift, and go to state 100
+    '#'              shift, and go to state 101
+
+    type             go to state 102
+    cast             go to state 230
+    addressOf        go to state 111
+    dereference      go to state 112
+    negation         go to state 113
+    unary            go to state 114
+    primary          go to state 115
+    literal          go to state 116
+    subprogramCall   go to state 117
+    arrayDef         go to state 118
+    enumDef          go to state 119
+    compoundTypeDef  go to state 120
+
+
+State 172
+
+  136 unary: primary INCREMENT •
+
+    $default  reduce using rule 136 (unary)
+
+
+State 173
+
+  137 unary: primary DECREMENT •
+
+    $default  reduce using rule 137 (unary)
+
+
+State 174
+
+   19 func: FUNC IDENTIFIER '(' ')' ':' type • block
+  105 type: type • '[' ']'
+
+    '{'  shift, and go to state 125
+    '['  shift, and go to state 51
+
+    block  go to state 231
+
+
+State 175
+
+   20 func: FUNC IDENTIFIER '(' params ')' ':' • type block
+
+    USIZE       shift, and go to state 9
+    U8          shift, and go to state 10
+    U16         shift, and go to state 11
+    U32         shift, and go to state 12
+    U64         shift, and go to state 13
+    I8          shift, and go to state 14
+    I16         shift, and go to state 15
+    I32         shift, and go to state 16
+    I64         shift, and go to state 17
+    F32         shift, and go to state 18
+    F64         shift, and go to state 19
+    BOOL        shift, and go to state 20
+    STRING      shift, and go to state 21
+    CHAR        shift, and go to state 22
+    IDENTIFIER  shift, and go to state 24
+
+    type  go to state 232
+
+
+State 176
+
+   82 params: params ',' field •
+
+    $default  reduce using rule 82 (params)
+
+
+State 177
+
+   72 if: IF • '(' expr ')' block
+   73   | IF • '(' expr ')' block elseifs
+   74   | IF • '(' expr ')' block ELSE block
+   75   | IF • '(' expr ')' block elseifs ELSE block
+
+    '('  shift, and go to state 233
+
+
+State 178
+
+   48 while: WHILE • '(' expr ')' block
+
+    '('  shift, and go to state 234
+
+
+State 179
+
+   49 for: FOR • '(' forHeader ')' block
+
+    '('  shift, and go to state 235
+
+
+State 180
+
+   57 foreach: FOREACH • '(' type IDENTIFIER ':' IDENTIFIER ')' block
+   58        | FOREACH • '(' typequalifier type IDENTIFIER ':' IDENTIFIER ')' block
+
+    '('  shift, and go to state 236
+
+
+State 181
+
+   70 return: RETURN • ';'
+   71       | RETURN • expr ';'
+
+    INT_LITERAL      shift, and go to state 85
+    FLOAT_LITERAL    shift, and go to state 86
+    STRING_LITERAL   shift, and go to state 87
+    CHAR_LITERAL     shift, and go to state 88
+    BOOLEAN_LITERAL  shift, and go to state 89
+    USIZE            shift, and go to state 9
+    U8               shift, and go to state 10
+    U16              shift, and go to state 11
+    U32              shift, and go to state 12
+    U64              shift, and go to state 13
+    I8               shift, and go to state 14
+    I16              shift, and go to state 15
+    I32              shift, and go to state 16
+    I64              shift, and go to state 17
+    F32              shift, and go to state 18
+    F64              shift, and go to state 19
+    BOOL             shift, and go to state 20
+    STRING           shift, and go to state 21
+    CHAR             shift, and go to state 22
+    NOT              shift, and go to state 90
+    NEW              shift, and go to state 91
+    INCREMENT        shift, and go to state 92
+    DECREMENT        shift, and go to state 93
+    IDENTIFIER       shift, and go to state 94
+    ';'              shift, and go to state 237
+    '('              shift, and go to state 95
+    '['              shift, and go to state 96
+    '+'              shift, and go to state 97
+    '-'              shift, and go to state 98
+    '*'              shift, and go to state 99
+    '&'              shift, and go to state 100
+    '#'              shift, and go to state 101
+
+    type             go to state 102
+    expr             go to state 238
+    logicalOr        go to state 104
+    logicalAnd       go to state 105
+    comparison       go to state 106
+    equality         go to state 107
+    term             go to state 108
+    factor           go to state 109
+    cast             go to state 110
+    addressOf        go to state 111
+    dereference      go to state 112
+    negation         go to state 113
+    unary            go to state 114
+    primary          go to state 115
+    literal          go to state 116
+    subprogramCall   go to state 117
+    arrayDef         go to state 118
+    enumDef          go to state 119
+    compoundTypeDef  go to state 120
+
+
+State 182
+
+   40 statement: BREAK • ';'
+
+    ';'  shift, and go to state 239
+
+
+State 183
+
+   41 statement: CONTINUE • ';'
+
+    ';'  shift, and go to state 240
+
+
+State 184
+
+   59 match: MATCH • '(' expr ')' '{' matchCases '}'
+   60      | MATCH • '(' expr ')' '{' matchCases ',' '}'
+
+    '('  shift, and go to state 241
+
+
+State 185
+
+   43 statement: DELETE • expr ';'
+
+    INT_LITERAL      shift, and go to state 85
+    FLOAT_LITERAL    shift, and go to state 86
+    STRING_LITERAL   shift, and go to state 87
+    CHAR_LITERAL     shift, and go to state 88
+    BOOLEAN_LITERAL  shift, and go to state 89
+    USIZE            shift, and go to state 9
+    U8               shift, and go to state 10
+    U16              shift, and go to state 11
+    U32              shift, and go to state 12
+    U64              shift, and go to state 13
+    I8               shift, and go to state 14
+    I16              shift, and go to state 15
+    I32              shift, and go to state 16
+    I64              shift, and go to state 17
+    F32              shift, and go to state 18
+    F64              shift, and go to state 19
+    BOOL             shift, and go to state 20
+    STRING           shift, and go to state 21
+    CHAR             shift, and go to state 22
+    NOT              shift, and go to state 90
+    NEW              shift, and go to state 91
+    INCREMENT        shift, and go to state 92
+    DECREMENT        shift, and go to state 93
+    IDENTIFIER       shift, and go to state 94
+    '('              shift, and go to state 95
+    '['              shift, and go to state 96
+    '+'              shift, and go to state 97
+    '-'              shift, and go to state 98
+    '*'              shift, and go to state 99
+    '&'              shift, and go to state 100
+    '#'              shift, and go to state 101
+
+    type             go to state 102
+    expr             go to state 242
+    logicalOr        go to state 104
+    logicalAnd       go to state 105
+    comparison       go to state 106
+    equality         go to state 107
+    term             go to state 108
+    factor           go to state 109
+    cast             go to state 110
+    addressOf        go to state 111
+    dereference      go to state 112
+    negation         go to state 113
+    unary            go to state 114
+    primary          go to state 115
+    literal          go to state 116
+    subprogramCall   go to state 117
+    arrayDef         go to state 118
+    enumDef          go to state 119
+    compoundTypeDef  go to state 120
+
+
+State 186
+
+   42 statement: PRINT • expr ';'
+
+    INT_LITERAL      shift, and go to state 85
+    FLOAT_LITERAL    shift, and go to state 86
+    STRING_LITERAL   shift, and go to state 87
+    CHAR_LITERAL     shift, and go to state 88
+    BOOLEAN_LITERAL  shift, and go to state 89
+    USIZE            shift, and go to state 9
+    U8               shift, and go to state 10
+    U16              shift, and go to state 11
+    U32              shift, and go to state 12
+    U64              shift, and go to state 13
+    I8               shift, and go to state 14
+    I16              shift, and go to state 15
+    I32              shift, and go to state 16
+    I64              shift, and go to state 17
+    F32              shift, and go to state 18
+    F64              shift, and go to state 19
+    BOOL             shift, and go to state 20
+    STRING           shift, and go to state 21
+    CHAR             shift, and go to state 22
+    NOT              shift, and go to state 90
+    NEW              shift, and go to state 91
+    INCREMENT        shift, and go to state 92
+    DECREMENT        shift, and go to state 93
+    IDENTIFIER       shift, and go to state 94
+    '('              shift, and go to state 95
+    '['              shift, and go to state 96
+    '+'              shift, and go to state 97
+    '-'              shift, and go to state 98
+    '*'              shift, and go to state 99
+    '&'              shift, and go to state 100
+    '#'              shift, and go to state 101
+
+    type             go to state 102
+    expr             go to state 243
+    logicalOr        go to state 104
+    logicalAnd       go to state 105
+    comparison       go to state 106
+    equality         go to state 107
+    term             go to state 108
+    factor           go to state 109
+    cast             go to state 110
+    addressOf        go to state 111
+    dereference      go to state 112
+    negation         go to state 113
+    unary            go to state 114
+    primary          go to state 115
+    literal          go to state 116
+    subprogramCall   go to state 117
+    arrayDef         go to state 118
+    enumDef          go to state 119
+    compoundTypeDef  go to state 120
+
+
+State 187
+
+   47 assignment: IDENTIFIER • '=' expr ';'
+  104 type: IDENTIFIER •
+
+    '='  shift, and go to state 244
+
+    $default  reduce using rule 104 (type)
+
+
+State 188
+
+  169 block: '{' '}' •
+
+    $default  reduce using rule 169 (block)
+
+
+State 189
+
+   35 statement: varDecl •
+
+    $default  reduce using rule 35 (statement)
+
+
+State 190
+
+   34 statements: statements • statement
+  170 block: '{' statements • '}'
+
+    IF          shift, and go to state 177
+    WHILE       shift, and go to state 178
+    FOR         shift, and go to state 179
+    FOREACH     shift, and go to state 180
+    RETURN      shift, and go to state 181
+    BREAK       shift, and go to state 182
+    CONTINUE    shift, and go to state 183
+    MATCH       shift, and go to state 184
+    CONST       shift, and go to state 7
+    STATIC      shift, and go to state 8
+    USIZE       shift, and go to state 9
+    U8          shift, and go to state 10
+    U16         shift, and go to state 11
+    U32         shift, and go to state 12
+    U64         shift, and go to state 13
+    I8          shift, and go to state 14
+    I16         shift, and go to state 15
+    I32         shift, and go to state 16
+    I64         shift, and go to state 17
+    F32         shift, and go to state 18
+    F64         shift, and go to state 19
+    BOOL        shift, and go to state 20
+    STRING      shift, and go to state 21
+    CHAR        shift, and go to state 22
+    DELETE      shift, and go to state 185
+    PRINT       shift, and go to state 186
+    IDENTIFIER  shift, and go to state 187
+    '}'         shift, and go to state 245
+
+    varDecl         go to state 189
+    statement       go to state 246
+    assignment      go to state 192
+    while           go to state 193
+    for             go to state 194
+    foreach         go to state 195
+    match           go to state 196
+    return          go to state 197
+    if              go to state 198
+    typequalifiers  go to state 36
+    typequalifier   go to state 37
+    type            go to state 38
+
+
+State 191
+
+   33 statements: statement •
+
+    $default  reduce using rule 33 (statements)
+
+
+State 192
+
+   36 statement: assignment •
+
+    $default  reduce using rule 36 (statement)
+
+
+State 193
+
+   37 statement: while •
+
+    $default  reduce using rule 37 (statement)
+
+
+State 194
+
+   38 statement: for •
+
+    $default  reduce using rule 38 (statement)
+
+
+State 195
+
+   39 statement: foreach •
+
+    $default  reduce using rule 39 (statement)
+
+
+State 196
+
+   44 statement: match •
+
+    $default  reduce using rule 44 (statement)
+
+
+State 197
+
+   45 statement: return •
+
+    $default  reduce using rule 45 (statement)
+
+
+State 198
+
+   46 statement: if •
+
+    $default  reduce using rule 46 (statement)
+
+
+State 199
+
+   18 proc: PROC IDENTIFIER '(' params ')' block •
+
+    $default  reduce using rule 18 (proc)
+
+
+State 200
+
+   25 enumValues: IDENTIFIER '=' INT_LITERAL •
+   26           | IDENTIFIER '=' INT_LITERAL • ','
+
+    ','  shift, and go to state 247
+
+    $default  reduce using rule 25 (enumValues)
+
+
+State 201
+
+   27 enumValues: enumValues IDENTIFIER '=' • INT_LITERAL ','
+
+    INT_LITERAL  shift, and go to state 248
+
+
+State 202
+
+   22 enum: ENUM IDENTIFIER '<' type '>' '{' • enumValues '}'
+
+    IDENTIFIER  shift, and go to state 72
+
+    enumValues  go to state 249
+
+
+State 203
+
+   80 fields: fields field ';' •
+
+    $default  reduce using rule 80 (fields)
+
+
+State 204
+
+   30 struct: STRUCT IDENTIFIER '<' types '>' '{' • fields '}'
+
+    USIZE       shift, and go to state 9
+    U8          shift, and go to state 10
+    U16         shift, and go to state 11
+    U32         shift, and go to state 12
+    U64         shift, and go to state 13
+    I8          shift, and go to state 14
+    I16         shift, and go to state 15
+    I32         shift, and go to state 16
+    I64         shift, and go to state 17
+    F32         shift, and go to state 18
+    F64         shift, and go to state 19
+    BOOL        shift, and go to state 20
+    STRING      shift, and go to state 21
+    CHAR        shift, and go to state 22
+    IDENTIFIER  shift, and go to state 24
+
+    fields  go to state 250
+    field   go to state 76
+    type    go to state 69
+
+
+State 205
+
+   89 types: types ',' type •
+  105 type: type • '[' ']'
+
+    '['  shift, and go to state 51
+
+    $default  reduce using rule 89 (types)
+
+
+State 206
+
+   32 tuple: TUPLE IDENTIFIER '<' types '>' '{' • types '}'
+
+    USIZE       shift, and go to state 9
+    U8          shift, and go to state 10
+    U16         shift, and go to state 11
+    U32         shift, and go to state 12
+    U64         shift, and go to state 13
+    I8          shift, and go to state 14
+    I16         shift, and go to state 15
+    I32         shift, and go to state 16
+    I64         shift, and go to state 17
+    F32         shift, and go to state 18
+    F64         shift, and go to state 19
+    BOOL        shift, and go to state 20
+    STRING      shift, and go to state 21
+    CHAR        shift, and go to state 22
+    IDENTIFIER  shift, and go to state 24
+
+    types  go to state 251
+    type   go to state 79
+
+
+State 207
+
+   15 varDecl: typequalifiers type IDENTIFIER '=' expr ';' •
+
+    $default  reduce using rule 15 (varDecl)
+
+
+State 208
+
+  163 enumDef: IDENTIFIER DOUBLE_COLON IDENTIFIER •
+
+    $default  reduce using rule 163 (enumDef)
+
+
+State 209
+
+  154 subprogramCall: IDENTIFIER '(' ')' •
+
+    $default  reduce using rule 154 (subprogramCall)
+
+
+State 210
+
+  156 arguments: expr •
+
+    $default  reduce using rule 156 (arguments)
+
+
+State 211
+
+  155 subprogramCall: IDENTIFIER '(' arguments • ')'
+  157 arguments: arguments • ',' expr
+
+    ')'  shift, and go to state 252
+    ','  shift, and go to state 253
+
+
+State 212
+
+  126 cast: '(' type ')' • addressOf
+
+    INT_LITERAL      shift, and go to state 85
+    FLOAT_LITERAL    shift, and go to state 86
+    STRING_LITERAL   shift, and go to state 87
+    CHAR_LITERAL     shift, and go to state 88
+    BOOLEAN_LITERAL  shift, and go to state 89
+    USIZE            shift, and go to state 9
+    U8               shift, and go to state 10
+    U16              shift, and go to state 11
+    U32              shift, and go to state 12
+    U64              shift, and go to state 13
+    I8               shift, and go to state 14
+    I16              shift, and go to state 15
+    I32              shift, and go to state 16
+    I64              shift, and go to state 17
+    F32              shift, and go to state 18
+    F64              shift, and go to state 19
+    BOOL             shift, and go to state 20
+    STRING           shift, and go to state 21
+    CHAR             shift, and go to state 22
+    NOT              shift, and go to state 90
+    NEW              shift, and go to state 91
+    INCREMENT        shift, and go to state 92
+    DECREMENT        shift, and go to state 93
+    IDENTIFIER       shift, and go to state 94
+    '['              shift, and go to state 96
+    '+'              shift, and go to state 97
+    '-'              shift, and go to state 98
+    '*'              shift, and go to state 99
+    '&'              shift, and go to state 100
+    '#'              shift, and go to state 101
+
+    type             go to state 102
+    addressOf        go to state 254
+    dereference      go to state 112
+    negation         go to state 113
+    unary            go to state 114
+    primary          go to state 115
+    literal          go to state 116
+    subprogramCall   go to state 117
+    arrayDef         go to state 118
+    enumDef          go to state 119
+    compoundTypeDef  go to state 120
+
+
+State 213
+
+  161 commaSeparatedExpr: expr ',' •
+  162                   | expr ',' • commaSeparatedExpr
+
+    INT_LITERAL      shift, and go to state 85
+    FLOAT_LITERAL    shift, and go to state 86
+    STRING_LITERAL   shift, and go to state 87
+    CHAR_LITERAL     shift, and go to state 88
+    BOOLEAN_LITERAL  shift, and go to state 89
+    USIZE            shift, and go to state 9
+    U8               shift, and go to state 10
+    U16              shift, and go to state 11
+    U32              shift, and go to state 12
+    U64              shift, and go to state 13
+    I8               shift, and go to state 14
+    I16              shift, and go to state 15
+    I32              shift, and go to state 16
+    I64              shift, and go to state 17
+    F32              shift, and go to state 18
+    F64              shift, and go to state 19
+    BOOL             shift, and go to state 20
+    STRING           shift, and go to state 21
+    CHAR             shift, and go to state 22
+    NOT              shift, and go to state 90
+    NEW              shift, and go to state 91
+    INCREMENT        shift, and go to state 92
+    DECREMENT        shift, and go to state 93
+    IDENTIFIER       shift, and go to state 94
+    '('              shift, and go to state 95
+    '['              shift, and go to state 96
+    '+'              shift, and go to state 97
+    '-'              shift, and go to state 98
+    '*'              shift, and go to state 99
+    '&'              shift, and go to state 100
+    '#'              shift, and go to state 101
+
+    $default  reduce using rule 161 (commaSeparatedExpr)
+
+    type                go to state 102
+    expr                go to state 150
+    logicalOr           go to state 104
+    logicalAnd          go to state 105
+    comparison          go to state 106
+    equality            go to state 107
+    term                go to state 108
+    factor              go to state 109
+    cast                go to state 110
+    addressOf           go to state 111
+    dereference         go to state 112
+    negation            go to state 113
+    unary               go to state 114
+    primary             go to state 115
+    literal             go to state 116
+    subprogramCall      go to state 117
+    arrayDef            go to state 118
+    commaSeparatedExpr  go to state 255
+    enumDef             go to state 119
+    compoundTypeDef     go to state 120
+
+
+State 214
+
+  159 arrayDef: '[' commaSeparatedExpr ']' •
+
+    $default  reduce using rule 159 (arrayDef)
+
+
+State 215
+
+  164 compoundTypeDef: type '{' '}' •
+
+    $default  reduce using rule 164 (compoundTypeDef)
+
+
+State 216
+
+  105 type: type • '[' ']'
+  166 compoundTypeFields: type • ':' expr
+  167                   | type • ':' expr ','
+  168                   | type • ':' expr ',' compoundTypeFields
+
+    ':'  shift, and go to state 256
+    '['  shift, and go to state 51
+
+
+State 217
+
+  165 compoundTypeDef: type '{' compoundTypeFields • '}'
+
+    '}'  shift, and go to state 257
+
+
+State 218
+
+  107 logicalOr: logicalOr OR logicalAnd •
+  109 logicalAnd: logicalAnd • AND comparison
+
+    AND  shift, and go to state 160
+
+    $default  reduce using rule 107 (logicalOr)
+
+
+State 219
+
+  109 logicalAnd: logicalAnd AND comparison •
+  111 comparison: comparison • '<' equality
+  112           | comparison • '>' equality
+  113           | comparison • LESS_THAN_EQUALS equality
+  114           | comparison • MORE_THAN_EQUALS equality
+
+    LESS_THAN_EQUALS  shift, and go to state 161
+    MORE_THAN_EQUALS  shift, and go to state 162
+    '<'               shift, and go to state 163
+    '>'               shift, and go to state 164
+
+    $default  reduce using rule 109 (logicalAnd)
+
+
+State 220
+
+  113 comparison: comparison LESS_THAN_EQUALS equality •
+  116 equality: equality • EQUALITY term
+  117         | equality • INEQUALITY term
+
+    EQUALITY    shift, and go to state 165
+    INEQUALITY  shift, and go to state 166
+
+    $default  reduce using rule 113 (comparison)
+
+
+State 221
+
+  114 comparison: comparison MORE_THAN_EQUALS equality •
+  116 equality: equality • EQUALITY term
+  117         | equality • INEQUALITY term
+
+    EQUALITY    shift, and go to state 165
+    INEQUALITY  shift, and go to state 166
+
+    $default  reduce using rule 114 (comparison)
+
+
+State 222
+
+  111 comparison: comparison '<' equality •
+  116 equality: equality • EQUALITY term
+  117         | equality • INEQUALITY term
+
+    EQUALITY    shift, and go to state 165
+    INEQUALITY  shift, and go to state 166
+
+    $default  reduce using rule 111 (comparison)
+
+
+State 223
+
+  112 comparison: comparison '>' equality •
+  116 equality: equality • EQUALITY term
+  117         | equality • INEQUALITY term
+
+    EQUALITY    shift, and go to state 165
+    INEQUALITY  shift, and go to state 166
+
+    $default  reduce using rule 112 (comparison)
+
+
+State 224
+
+  116 equality: equality EQUALITY term •
+  119 term: term • '+' factor
+  120     | term • '-' factor
+
+    '+'  shift, and go to state 167
+    '-'  shift, and go to state 168
+
+    $default  reduce using rule 116 (equality)
+
+
+State 225
+
+  117 equality: equality INEQUALITY term •
+  119 term: term • '+' factor
+  120     | term • '-' factor
+
+    '+'  shift, and go to state 167
+    '-'  shift, and go to state 168
+
+    $default  reduce using rule 117 (equality)
+
+
+State 226
+
+  119 term: term '+' factor •
+  122 factor: factor • '*' cast
+  123       | factor • '/' cast
+  124       | factor • '%' cast
+
+    '*'  shift, and go to state 169
+    '/'  shift, and go to state 170
+    '%'  shift, and go to state 171
+
+    $default  reduce using rule 119 (term)
+
+
+State 227
+
+  120 term: term '-' factor •
+  122 factor: factor • '*' cast
+  123       | factor • '/' cast
+  124       | factor • '%' cast
+
+    '*'  shift, and go to state 169
+    '/'  shift, and go to state 170
+    '%'  shift, and go to state 171
+
+    $default  reduce using rule 120 (term)
+
+
+State 228
+
+  122 factor: factor '*' cast •
+
+    $default  reduce using rule 122 (factor)
+
+
+State 229
+
+  123 factor: factor '/' cast •
+
+    $default  reduce using rule 123 (factor)
+
+
+State 230
+
+  124 factor: factor '%' cast •
+
+    $default  reduce using rule 124 (factor)
+
+
+State 231
+
+   19 func: FUNC IDENTIFIER '(' ')' ':' type block •
+
+    $default  reduce using rule 19 (func)
+
+
+State 232
+
+   20 func: FUNC IDENTIFIER '(' params ')' ':' type • block
+  105 type: type • '[' ']'
+
+    '{'  shift, and go to state 125
+    '['  shift, and go to state 51
+
+    block  go to state 258
+
+
+State 233
+
+   72 if: IF '(' • expr ')' block
+   73   | IF '(' • expr ')' block elseifs
+   74   | IF '(' • expr ')' block ELSE block
+   75   | IF '(' • expr ')' block elseifs ELSE block
+
+    INT_LITERAL      shift, and go to state 85
+    FLOAT_LITERAL    shift, and go to state 86
+    STRING_LITERAL   shift, and go to state 87
+    CHAR_LITERAL     shift, and go to state 88
+    BOOLEAN_LITERAL  shift, and go to state 89
+    USIZE            shift, and go to state 9
+    U8               shift, and go to state 10
+    U16              shift, and go to state 11
+    U32              shift, and go to state 12
+    U64              shift, and go to state 13
+    I8               shift, and go to state 14
+    I16              shift, and go to state 15
+    I32              shift, and go to state 16
+    I64              shift, and go to state 17
+    F32              shift, and go to state 18
+    F64              shift, and go to state 19
+    BOOL             shift, and go to state 20
+    STRING           shift, and go to state 21
+    CHAR             shift, and go to state 22
+    NOT              shift, and go to state 90
+    NEW              shift, and go to state 91
+    INCREMENT        shift, and go to state 92
+    DECREMENT        shift, and go to state 93
+    IDENTIFIER       shift, and go to state 94
+    '('              shift, and go to state 95
+    '['              shift, and go to state 96
+    '+'              shift, and go to state 97
+    '-'              shift, and go to state 98
+    '*'              shift, and go to state 99
+    '&'              shift, and go to state 100
+    '#'              shift, and go to state 101
+
+    type             go to state 102
+    expr             go to state 259
+    logicalOr        go to state 104
+    logicalAnd       go to state 105
+    comparison       go to state 106
+    equality         go to state 107
+    term             go to state 108
+    factor           go to state 109
+    cast             go to state 110
+    addressOf        go to state 111
+    dereference      go to state 112
+    negation         go to state 113
+    unary            go to state 114
+    primary          go to state 115
+    literal          go to state 116
+    subprogramCall   go to state 117
+    arrayDef         go to state 118
+    enumDef          go to state 119
+    compoundTypeDef  go to state 120
+
+
+State 234
+
+   48 while: WHILE '(' • expr ')' block
+
+    INT_LITERAL      shift, and go to state 85
+    FLOAT_LITERAL    shift, and go to state 86
+    STRING_LITERAL   shift, and go to state 87
+    CHAR_LITERAL     shift, and go to state 88
+    BOOLEAN_LITERAL  shift, and go to state 89
+    USIZE            shift, and go to state 9
+    U8               shift, and go to state 10
+    U16              shift, and go to state 11
+    U32              shift, and go to state 12
+    U64              shift, and go to state 13
+    I8               shift, and go to state 14
+    I16              shift, and go to state 15
+    I32              shift, and go to state 16
+    I64              shift, and go to state 17
+    F32              shift, and go to state 18
+    F64              shift, and go to state 19
+    BOOL             shift, and go to state 20
+    STRING           shift, and go to state 21
+    CHAR             shift, and go to state 22
+    NOT              shift, and go to state 90
+    NEW              shift, and go to state 91
+    INCREMENT        shift, and go to state 92
+    DECREMENT        shift, and go to state 93
+    IDENTIFIER       shift, and go to state 94
+    '('              shift, and go to state 95
+    '['              shift, and go to state 96
+    '+'              shift, and go to state 97
+    '-'              shift, and go to state 98
+    '*'              shift, and go to state 99
+    '&'              shift, and go to state 100
+    '#'              shift, and go to state 101
+
+    type             go to state 102
+    expr             go to state 260
+    logicalOr        go to state 104
+    logicalAnd       go to state 105
+    comparison       go to state 106
+    equality         go to state 107
+    term             go to state 108
+    factor           go to state 109
+    cast             go to state 110
+    addressOf        go to state 111
+    dereference      go to state 112
+    negation         go to state 113
+    unary            go to state 114
+    primary          go to state 115
+    literal          go to state 116
+    subprogramCall   go to state 117
+    arrayDef         go to state 118
+    enumDef          go to state 119
+    compoundTypeDef  go to state 120
+
+
+State 235
+
+   49 for: FOR '(' • forHeader ')' block
+
+    IF          shift, and go to state 177
+    WHILE       shift, and go to state 178
+    FOR         shift, and go to state 179
+    FOREACH     shift, and go to state 180
+    RETURN      shift, and go to state 181
+    BREAK       shift, and go to state 182
+    CONTINUE    shift, and go to state 183
+    MATCH       shift, and go to state 184
+    CONST       shift, and go to state 7
+    STATIC      shift, and go to state 8
+    USIZE       shift, and go to state 9
+    U8          shift, and go to state 10
+    U16         shift, and go to state 11
+    U32         shift, and go to state 12
+    U64         shift, and go to state 13
+    I8          shift, and go to state 14
+    I16         shift, and go to state 15
+    I32         shift, and go to state 16
+    I64         shift, and go to state 17
+    F32         shift, and go to state 18
+    F64         shift, and go to state 19
+    BOOL        shift, and go to state 20
+    STRING      shift, and go to state 21
+    CHAR        shift, and go to state 22
+    DELETE      shift, and go to state 185
+    PRINT       shift, and go to state 186
+    IDENTIFIER  shift, and go to state 187
+    ';'         shift, and go to state 261
+
+    varDecl         go to state 189
+    statement       go to state 262
+    assignment      go to state 192
+    while           go to state 193
+    for             go to state 194
+    forHeader       go to state 263
+    foreach         go to state 195
+    match           go to state 196
+    return          go to state 197
+    if              go to state 198
+    typequalifiers  go to state 36
+    typequalifier   go to state 37
+    type            go to state 38
+
+
+State 236
+
+   57 foreach: FOREACH '(' • type IDENTIFIER ':' IDENTIFIER ')' block
+   58        | FOREACH '(' • typequalifier type IDENTIFIER ':' IDENTIFIER ')' block
+
+    CONST       shift, and go to state 7
+    STATIC      shift, and go to state 8
+    USIZE       shift, and go to state 9
+    U8          shift, and go to state 10
+    U16         shift, and go to state 11
+    U32         shift, and go to state 12
+    U64         shift, and go to state 13
+    I8          shift, and go to state 14
+    I16         shift, and go to state 15
+    I32         shift, and go to state 16
+    I64         shift, and go to state 17
+    F32         shift, and go to state 18
+    F64         shift, and go to state 19
+    BOOL        shift, and go to state 20
+    STRING      shift, and go to state 21
+    CHAR        shift, and go to state 22
+    IDENTIFIER  shift, and go to state 24
+
+    typequalifier  go to state 264
+    type           go to state 265
+
+
+State 237
+
+   70 return: RETURN ';' •
+
+    $default  reduce using rule 70 (return)
+
+
+State 238
+
+   71 return: RETURN expr • ';'
+
+    ';'  shift, and go to state 266
+
+
+State 239
+
+   40 statement: BREAK ';' •
+
+    $default  reduce using rule 40 (statement)
+
+
+State 240
+
+   41 statement: CONTINUE ';' •
+
+    $default  reduce using rule 41 (statement)
+
+
+State 241
+
+   59 match: MATCH '(' • expr ')' '{' matchCases '}'
+   60      | MATCH '(' • expr ')' '{' matchCases ',' '}'
+
+    INT_LITERAL      shift, and go to state 85
+    FLOAT_LITERAL    shift, and go to state 86
+    STRING_LITERAL   shift, and go to state 87
+    CHAR_LITERAL     shift, and go to state 88
+    BOOLEAN_LITERAL  shift, and go to state 89
+    USIZE            shift, and go to state 9
+    U8               shift, and go to state 10
+    U16              shift, and go to state 11
+    U32              shift, and go to state 12
+    U64              shift, and go to state 13
+    I8               shift, and go to state 14
+    I16              shift, and go to state 15
+    I32              shift, and go to state 16
+    I64              shift, and go to state 17
+    F32              shift, and go to state 18
+    F64              shift, and go to state 19
+    BOOL             shift, and go to state 20
+    STRING           shift, and go to state 21
+    CHAR             shift, and go to state 22
+    NOT              shift, and go to state 90
+    NEW              shift, and go to state 91
+    INCREMENT        shift, and go to state 92
+    DECREMENT        shift, and go to state 93
+    IDENTIFIER       shift, and go to state 94
+    '('              shift, and go to state 95
+    '['              shift, and go to state 96
+    '+'              shift, and go to state 97
+    '-'              shift, and go to state 98
+    '*'              shift, and go to state 99
+    '&'              shift, and go to state 100
+    '#'              shift, and go to state 101
+
+    type             go to state 102
+    expr             go to state 267
+    logicalOr        go to state 104
+    logicalAnd       go to state 105
+    comparison       go to state 106
+    equality         go to state 107
+    term             go to state 108
+    factor           go to state 109
+    cast             go to state 110
+    addressOf        go to state 111
+    dereference      go to state 112
+    negation         go to state 113
+    unary            go to state 114
+    primary          go to state 115
+    literal          go to state 116
+    subprogramCall   go to state 117
+    arrayDef         go to state 118
+    enumDef          go to state 119
+    compoundTypeDef  go to state 120
+
+
+State 242
+
+   43 statement: DELETE expr • ';'
+
+    ';'  shift, and go to state 268
+
+
+State 243
+
+   42 statement: PRINT expr • ';'
+
+    ';'  shift, and go to state 269
+
+
+State 244
+
+   47 assignment: IDENTIFIER '=' • expr ';'
+
+    INT_LITERAL      shift, and go to state 85
+    FLOAT_LITERAL    shift, and go to state 86
+    STRING_LITERAL   shift, and go to state 87
+    CHAR_LITERAL     shift, and go to state 88
+    BOOLEAN_LITERAL  shift, and go to state 89
+    USIZE            shift, and go to state 9
+    U8               shift, and go to state 10
+    U16              shift, and go to state 11
+    U32              shift, and go to state 12
+    U64              shift, and go to state 13
+    I8               shift, and go to state 14
+    I16              shift, and go to state 15
+    I32              shift, and go to state 16
+    I64              shift, and go to state 17
+    F32              shift, and go to state 18
+    F64              shift, and go to state 19
+    BOOL             shift, and go to state 20
+    STRING           shift, and go to state 21
+    CHAR             shift, and go to state 22
+    NOT              shift, and go to state 90
+    NEW              shift, and go to state 91
+    INCREMENT        shift, and go to state 92
+    DECREMENT        shift, and go to state 93
+    IDENTIFIER       shift, and go to state 94
+    '('              shift, and go to state 95
+    '['              shift, and go to state 96
+    '+'              shift, and go to state 97
+    '-'              shift, and go to state 98
+    '*'              shift, and go to state 99
+    '&'              shift, and go to state 100
+    '#'              shift, and go to state 101
+
+    type             go to state 102
+    expr             go to state 270
+    logicalOr        go to state 104
+    logicalAnd       go to state 105
+    comparison       go to state 106
+    equality         go to state 107
+    term             go to state 108
+    factor           go to state 109
+    cast             go to state 110
+    addressOf        go to state 111
+    dereference      go to state 112
+    negation         go to state 113
+    unary            go to state 114
+    primary          go to state 115
+    literal          go to state 116
+    subprogramCall   go to state 117
+    arrayDef         go to state 118
+    enumDef          go to state 119
+    compoundTypeDef  go to state 120
+
+
+State 245
+
+  170 block: '{' statements '}' •
+
+    $default  reduce using rule 170 (block)
+
+
+State 246
+
+   34 statements: statements statement •
+
+    $default  reduce using rule 34 (statements)
+
+
+State 247
+
+   26 enumValues: IDENTIFIER '=' INT_LITERAL ',' •
+
+    $default  reduce using rule 26 (enumValues)
+
+
+State 248
+
+   27 enumValues: enumValues IDENTIFIER '=' INT_LITERAL • ','
+
+    ','  shift, and go to state 271
+
+
+State 249
+
+   22 enum: ENUM IDENTIFIER '<' type '>' '{' enumValues • '}'
+   27 enumValues: enumValues • IDENTIFIER '=' INT_LITERAL ','
+
+    IDENTIFIER  shift, and go to state 130
+    '}'         shift, and go to state 272
+
+
+State 250
+
+   30 struct: STRUCT IDENTIFIER '<' types '>' '{' fields • '}'
+   80 fields: fields • field ';'
+
+    USIZE       shift, and go to state 9
+    U8          shift, and go to state 10
+    U16         shift, and go to state 11
+    U32         shift, and go to state 12
+    U64         shift, and go to state 13
+    I8          shift, and go to state 14
+    I16         shift, and go to state 15
+    I32         shift, and go to state 16
+    I64         shift, and go to state 17
+    F32         shift, and go to state 18
+    F64         shift, and go to state 19
+    BOOL        shift, and go to state 20
+    STRING      shift, and go to state 21
+    CHAR        shift, and go to state 22
+    IDENTIFIER  shift, and go to state 24
+    '}'         shift, and go to state 273
+
+    field  go to state 134
+    type   go to state 69
+
+
+State 251
+
+   32 tuple: TUPLE IDENTIFIER '<' types '>' '{' types • '}'
+   89 types: types • ',' type
+
+    '}'  shift, and go to state 274
+    ','  shift, and go to state 138
+
+
+State 252
+
+  155 subprogramCall: IDENTIFIER '(' arguments ')' •
+
+    $default  reduce using rule 155 (subprogramCall)
+
+
+State 253
+
+  157 arguments: arguments ',' • expr
+
+    INT_LITERAL      shift, and go to state 85
+    FLOAT_LITERAL    shift, and go to state 86
+    STRING_LITERAL   shift, and go to state 87
+    CHAR_LITERAL     shift, and go to state 88
+    BOOLEAN_LITERAL  shift, and go to state 89
+    USIZE            shift, and go to state 9
+    U8               shift, and go to state 10
+    U16              shift, and go to state 11
+    U32              shift, and go to state 12
+    U64              shift, and go to state 13
+    I8               shift, and go to state 14
+    I16              shift, and go to state 15
+    I32              shift, and go to state 16
+    I64              shift, and go to state 17
+    F32              shift, and go to state 18
+    F64              shift, and go to state 19
+    BOOL             shift, and go to state 20
+    STRING           shift, and go to state 21
+    CHAR             shift, and go to state 22
+    NOT              shift, and go to state 90
+    NEW              shift, and go to state 91
+    INCREMENT        shift, and go to state 92
+    DECREMENT        shift, and go to state 93
+    IDENTIFIER       shift, and go to state 94
+    '('              shift, and go to state 95
+    '['              shift, and go to state 96
+    '+'              shift, and go to state 97
+    '-'              shift, and go to state 98
+    '*'              shift, and go to state 99
+    '&'              shift, and go to state 100
+    '#'              shift, and go to state 101
+
+    type             go to state 102
+    expr             go to state 275
+    logicalOr        go to state 104
+    logicalAnd       go to state 105
+    comparison       go to state 106
+    equality         go to state 107
+    term             go to state 108
+    factor           go to state 109
+    cast             go to state 110
+    addressOf        go to state 111
+    dereference      go to state 112
+    negation         go to state 113
+    unary            go to state 114
+    primary          go to state 115
+    literal          go to state 116
+    subprogramCall   go to state 117
+    arrayDef         go to state 118
+    enumDef          go to state 119
+    compoundTypeDef  go to state 120
+
+
+State 254
+
+  126 cast: '(' type ')' addressOf •
+
+    $default  reduce using rule 126 (cast)
+
+
+State 255
+
+  162 commaSeparatedExpr: expr ',' commaSeparatedExpr •
+
+    $default  reduce using rule 162 (commaSeparatedExpr)
+
+
+State 256
+
+  166 compoundTypeFields: type ':' • expr
+  167                   | type ':' • expr ','
+  168                   | type ':' • expr ',' compoundTypeFields
+
+    INT_LITERAL      shift, and go to state 85
+    FLOAT_LITERAL    shift, and go to state 86
+    STRING_LITERAL   shift, and go to state 87
+    CHAR_LITERAL     shift, and go to state 88
+    BOOLEAN_LITERAL  shift, and go to state 89
+    USIZE            shift, and go to state 9
+    U8               shift, and go to state 10
+    U16              shift, and go to state 11
+    U32              shift, and go to state 12
+    U64              shift, and go to state 13
+    I8               shift, and go to state 14
+    I16              shift, and go to state 15
+    I32              shift, and go to state 16
+    I64              shift, and go to state 17
+    F32              shift, and go to state 18
+    F64              shift, and go to state 19
+    BOOL             shift, and go to state 20
+    STRING           shift, and go to state 21
+    CHAR             shift, and go to state 22
+    NOT              shift, and go to state 90
+    NEW              shift, and go to state 91
+    INCREMENT        shift, and go to state 92
+    DECREMENT        shift, and go to state 93
+    IDENTIFIER       shift, and go to state 94
+    '('              shift, and go to state 95
+    '['              shift, and go to state 96
+    '+'              shift, and go to state 97
+    '-'              shift, and go to state 98
+    '*'              shift, and go to state 99
+    '&'              shift, and go to state 100
+    '#'              shift, and go to state 101
+
+    type             go to state 102
+    expr             go to state 276
+    logicalOr        go to state 104
+    logicalAnd       go to state 105
+    comparison       go to state 106
+    equality         go to state 107
+    term             go to state 108
+    factor           go to state 109
+    cast             go to state 110
+    addressOf        go to state 111
+    dereference      go to state 112
+    negation         go to state 113
+    unary            go to state 114
+    primary          go to state 115
+    literal          go to state 116
+    subprogramCall   go to state 117
+    arrayDef         go to state 118
+    enumDef          go to state 119
+    compoundTypeDef  go to state 120
+
+
+State 257
+
+  165 compoundTypeDef: type '{' compoundTypeFields '}' •
+
+    $default  reduce using rule 165 (compoundTypeDef)
+
+
+State 258
+
+   20 func: FUNC IDENTIFIER '(' params ')' ':' type block •
+
+    $default  reduce using rule 20 (func)
+
+
+State 259
+
+   72 if: IF '(' expr • ')' block
+   73   | IF '(' expr • ')' block elseifs
+   74   | IF '(' expr • ')' block ELSE block
+   75   | IF '(' expr • ')' block elseifs ELSE block
+
+    ')'  shift, and go to state 277
+
+
+State 260
+
+   48 while: WHILE '(' expr • ')' block
+
+    ')'  shift, and go to state 278
+
+
+State 261
+
+   50 forHeader: ';' • ';'
+   52          | ';' • expr ';' statement
+   53          | ';' • ';' statement
+   56          | ';' • expr ';'
+
+    INT_LITERAL      shift, and go to state 85
+    FLOAT_LITERAL    shift, and go to state 86
+    STRING_LITERAL   shift, and go to state 87
+    CHAR_LITERAL     shift, and go to state 88
+    BOOLEAN_LITERAL  shift, and go to state 89
+    USIZE            shift, and go to state 9
+    U8               shift, and go to state 10
+    U16              shift, and go to state 11
+    U32              shift, and go to state 12
+    U64              shift, and go to state 13
+    I8               shift, and go to state 14
+    I16              shift, and go to state 15
+    I32              shift, and go to state 16
+    I64              shift, and go to state 17
+    F32              shift, and go to state 18
+    F64              shift, and go to state 19
+    BOOL             shift, and go to state 20
+    STRING           shift, and go to state 21
+    CHAR             shift, and go to state 22
+    NOT              shift, and go to state 90
+    NEW              shift, and go to state 91
+    INCREMENT        shift, and go to state 92
+    DECREMENT        shift, and go to state 93
+    IDENTIFIER       shift, and go to state 94
+    ';'              shift, and go to state 279
+    '('              shift, and go to state 95
+    '['              shift, and go to state 96
+    '+'              shift, and go to state 97
+    '-'              shift, and go to state 98
+    '*'              shift, and go to state 99
+    '&'              shift, and go to state 100
+    '#'              shift, and go to state 101
+
+    type             go to state 102
+    expr             go to state 280
+    logicalOr        go to state 104
+    logicalAnd       go to state 105
+    comparison       go to state 106
+    equality         go to state 107
+    term             go to state 108
+    factor           go to state 109
+    cast             go to state 110
+    addressOf        go to state 111
+    dereference      go to state 112
+    negation         go to state 113
+    unary            go to state 114
+    primary          go to state 115
+    literal          go to state 116
+    subprogramCall   go to state 117
+    arrayDef         go to state 118
+    enumDef          go to state 119
+    compoundTypeDef  go to state 120
+
+
+State 262
+
+   51 forHeader: statement • expr statement
+   54          | statement • ';' ';'
+   55          | statement • ';' expr ';'
+
+    INT_LITERAL      shift, and go to state 85
+    FLOAT_LITERAL    shift, and go to state 86
+    STRING_LITERAL   shift, and go to state 87
+    CHAR_LITERAL     shift, and go to state 88
+    BOOLEAN_LITERAL  shift, and go to state 89
+    USIZE            shift, and go to state 9
+    U8               shift, and go to state 10
+    U16              shift, and go to state 11
+    U32              shift, and go to state 12
+    U64              shift, and go to state 13
+    I8               shift, and go to state 14
+    I16              shift, and go to state 15
+    I32              shift, and go to state 16
+    I64              shift, and go to state 17
+    F32              shift, and go to state 18
+    F64              shift, and go to state 19
+    BOOL             shift, and go to state 20
+    STRING           shift, and go to state 21
+    CHAR             shift, and go to state 22
+    NOT              shift, and go to state 90
+    NEW              shift, and go to state 91
+    INCREMENT        shift, and go to state 92
+    DECREMENT        shift, and go to state 93
+    IDENTIFIER       shift, and go to state 94
+    ';'              shift, and go to state 281
+    '('              shift, and go to state 95
+    '['              shift, and go to state 96
+    '+'              shift, and go to state 97
+    '-'              shift, and go to state 98
+    '*'              shift, and go to state 99
+    '&'              shift, and go to state 100
+    '#'              shift, and go to state 101
+
+    type             go to state 102
+    expr             go to state 282
+    logicalOr        go to state 104
+    logicalAnd       go to state 105
+    comparison       go to state 106
+    equality         go to state 107
+    term             go to state 108
+    factor           go to state 109
+    cast             go to state 110
+    addressOf        go to state 111
+    dereference      go to state 112
+    negation         go to state 113
+    unary            go to state 114
+    primary          go to state 115
+    literal          go to state 116
+    subprogramCall   go to state 117
+    arrayDef         go to state 118
+    enumDef          go to state 119
+    compoundTypeDef  go to state 120
+
+
+State 263
+
+   49 for: FOR '(' forHeader • ')' block
+
+    ')'  shift, and go to state 283
+
+
+State 264
+
+   58 foreach: FOREACH '(' typequalifier • type IDENTIFIER ':' IDENTIFIER ')' block
+
+    USIZE       shift, and go to state 9
+    U8          shift, and go to state 10
+    U16         shift, and go to state 11
+    U32         shift, and go to state 12
+    U64         shift, and go to state 13
+    I8          shift, and go to state 14
+    I16         shift, and go to state 15
+    I32         shift, and go to state 16
+    I64         shift, and go to state 17
+    F32         shift, and go to state 18
+    F64         shift, and go to state 19
+    BOOL        shift, and go to state 20
+    STRING      shift, and go to state 21
+    CHAR        shift, and go to state 22
+    IDENTIFIER  shift, and go to state 24
+
+    type  go to state 284
+
+
+State 265
+
+   57 foreach: FOREACH '(' type • IDENTIFIER ':' IDENTIFIER ')' block
+  105 type: type • '[' ']'
+
+    IDENTIFIER  shift, and go to state 285
+    '['         shift, and go to state 51
+
+
+State 266
+
+   71 return: RETURN expr ';' •
+
+    $default  reduce using rule 71 (return)
+
+
+State 267
+
+   59 match: MATCH '(' expr • ')' '{' matchCases '}'
+   60      | MATCH '(' expr • ')' '{' matchCases ',' '}'
+
+    ')'  shift, and go to state 286
+
+
+State 268
+
+   43 statement: DELETE expr ';' •
+
+    $default  reduce using rule 43 (statement)
+
+
+State 269
+
+   42 statement: PRINT expr ';' •
+
+    $default  reduce using rule 42 (statement)
+
+
+State 270
+
+   47 assignment: IDENTIFIER '=' expr • ';'
+
+    ';'  shift, and go to state 287
+
+
+State 271
+
+   27 enumValues: enumValues IDENTIFIER '=' INT_LITERAL ',' •
+
+    $default  reduce using rule 27 (enumValues)
+
+
+State 272
+
+   22 enum: ENUM IDENTIFIER '<' type '>' '{' enumValues '}' •
+
+    $default  reduce using rule 22 (enum)
+
+
+State 273
+
+   30 struct: STRUCT IDENTIFIER '<' types '>' '{' fields '}' •
+
+    $default  reduce using rule 30 (struct)
+
+
+State 274
+
+   32 tuple: TUPLE IDENTIFIER '<' types '>' '{' types '}' •
+
+    $default  reduce using rule 32 (tuple)
+
+
+State 275
+
+  157 arguments: arguments ',' expr •
+
+    $default  reduce using rule 157 (arguments)
+
+
+State 276
+
+  166 compoundTypeFields: type ':' expr •
+  167                   | type ':' expr • ','
+  168                   | type ':' expr • ',' compoundTypeFields
+
+    ','  shift, and go to state 288
+
+    $default  reduce using rule 166 (compoundTypeFields)
+
+
+State 277
+
+   72 if: IF '(' expr ')' • block
+   73   | IF '(' expr ')' • block elseifs
+   74   | IF '(' expr ')' • block ELSE block
+   75   | IF '(' expr ')' • block elseifs ELSE block
+
+    '{'  shift, and go to state 125
+
+    block  go to state 289
+
+
+State 278
+
+   48 while: WHILE '(' expr ')' • block
+
+    '{'  shift, and go to state 125
+
+    block  go to state 290
+
+
+State 279
+
+   50 forHeader: ';' ';' •
+   53          | ';' ';' • statement
+
+    IF          shift, and go to state 177
+    WHILE       shift, and go to state 178
+    FOR         shift, and go to state 179
+    FOREACH     shift, and go to state 180
+    RETURN      shift, and go to state 181
+    BREAK       shift, and go to state 182
+    CONTINUE    shift, and go to state 183
+    MATCH       shift, and go to state 184
+    CONST       shift, and go to state 7
+    STATIC      shift, and go to state 8
+    USIZE       shift, and go to state 9
+    U8          shift, and go to state 10
+    U16         shift, and go to state 11
+    U32         shift, and go to state 12
+    U64         shift, and go to state 13
+    I8          shift, and go to state 14
+    I16         shift, and go to state 15
+    I32         shift, and go to state 16
+    I64         shift, and go to state 17
+    F32         shift, and go to state 18
+    F64         shift, and go to state 19
+    BOOL        shift, and go to state 20
+    STRING      shift, and go to state 21
+    CHAR        shift, and go to state 22
+    DELETE      shift, and go to state 185
+    PRINT       shift, and go to state 186
+    IDENTIFIER  shift, and go to state 187
+
+    $default  reduce using rule 50 (forHeader)
+
+    varDecl         go to state 189
+    statement       go to state 291
+    assignment      go to state 192
+    while           go to state 193
+    for             go to state 194
+    foreach         go to state 195
+    match           go to state 196
+    return          go to state 197
+    if              go to state 198
+    typequalifiers  go to state 36
+    typequalifier   go to state 37
+    type            go to state 38
+
+
+State 280
+
+   52 forHeader: ';' expr • ';' statement
+   56          | ';' expr • ';'
+
+    ';'  shift, and go to state 292
+
+
+State 281
+
+   54 forHeader: statement ';' • ';'
+   55          | statement ';' • expr ';'
+
+    INT_LITERAL      shift, and go to state 85
+    FLOAT_LITERAL    shift, and go to state 86
+    STRING_LITERAL   shift, and go to state 87
+    CHAR_LITERAL     shift, and go to state 88
+    BOOLEAN_LITERAL  shift, and go to state 89
+    USIZE            shift, and go to state 9
+    U8               shift, and go to state 10
+    U16              shift, and go to state 11
+    U32              shift, and go to state 12
+    U64              shift, and go to state 13
+    I8               shift, and go to state 14
+    I16              shift, and go to state 15
+    I32              shift, and go to state 16
+    I64              shift, and go to state 17
+    F32              shift, and go to state 18
+    F64              shift, and go to state 19
+    BOOL             shift, and go to state 20
+    STRING           shift, and go to state 21
+    CHAR             shift, and go to state 22
+    NOT              shift, and go to state 90
+    NEW              shift, and go to state 91
+    INCREMENT        shift, and go to state 92
+    DECREMENT        shift, and go to state 93
+    IDENTIFIER       shift, and go to state 94
+    ';'              shift, and go to state 293
+    '('              shift, and go to state 95
+    '['              shift, and go to state 96
+    '+'              shift, and go to state 97
+    '-'              shift, and go to state 98
+    '*'              shift, and go to state 99
+    '&'              shift, and go to state 100
+    '#'              shift, and go to state 101
+
+    type             go to state 102
+    expr             go to state 294
+    logicalOr        go to state 104
+    logicalAnd       go to state 105
+    comparison       go to state 106
+    equality         go to state 107
+    term             go to state 108
+    factor           go to state 109
+    cast             go to state 110
+    addressOf        go to state 111
+    dereference      go to state 112
+    negation         go to state 113
+    unary            go to state 114
+    primary          go to state 115
+    literal          go to state 116
+    subprogramCall   go to state 117
+    arrayDef         go to state 118
+    enumDef          go to state 119
+    compoundTypeDef  go to state 120
+
+
+State 282
+
+   51 forHeader: statement expr • statement
+
+    IF          shift, and go to state 177
+    WHILE       shift, and go to state 178
+    FOR         shift, and go to state 179
+    FOREACH     shift, and go to state 180
+    RETURN      shift, and go to state 181
+    BREAK       shift, and go to state 182
+    CONTINUE    shift, and go to state 183
+    MATCH       shift, and go to state 184
+    CONST       shift, and go to state 7
+    STATIC      shift, and go to state 8
+    USIZE       shift, and go to state 9
+    U8          shift, and go to state 10
+    U16         shift, and go to state 11
+    U32         shift, and go to state 12
+    U64         shift, and go to state 13
+    I8          shift, and go to state 14
+    I16         shift, and go to state 15
+    I32         shift, and go to state 16
+    I64         shift, and go to state 17
+    F32         shift, and go to state 18
+    F64         shift, and go to state 19
+    BOOL        shift, and go to state 20
+    STRING      shift, and go to state 21
+    CHAR        shift, and go to state 22
+    DELETE      shift, and go to state 185
+    PRINT       shift, and go to state 186
+    IDENTIFIER  shift, and go to state 187
+
+    varDecl         go to state 189
+    statement       go to state 295
+    assignment      go to state 192
+    while           go to state 193
+    for             go to state 194
+    foreach         go to state 195
+    match           go to state 196
+    return          go to state 197
+    if              go to state 198
+    typequalifiers  go to state 36
+    typequalifier   go to state 37
+    type            go to state 38
+
+
+State 283
+
+   49 for: FOR '(' forHeader ')' • block
+
+    '{'  shift, and go to state 125
+
+    block  go to state 296
+
+
+State 284
+
+   58 foreach: FOREACH '(' typequalifier type • IDENTIFIER ':' IDENTIFIER ')' block
+  105 type: type • '[' ']'
+
+    IDENTIFIER  shift, and go to state 297
+    '['         shift, and go to state 51
+
+
+State 285
+
+   57 foreach: FOREACH '(' type IDENTIFIER • ':' IDENTIFIER ')' block
+
+    ':'  shift, and go to state 298
+
+
+State 286
+
+   59 match: MATCH '(' expr ')' • '{' matchCases '}'
+   60      | MATCH '(' expr ')' • '{' matchCases ',' '}'
+
+    '{'  shift, and go to state 299
+
+
+State 287
+
+   47 assignment: IDENTIFIER '=' expr ';' •
+
+    $default  reduce using rule 47 (assignment)
+
+
+State 288
+
+  167 compoundTypeFields: type ':' expr ',' •
+  168                   | type ':' expr ',' • compoundTypeFields
+
+    USIZE       shift, and go to state 9
+    U8          shift, and go to state 10
+    U16         shift, and go to state 11
+    U32         shift, and go to state 12
+    U64         shift, and go to state 13
+    I8          shift, and go to state 14
+    I16         shift, and go to state 15
+    I32         shift, and go to state 16
+    I64         shift, and go to state 17
+    F32         shift, and go to state 18
+    F64         shift, and go to state 19
+    BOOL        shift, and go to state 20
+    STRING      shift, and go to state 21
+    CHAR        shift, and go to state 22
+    IDENTIFIER  shift, and go to state 24
+
+    $default  reduce using rule 167 (compoundTypeFields)
+
+    type                go to state 216
+    compoundTypeFields  go to state 300
+
+
+State 289
+
+   72 if: IF '(' expr ')' block •
+   73   | IF '(' expr ')' block • elseifs
+   74   | IF '(' expr ')' block • ELSE block
+   75   | IF '(' expr ')' block • elseifs ELSE block
+
+    ELSE  shift, and go to state 301
+
+    $default  reduce using rule 72 (if)
+
+    elseifs  go to state 302
+    elseif   go to state 303
+
+
+State 290
+
+   48 while: WHILE '(' expr ')' block •
+
+    $default  reduce using rule 48 (while)
+
+
+State 291
+
+   53 forHeader: ';' ';' statement •
+
+    $default  reduce using rule 53 (forHeader)
+
+
+State 292
+
+   52 forHeader: ';' expr ';' • statement
+   56          | ';' expr ';' •
+
+    IF          shift, and go to state 177
+    WHILE       shift, and go to state 178
+    FOR         shift, and go to state 179
+    FOREACH     shift, and go to state 180
+    RETURN      shift, and go to state 181
+    BREAK       shift, and go to state 182
+    CONTINUE    shift, and go to state 183
+    MATCH       shift, and go to state 184
+    CONST       shift, and go to state 7
+    STATIC      shift, and go to state 8
+    USIZE       shift, and go to state 9
+    U8          shift, and go to state 10
+    U16         shift, and go to state 11
+    U32         shift, and go to state 12
+    U64         shift, and go to state 13
+    I8          shift, and go to state 14
+    I16         shift, and go to state 15
+    I32         shift, and go to state 16
+    I64         shift, and go to state 17
+    F32         shift, and go to state 18
+    F64         shift, and go to state 19
+    BOOL        shift, and go to state 20
+    STRING      shift, and go to state 21
+    CHAR        shift, and go to state 22
+    DELETE      shift, and go to state 185
+    PRINT       shift, and go to state 186
+    IDENTIFIER  shift, and go to state 187
+
+    $default  reduce using rule 56 (forHeader)
+
+    varDecl         go to state 189
+    statement       go to state 304
+    assignment      go to state 192
+    while           go to state 193
+    for             go to state 194
+    foreach         go to state 195
+    match           go to state 196
+    return          go to state 197
+    if              go to state 198
+    typequalifiers  go to state 36
+    typequalifier   go to state 37
+    type            go to state 38
+
+
+State 293
+
+   54 forHeader: statement ';' ';' •
+
+    $default  reduce using rule 54 (forHeader)
+
+
+State 294
+
+   55 forHeader: statement ';' expr • ';'
+
+    ';'  shift, and go to state 305
+
+
+State 295
+
+   51 forHeader: statement expr statement •
+
+    $default  reduce using rule 51 (forHeader)
+
+
+State 296
+
+   49 for: FOR '(' forHeader ')' block •
+
+    $default  reduce using rule 49 (for)
+
+
+State 297
+
+   58 foreach: FOREACH '(' typequalifier type IDENTIFIER • ':' IDENTIFIER ')' block
+
+    ':'  shift, and go to state 306
+
+
+State 298
+
+   57 foreach: FOREACH '(' type IDENTIFIER ':' • IDENTIFIER ')' block
+
+    IDENTIFIER  shift, and go to state 307
+
+
+State 299
+
+   59 match: MATCH '(' expr ')' '{' • matchCases '}'
+   60      | MATCH '(' expr ')' '{' • matchCases ',' '}'
+
+    INT_LITERAL      shift, and go to state 85
+    FLOAT_LITERAL    shift, and go to state 86
+    STRING_LITERAL   shift, and go to state 87
+    CHAR_LITERAL     shift, and go to state 88
+    BOOLEAN_LITERAL  shift, and go to state 89
+    '_'              shift, and go to state 308
+
+    matchCases         go to state 309
+    matchCase          go to state 310
+    matchLeft          go to state 311
+    multipleMatchLeft  go to state 312
+    literal            go to state 313
+
+
+State 300
+
+  168 compoundTypeFields: type ':' expr ',' compoundTypeFields •
+
+    $default  reduce using rule 168 (compoundTypeFields)
+
+
+State 301
+
+   74 if: IF '(' expr ')' block ELSE • block
+   78 elseif: ELSE • IF '(' expr ')' block
+
+    IF   shift, and go to state 314
+    '{'  shift, and go to state 125
+
+    block  go to state 315
+
+
+State 302
+
+   73 if: IF '(' expr ')' block elseifs •
+   75   | IF '(' expr ')' block elseifs • ELSE block
+   77 elseifs: elseifs • elseif
+
+    ELSE  shift, and go to state 316
+
+    $default  reduce using rule 73 (if)
+
+    elseif  go to state 317
+
+
+State 303
+
+   76 elseifs: elseif •
+
+    $default  reduce using rule 76 (elseifs)
+
+
+State 304
+
+   52 forHeader: ';' expr ';' statement •
+
+    $default  reduce using rule 52 (forHeader)
+
+
+State 305
+
+   55 forHeader: statement ';' expr ';' •
+
+    $default  reduce using rule 55 (forHeader)
+
+
+State 306
+
+   58 foreach: FOREACH '(' typequalifier type IDENTIFIER ':' • IDENTIFIER ')' block
+
+    IDENTIFIER  shift, and go to state 318
+
+
+State 307
+
+   57 foreach: FOREACH '(' type IDENTIFIER ':' IDENTIFIER • ')' block
+
+    ')'  shift, and go to state 319
+
+
+State 308
+
+   65 matchLeft: '_' •
+
+    $default  reduce using rule 65 (matchLeft)
+
+
+State 309
+
+   59 match: MATCH '(' expr ')' '{' matchCases • '}'
+   60      | MATCH '(' expr ')' '{' matchCases • ',' '}'
+   62 matchCases: matchCases • ',' matchCase
+
+    '}'  shift, and go to state 320
+    ','  shift, and go to state 321
+
+
+State 310
+
+   61 matchCases: matchCase •
+
+    $default  reduce using rule 61 (matchCases)
+
+
+State 311
+
+   63 matchCase: matchLeft • EQUALS_ARROW matchRight
+
+    EQUALS_ARROW  shift, and go to state 322
+
+
+State 312
+
+   64 matchLeft: multipleMatchLeft •
+   67 multipleMatchLeft: multipleMatchLeft • '|' literal
+
+    '|'  shift, and go to state 323
+
+    $default  reduce using rule 64 (matchLeft)
+
+
+State 313
+
+   66 multipleMatchLeft: literal •
+
+    $default  reduce using rule 66 (multipleMatchLeft)
+
+
+State 314
+
+   78 elseif: ELSE IF • '(' expr ')' block
+
+    '('  shift, and go to state 324
+
+
+State 315
+
+   74 if: IF '(' expr ')' block ELSE block •
+
+    $default  reduce using rule 74 (if)
+
+
+State 316
+
+   75 if: IF '(' expr ')' block elseifs ELSE • block
+   78 elseif: ELSE • IF '(' expr ')' block
+
+    IF   shift, and go to state 314
+    '{'  shift, and go to state 125
+
+    block  go to state 325
+
+
+State 317
+
+   77 elseifs: elseifs elseif •
+
+    $default  reduce using rule 77 (elseifs)
+
+
+State 318
+
+   58 foreach: FOREACH '(' typequalifier type IDENTIFIER ':' IDENTIFIER • ')' block
+
+    ')'  shift, and go to state 326
+
+
+State 319
+
+   57 foreach: FOREACH '(' type IDENTIFIER ':' IDENTIFIER ')' • block
+
+    '{'  shift, and go to state 125
+
+    block  go to state 327
+
+
+State 320
+
+   59 match: MATCH '(' expr ')' '{' matchCases '}' •
+
+    $default  reduce using rule 59 (match)
+
+
+State 321
+
+   60 match: MATCH '(' expr ')' '{' matchCases ',' • '}'
+   62 matchCases: matchCases ',' • matchCase
+
+    INT_LITERAL      shift, and go to state 85
+    FLOAT_LITERAL    shift, and go to state 86
+    STRING_LITERAL   shift, and go to state 87
+    CHAR_LITERAL     shift, and go to state 88
+    BOOLEAN_LITERAL  shift, and go to state 89
+    '}'              shift, and go to state 328
+    '_'              shift, and go to state 308
+
+    matchCase          go to state 329
+    matchLeft          go to state 311
+    multipleMatchLeft  go to state 312
+    literal            go to state 313
+
+
+State 322
+
+   63 matchCase: matchLeft EQUALS_ARROW • matchRight
+
+    IF          shift, and go to state 177
+    WHILE       shift, and go to state 178
+    FOR         shift, and go to state 179
+    FOREACH     shift, and go to state 180
+    RETURN      shift, and go to state 181
+    BREAK       shift, and go to state 182
+    CONTINUE    shift, and go to state 183
+    MATCH       shift, and go to state 184
+    CONST       shift, and go to state 7
+    STATIC      shift, and go to state 8
+    USIZE       shift, and go to state 9
+    U8          shift, and go to state 10
+    U16         shift, and go to state 11
+    U32         shift, and go to state 12
+    U64         shift, and go to state 13
+    I8          shift, and go to state 14
+    I16         shift, and go to state 15
+    I32         shift, and go to state 16
+    I64         shift, and go to state 17
+    F32         shift, and go to state 18
+    F64         shift, and go to state 19
+    BOOL        shift, and go to state 20
+    STRING      shift, and go to state 21
+    CHAR        shift, and go to state 22
+    DELETE      shift, and go to state 185
+    PRINT       shift, and go to state 186
+    IDENTIFIER  shift, and go to state 187
+    '{'         shift, and go to state 125
+
+    varDecl         go to state 189
+    statement       go to state 330
+    assignment      go to state 192
+    while           go to state 193
+    for             go to state 194
+    foreach         go to state 195
+    match           go to state 196
+    matchRight      go to state 331
+    return          go to state 197
+    if              go to state 198
+    typequalifiers  go to state 36
+    typequalifier   go to state 37
+    type            go to state 38
+    block           go to state 332
+
+
+State 323
+
+   67 multipleMatchLeft: multipleMatchLeft '|' • literal
+
+    INT_LITERAL      shift, and go to state 85
+    FLOAT_LITERAL    shift, and go to state 86
+    STRING_LITERAL   shift, and go to state 87
+    CHAR_LITERAL     shift, and go to state 88
+    BOOLEAN_LITERAL  shift, and go to state 89
+
+    literal  go to state 333
+
+
+State 324
+
+   78 elseif: ELSE IF '(' • expr ')' block
+
+    INT_LITERAL      shift, and go to state 85
+    FLOAT_LITERAL    shift, and go to state 86
+    STRING_LITERAL   shift, and go to state 87
+    CHAR_LITERAL     shift, and go to state 88
+    BOOLEAN_LITERAL  shift, and go to state 89
+    USIZE            shift, and go to state 9
+    U8               shift, and go to state 10
+    U16              shift, and go to state 11
+    U32              shift, and go to state 12
+    U64              shift, and go to state 13
+    I8               shift, and go to state 14
+    I16              shift, and go to state 15
+    I32              shift, and go to state 16
+    I64              shift, and go to state 17
+    F32              shift, and go to state 18
+    F64              shift, and go to state 19
+    BOOL             shift, and go to state 20
+    STRING           shift, and go to state 21
+    CHAR             shift, and go to state 22
+    NOT              shift, and go to state 90
+    NEW              shift, and go to state 91
+    INCREMENT        shift, and go to state 92
+    DECREMENT        shift, and go to state 93
+    IDENTIFIER       shift, and go to state 94
+    '('              shift, and go to state 95
+    '['              shift, and go to state 96
+    '+'              shift, and go to state 97
+    '-'              shift, and go to state 98
+    '*'              shift, and go to state 99
+    '&'              shift, and go to state 100
+    '#'              shift, and go to state 101
+
+    type             go to state 102
+    expr             go to state 334
+    logicalOr        go to state 104
+    logicalAnd       go to state 105
+    comparison       go to state 106
+    equality         go to state 107
+    term             go to state 108
+    factor           go to state 109
+    cast             go to state 110
+    addressOf        go to state 111
+    dereference      go to state 112
+    negation         go to state 113
+    unary            go to state 114
+    primary          go to state 115
+    literal          go to state 116
+    subprogramCall   go to state 117
+    arrayDef         go to state 118
+    enumDef          go to state 119
+    compoundTypeDef  go to state 120
+
+
+State 325
+
+   75 if: IF '(' expr ')' block elseifs ELSE block •
+
+    $default  reduce using rule 75 (if)
+
+
+State 326
+
+   58 foreach: FOREACH '(' typequalifier type IDENTIFIER ':' IDENTIFIER ')' • block
+
+    '{'  shift, and go to state 125
+
+    block  go to state 335
+
+
+State 327
+
+   57 foreach: FOREACH '(' type IDENTIFIER ':' IDENTIFIER ')' block •
+
+    $default  reduce using rule 57 (foreach)
+
+
+State 328
+
+   60 match: MATCH '(' expr ')' '{' matchCases ',' '}' •
+
+    $default  reduce using rule 60 (match)
+
+
+State 329
+
+   62 matchCases: matchCases ',' matchCase •
+
+    $default  reduce using rule 62 (matchCases)
+
+
+State 330
+
+   69 matchRight: statement •
+
+    $default  reduce using rule 69 (matchRight)
+
+
+State 331
+
+   63 matchCase: matchLeft EQUALS_ARROW matchRight •
+
+    $default  reduce using rule 63 (matchCase)
+
+
+State 332
+
+   68 matchRight: block •
+
+    $default  reduce using rule 68 (matchRight)
+
+
+State 333
+
+   67 multipleMatchLeft: multipleMatchLeft '|' literal •
+
+    $default  reduce using rule 67 (multipleMatchLeft)
+
+
+State 334
+
+   78 elseif: ELSE IF '(' expr • ')' block
+
+    ')'  shift, and go to state 336
+
+
+State 335
+
+   58 foreach: FOREACH '(' typequalifier type IDENTIFIER ':' IDENTIFIER ')' block •
+
+    $default  reduce using rule 58 (foreach)
+
+
+State 336
+
+   78 elseif: ELSE IF '(' expr ')' • block
+
+    '{'  shift, and go to state 125
+
+    block  go to state 337
+
+
+State 337
+
+   78 elseif: ELSE IF '(' expr ')' block •
+
+    $default  reduce using rule 78 (elseif)

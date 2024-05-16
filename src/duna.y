@@ -59,14 +59,10 @@ typedef : TYPEDEF type IDENTIFIER ';' ;
 
 proc : PROC IDENTIFIER '(' ')' block
   | PROC IDENTIFIER '(' params ')' block
-  | PROC IDENTIFIER '<' types '>' '(' ')' block
-  | PROC IDENTIFIER '<' types '>' '(' params ')' block
   ;
 
 func : FUNC IDENTIFIER '(' ')' ':' type block
   | FUNC IDENTIFIER '(' params ')' ':' type block
-  | FUNC IDENTIFIER '<' ids '>' '(' ')' ':' type block
-  | FUNC IDENTIFIER '<' ids '>' '(' params ')' ':' type block
   ;
 
 enum : ENUM IDENTIFIER '{' enumValues '}'
@@ -287,9 +283,7 @@ arrayIndex : arrayDef '[' expr ']'
   ;
 
 subprogramCall : IDENTIFIER '(' ')'
-  | IDENTIFIER '<' ids '>' '(' ')'
   | IDENTIFIER '(' arguments ')'
-  | IDENTIFIER '<' ids '>' '(' arguments ')'
   ;
 arguments : expr | arguments ',' expr ;
 
