@@ -28,7 +28,7 @@ extern FILE * yyin;
 %token MATCH ENUM UNION STRUCT TUPLE CONST STATIC
 %token USIZE U8 U16 U32 U64 I8 I16 I32 I64 F32 F64 BOOL STRING CHAR TYPEDEF
 %token NOT AND OR NEW DELETE PRINT
-%token EQUALITY INEQUALITY LESS_THAN_EQUALS MORE_THAN_EQUALS EQUALS_ARROW INCREMENT DECREMENT DOUBLE_COLON
+%token EQUALITY INEQUALITY ASSIGN LESS_THAN_EQUALS MORE_THAN_EQUALS LESS_THAN MORE_THAN PLUS MINUS ASTERISK SLASH INCREMENT DECREMENT DOUBLE_COLON EQUALS_ARROW AMPERSAND HASHTAG PERCENTAGE
 %token <sValue> IDENTIFIER
 
 %start program
@@ -51,9 +51,9 @@ declaration : varDecl
   ;
 
 varDecl : type IDENTIFIER ';'
-  | type IDENTIFIER '=' expr ';'
+  | type IDENTIFIER ASSIGN expr ';'
   | typequalifiers type IDENTIFIER ';'
-  | typequalifiers type IDENTIFIER '=' expr ';'
+  | typequalifiers type IDENTIFIER ASSIGN expr ';'
 
 typedef : TYPEDEF type IDENTIFIER ';' ;
 
@@ -66,25 +66,25 @@ func : FUNC IDENTIFIER '(' ')' ':' type block
   ;
 
 enum : ENUM IDENTIFIER '{' enumValues '}'
-  | ENUM IDENTIFIER '<' type '>' '{' enumValues '}'
+  | ENUM IDENTIFIER LESS_THAN type MORE_THAN '{' enumValues '}'
   ;
 
 enumValues : IDENTIFIER
   | IDENTIFIER ','
-  | IDENTIFIER '=' INT_LITERAL
-  | IDENTIFIER '=' INT_LITERAL ','
-  | enumValues IDENTIFIER '=' INT_LITERAL ','
+  | IDENTIFIER ASSIGN INT_LITERAL
+  | IDENTIFIER ASSIGN INT_LITERAL ','
+  | enumValues IDENTIFIER ASSIGN INT_LITERAL ','
   ;
 
 union : UNION IDENTIFIER '{' fields '}'                       {printf(">>> Union\n");}
   ;
 
 struct : STRUCT IDENTIFIER '{' fields '}'                     {printf(">>> Struct v1\n");}
-  | STRUCT IDENTIFIER '<' types '>' '{' fields '}'            {printf(">>> Struct v2\n");}
+  | STRUCT IDENTIFIER LESS_THAN types MORE_THAN '{' fields '}'            {printf(">>> Struct v2\n");}
   ;
 
 tuple : TUPLE IDENTIFIER '{' types '}'                     {printf(">>> Struct v1\n");}
-  | TUPLE IDENTIFIER '<' types '>' '{' types '}'            {printf(">>> Struct v2\n");}
+  | TUPLE IDENTIFIER LESS_THAN types MORE_THAN '{' types '}'            {printf(">>> Struct v2\n");}
   ;
 
 ids : IDENTIFIER
@@ -109,7 +109,7 @@ statement : varDecl
   | if
   ;
 
-assignment : IDENTIFIER '=' expr ';' { printf(">>> Assignment\n"); } ;
+assignment : IDENTIFIER ASSIGN expr ';' { printf(">>> Assignment\n"); } ;
 
 while : WHILE '(' expr ')' block            {printf(">>> While\n");}
   ;
@@ -196,7 +196,7 @@ type : USIZE
   | CHAR
   | IDENTIFIER
   | type '[' ']'
-  /* | type '*' */
+  /* | type ASTERISK */
   ;
 
 expr : logicalOr ;
@@ -209,8 +209,8 @@ logicalAnd : logicalAnd AND comparison
   | comparison
   ;
 
-comparison : comparison '<' equality
-  | comparison '>' equality
+comparison : comparison LESS_THAN equality
+  | comparison MORE_THAN equality
   | comparison LESS_THAN_EQUALS equality
   | comparison MORE_THAN_EQUALS equality
   | equality
@@ -221,14 +221,14 @@ equality : equality EQUALITY term
   | term
   ;
 
-term : term '+' factor
-  | term '-' factor
+term : term PLUS factor
+  | term MINUS factor
   | factor
   ;
 
-factor : factor '*' cast
-  | factor '/' cast
-  | factor '%' cast 
+factor : factor ASTERISK cast
+  | factor SLASH cast
+  | factor PERCENTAGE cast 
   | cast
   ;
 
@@ -236,11 +236,11 @@ cast : '(' type ')' addressOf
   | addressOf
   ;
 
-addressOf : '&' dereference
+addressOf : AMPERSAND dereference
   | dereference
   ;
 
-dereference : '*' negation
+dereference : ASTERISK negation
   | negation
   ;
 
@@ -252,9 +252,9 @@ unary : INCREMENT primary
   | DECREMENT primary
   | primary INCREMENT
   | primary DECREMENT
-  | '+' primary
-  | '-' primary
-  | '#' primary
+  | PLUS primary
+  | MINUS primary
+  | HASHTAG primary
   | primary
   ;
 
@@ -303,7 +303,7 @@ compoundTypeFields : type ':' expr
   | type ':' expr ',' compoundTypeFields
   ;
 
-tupleDef : '<' commaSeparatedExpr '>' ;
+tupleDef : LESS_THAN commaSeparatedExpr MORE_THAN ;
 
 fieldAccess : expr '.' IDENTIFIER 
   | expr

@@ -1,10 +1,22 @@
 for symbol, name in [
     ("==", "equality"),
+    ("!=", "inequality"),
     ("=", "assign"),
     ("<=", "less_than_equals"),
     (">=", "more_than_equals"),
     ("<", "less_than"),
-    (">", "more_than")
+    (">", "more_than"),
+    ("+", "plus"),
+    ("-", "minus"),
+    ("*", "asterisk"),
+    ("/", "slash"),
+    ("++", "increment"),
+    ("--", "decrement"),
+    ("::", "double_colon"),
+    ("=>", "equals_arrow"),
+    ("&", "ampersand"),
+    ("#", "hashtag"),
+    ('%', "percentage")
 ]:
     print(f'"{symbol.lower()}"   {{ printf("TOKEN(%s)\\n", yytext); return({name.upper()});}}')
 
@@ -18,10 +30,8 @@ for symbol, name in [
     (".", "dot"),
     (",", "comma"),
     (";", "semicolon"),
-    ("+", "plus"),
-    ("-", "minus"),
-    ("*", "asterisk"),
-    ("/", "slash"),
+    ("_", "underline"),
+    (":", "colon"),
 ]:
     print(f'"{symbol.lower()}"   {{ printf("TOKEN(%s)\\n", yytext); return(yytext[0]);}}')
 
@@ -59,10 +69,11 @@ for identifier in [
     "bool",
     "string",
     "char",
-    "true",
-    "false",
     "not",
     "and",
-    "or"
+    "or",
+    "new",
+    "delete",
+    "print",
 ]:
     print(f'"{identifier.lower()}"          {{ printf("TOKEN(%s)\\n", yytext); return({identifier.upper()}); }}')
