@@ -1,0 +1,27 @@
+proc mdc(u32 n, u32 m, u32* @r) {
+    if (n % m == 0) {
+        *@r = n;
+        return;
+    } else if (m > n) {
+        mdc(n, m % n, @r);
+        return;
+    }
+
+    if (m % n == 0) {
+        *@r = m;
+        return;
+    } else if (n > m) {
+        mdc(m, n % m, @r);
+        return;
+    }
+}
+
+proc main() {
+    u32 n = cast<u32>(read());
+    u32 m = cast<u32>(read());
+    u32* @r;
+
+    mdc(n, m, @r);
+
+    print("MDC: " ++ cast<string>(*@r) ++ "\n");
+}
