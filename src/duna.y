@@ -63,7 +63,7 @@ declaration : varDecl
   | enum
   | union
   | struct
-  | tuple
+  /* | tuple */
   ;
 
 varDecl : type IDENTIFIER ';'
@@ -71,7 +71,8 @@ varDecl : type IDENTIFIER ';'
   | typequalifiers type IDENTIFIER ';'
   | typequalifiers type IDENTIFIER ASSIGN expr ';'
 
-typedef : TYPEDEF type IDENTIFIER ';' ;
+typedef : TYPEDEF type IDENTIFIER ';' 
+  ;
 
 proc : PROC IDENTIFIER '(' ')' block
   | PROC IDENTIFIER '(' params ')' block
@@ -96,12 +97,11 @@ union : UNION IDENTIFIER '{' fields '}'                       {printf(">>> Union
   ;
 
 struct : STRUCT IDENTIFIER '{' fields '}'                     {printf(">>> Struct v1\n");}
-  | STRUCT IDENTIFIER LESS_THAN types MORE_THAN '{' fields '}'            {printf(">>> Struct v2\n");}
   ;
 
-tuple : TUPLE IDENTIFIER '{' types '}'                     {printf(">>> Struct v1\n");}
+/* tuple : TUPLE IDENTIFIER '{' types '}'                     {printf(">>> Struct v1\n");}
   | TUPLE IDENTIFIER LESS_THAN types MORE_THAN '{' types '}'            {printf(">>> Struct v2\n");}
-  ;
+  ; */
 
 ids : IDENTIFIER
   | ids ',' IDENTIFIER
@@ -123,6 +123,7 @@ statement : varDecl
   | match
   | return
   | if
+  | subprogramCall ';'
   ;
 
 assignment : IDENTIFIER ASSIGN expr ';' { printf(">>> Assignment\n"); } ;
@@ -267,6 +268,7 @@ subprogramCall : IDENTIFIER '(' ')'
 arguments : expr | arguments ',' expr ;
 
 arrayDef : '[' ']' | '[' commaSeparatedExpr ']' ;
+
 commaSeparatedExpr : expr
   | expr ','
   | expr ',' commaSeparatedExpr
@@ -277,12 +279,13 @@ enumDef : IDENTIFIER DOUBLE_COLON IDENTIFIER ;
 compoundTypeDef : type '{' '}'
   | type '{' compoundTypeFields '}'
   ;
+
 compoundTypeFields : type ':' expr
   | type ':' expr ','
   | type ':' expr ',' compoundTypeFields
   ;
 
-tupleDef : LESS_THAN commaSeparatedExpr MORE_THAN ;
+//tupleDef : LESS_THAN commaSeparatedExpr MORE_THAN ;
 
 fieldAccess : expr '.' IDENTIFIER 
   | expr

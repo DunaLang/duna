@@ -10,8 +10,6 @@ for symbol, name in [
     ("-", "minus"),
     ("*", "asterisk"),
     ("/", "slash"),
-    ("++", "increment"),
-    ("--", "decrement"),
     ("::", "double_colon"),
     ("=>", "equals_arrow"),
     ("&", "ampersand"),
@@ -75,6 +73,7 @@ for identifier in [
     "new",
     "delete",
     "print",
-    "cast"
+    "cast",
+    "typedef"
 ]:
     print(f'"{identifier.lower()}"          {{ printf("TOKEN(%s)\\n", yytext); return({identifier.upper()}); }}')

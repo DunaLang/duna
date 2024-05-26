@@ -1,4 +1,4 @@
-typedef i16 int;
+typedef i16 myint;
 
 // Struct v1
 struct Pessoa {
@@ -7,10 +7,10 @@ struct Pessoa {
 }
 
 // Struct v2
-struct Calculadora <T>{
-  T n1;
-  T n2;
-}
+//struct Calculadora <T>{
+//  T n1;
+//  T n2;
+//}
 
 // Union
 union yylval {
@@ -34,19 +34,19 @@ proc testeComParams (i16 i, bool isTrue) {
 }
 
 // Proc v3 - Templates
-proc testeTemplate <T, U>(T param1, U param2) {}
+//proc testeTemplate <T, U>(T param1, U param2) {}
 
 // Func v1
 func main () : i8 {}
 
 // Func v2
-func testeFuncTemplate <T>() : T {}
+//func testeFuncTemplate <T>() : T {}
 
 // Func v3
 func equals(string msg, string msg2) : bool {}
 
 // Func v4
-func soma <T>(T n1, T n2) : T {}
+//func soma <T>(T n1, T n2) : T {}
 
 // Proc main
 proc main() {

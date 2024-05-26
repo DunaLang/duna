@@ -32,8 +32,6 @@ commentary       (\/\*([^*]|[\r\n]|(\*+([^*\/]|[\r\n])))*\*+\/)|(\/\/.*)
 "-"   { printf("TOKEN(%s)\n", yytext); return(MINUS);}
 "*"   { printf("TOKEN(%s)\n", yytext); return(ASTERISK);}
 "/"   { printf("TOKEN(%s)\n", yytext); return(SLASH);}
-"++"   { printf("TOKEN(%s)\n", yytext); return(INCREMENT);}
-"--"   { printf("TOKEN(%s)\n", yytext); return(DECREMENT);}
 "::"   { printf("TOKEN(%s)\n", yytext); return(DOUBLE_COLON);}
 "=>"   { printf("TOKEN(%s)\n", yytext); return(EQUALS_ARROW);}
 "&"   { printf("TOKEN(%s)\n", yytext); return(AMPERSAND);}
@@ -89,6 +87,7 @@ commentary       (\/\*([^*]|[\r\n]|(\*+([^*\/]|[\r\n])))*\*+\/)|(\/\/.*)
 "delete"          { printf("TOKEN(%s)\n", yytext); return(DELETE); }
 "print"          { printf("TOKEN(%s)\n", yytext); return(PRINT); }
 "cast"          { printf("TOKEN(%s)\n", yytext); return(CAST); }
+"typedef"          { printf("TOKEN(%s)\n", yytext); return(TYPEDEF); }
 
 {booleanLiteral}  {printf("LITERAL(%s)\n", yytext); yylval.iValue = process_bool_literal(yytext); return BOOLEAN_LITERAL;}
 {intLiteral}      {printf("LITERAL(%s)\n", yytext); yylval.iValue = atoi(yytext); return INT_LITERAL; }
