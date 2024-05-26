@@ -13,7 +13,7 @@ intLiteral    [0-9]+
 floatLiteral  [0-9]+.[0-9]+
 stringLiteral \"[^\n"]+\"
 charLiteral   \'[^\\']\'
-identifier    [@a-zA-Z][a-zA-Z0-9]*
+identifier    [@a-zA-Z_][a-zA-Z0-9_]*
 commentary       (\/\*([^*]|[\r\n]|(\*+([^*\/]|[\r\n])))*\*+\/)|(\/\/.*) 
 
 %%
@@ -23,6 +23,10 @@ commentary       (\/\*([^*]|[\r\n]|(\*+([^*\/]|[\r\n])))*\*+\/)|(\/\/.*)
 
 "=="   { printf("TOKEN(%s)\n", yytext); return(EQUALITY);}
 "!="   { printf("TOKEN(%s)\n", yytext); return(INEQUALITY);}
+"+="   { printf("TOKEN(%s)\n", yytext); return(ADD_ASSIGN);}
+"-="   { printf("TOKEN(%s)\n", yytext); return(SUB_ASSIGN);}
+"*="   { printf("TOKEN(%s)\n", yytext); return(MULT_ASSIGN);}
+"/="   { printf("TOKEN(%s)\n", yytext); return(DIV_ASSIGN);}
 "="   { printf("TOKEN(%s)\n", yytext); return(ASSIGN);}
 "<="   { printf("TOKEN(%s)\n", yytext); return(LESS_THAN_EQUALS);}
 ">="   { printf("TOKEN(%s)\n", yytext); return(MORE_THAN_EQUALS);}
@@ -63,7 +67,6 @@ commentary       (\/\*([^*]|[\r\n]|(\*+([^*\/]|[\r\n])))*\*+\/)|(\/\/.*)
 "enum"          { printf("TOKEN(%s)\n", yytext); return(ENUM); }
 "union"          { printf("TOKEN(%s)\n", yytext); return(UNION); }
 "struct"          { printf("TOKEN(%s)\n", yytext); return(STRUCT); }
-"tuple"          { printf("TOKEN(%s)\n", yytext); return(TUPLE); }
 "const"          { printf("TOKEN(%s)\n", yytext); return(CONST); }
 "static"          { printf("TOKEN(%s)\n", yytext); return(STATIC); }
 "usize"          { printf("TOKEN(%s)\n", yytext); return(USIZE); }
@@ -88,6 +91,7 @@ commentary       (\/\*([^*]|[\r\n]|(\*+([^*\/]|[\r\n])))*\*+\/)|(\/\/.*)
 "print"          { printf("TOKEN(%s)\n", yytext); return(PRINT); }
 "cast"          { printf("TOKEN(%s)\n", yytext); return(CAST); }
 "typedef"          { printf("TOKEN(%s)\n", yytext); return(TYPEDEF); }
+"null"          { printf("TOKEN(%s)\n", yytext); return(T_NULL); }
 
 {booleanLiteral}  {printf("LITERAL(%s)\n", yytext); yylval.iValue = process_bool_literal(yytext); return BOOLEAN_LITERAL;}
 {intLiteral}      {printf("LITERAL(%s)\n", yytext); yylval.iValue = atoi(yytext); return INT_LITERAL; }

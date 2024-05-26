@@ -25,18 +25,20 @@ extern FILE * yyin;
 %token <cValue> CHAR_LITERAL
 %token <iValue> BOOLEAN_LITERAL
 %token IF ELSE WHILE FOR FOREACH FUNC PROC RETURN BREAK CONTINUE 
-%token MATCH ENUM UNION STRUCT TUPLE CONST STATIC
+%token MATCH ENUM UNION STRUCT CONST STATIC
 %token USIZE U8 U16 U32 U64 I8 I16 I32 I64 F32 F64 BOOL STRING CHAR TYPEDEF
-%token NOT AND OR NEW DELETE PRINT CAST
+%token NOT AND OR NEW DELETE PRINT CAST T_NULL
+%token ADD_ASSIGN SUB_ASSIGN MULT_ASSIGN DIV_ASSIGN
 %token EQUALITY INEQUALITY ASSIGN LESS_THAN_EQUALS MORE_THAN_EQUALS LESS_THAN MORE_THAN PLUS MINUS ASTERISK SLASH DOUBLE_COLON EQUALS_ARROW AMPERSAND HASHTAG PERCENTAGE
 %token <sValue> IDENTIFIER
 
 %nonassoc ULITERAL UPRIMARY
 %nonassoc UHASHTAG UMINUS UPLUS
 %nonassoc UNOT
-%nonassoc UASTERISK
 %nonassoc UAMPERSAND
 %nonassoc UTYPE
+%right ARRAY_TYPE
+%nonassoc UNEW
 %left PERCENTAGE SLASH ASTERISK
 %left MINUS PLUS
 %left EQUALITY INEQUALITY
@@ -44,8 +46,6 @@ extern FILE * yyin;
 %left AND
 %left OR
 %nonassoc UPARENTESISEXPR
-
-
 
 %start program
 
@@ -63,7 +63,6 @@ declaration : varDecl
   | enum
   | union
   | struct
-  /* | tuple */
   ;
 
 varDecl : type IDENTIFIER ';'
@@ -99,20 +98,13 @@ union : UNION IDENTIFIER '{' fields '}'                       {printf(">>> Union
 struct : STRUCT IDENTIFIER '{' fields '}'                     {printf(">>> Struct v1\n");}
   ;
 
-/* tuple : TUPLE IDENTIFIER '{' types '}'                     {printf(">>> Struct v1\n");}
-  | TUPLE IDENTIFIER LESS_THAN types MORE_THAN '{' types '}'            {printf(">>> Struct v2\n");}
-  ; */
-
-ids : IDENTIFIER
-  | ids ',' IDENTIFIER
-  ;
-
 statements : statement
   | statements statement
   ;
 
 statement : varDecl
   | assignment
+  | increment_assignment ';'
   | while
   | for
   | foreach
@@ -126,16 +118,47 @@ statement : varDecl
   | subprogramCall ';'
   ;
 
-assignment : IDENTIFIER ASSIGN expr ';' { printf(">>> Assignment\n"); } ;
+assignment : IDENTIFIER ASSIGN expr ';' { printf(">>> Assignment\n"); }
+  | arrayIndex ASSIGN expr ';'
+  | derreferencing ASSIGN expr ';'
+  | fieldAccess ASSIGN expr ';'
+  ;
+
+increment_assignment : add_assignment
+  | sub_assignment 
+  | mul_assignment 
+  | div_assignment
+  ;
+
+add_assignment : IDENTIFIER ADD_ASSIGN expr
+  | arrayIndex ADD_ASSIGN expr
+  | derreferencing ADD_ASSIGN expr
+  | fieldAccess ADD_ASSIGN expr
+  ;
+sub_assignment : IDENTIFIER SUB_ASSIGN expr
+  | arrayIndex SUB_ASSIGN expr
+  | derreferencing SUB_ASSIGN expr
+  | fieldAccess SUB_ASSIGN expr
+  ;
+mul_assignment : IDENTIFIER MULT_ASSIGN expr
+  | arrayIndex MULT_ASSIGN expr
+  | derreferencing MULT_ASSIGN expr
+  | fieldAccess MULT_ASSIGN expr
+  ;
+div_assignment : IDENTIFIER DIV_ASSIGN expr
+  | arrayIndex DIV_ASSIGN expr
+  | derreferencing DIV_ASSIGN expr
+  | fieldAccess DIV_ASSIGN expr
+  ;
 
 while : WHILE '(' expr ')' block            {printf(">>> While\n");}
   ;
 
 for : FOR '(' forHeader ')' block ;
 forHeader : ';' ';'
-  | statement expr statement
-  | ';' expr ';' statement
-  | ';' ';' statement
+  | statement expr ';' increment_assignment
+  | ';' expr ';' increment_assignment
+  | ';' ';' increment_assignment
   | statement ';' ';'
   | statement ';' expr ';'
   | ';' expr ';'
@@ -151,12 +174,11 @@ match : MATCH '(' expr ')' '{' matchCases '}'
 matchCases : matchCase
   | matchCases ',' matchCase
   ;
-matchCase : matchLeft EQUALS_ARROW matchRight ;
+matchCase : matchLeft EQUALS_ARROW block ;
 matchLeft : multipleMatchLeft | '_' ;
 multipleMatchLeft : literal
   | multipleMatchLeft '|' literal
   ;
-matchRight : block | statement ;
 
 return : RETURN ';'
   | RETURN expr ';'
@@ -193,10 +215,6 @@ typequalifier : CONST
   | STATIC
   ;
 
-types : type
-  | types ',' type
-  ;
-
 type : USIZE
   | U8
   | U16
@@ -212,26 +230,32 @@ type : USIZE
   | STRING
   | CHAR
   | IDENTIFIER
-  | type '[' ']'
-  /* | type ASTERISK */
+  | '[' expr ']' type %prec ARRAY_TYPE
+  | '[' ']' type %prec ARRAY_TYPE
+  | pointer
   ;
+
+pointer : type ASTERISK;
 
 primary : IDENTIFIER
   | subprogramCall
-  | NEW type
-  /* | arrayIndex */
+  | NEW type %prec UNEW
+  | arrayIndex
   | arrayDef
   | enumDef
   | compoundTypeDef
-  /* | tupleDef */
-  /* | fieldAccess */
+  | fieldAccess
+  | derreferencing
   ;
+
+derreferencing : ASTERISK IDENTIFIER;
 
 literal : CHAR_LITERAL
   | STRING_LITERAL
   | FLOAT_LITERAL
   | INT_LITERAL
   | BOOLEAN_LITERAL
+  | T_NULL
   ;
 
 expr: primary %prec UPRIMARY 
@@ -249,9 +273,9 @@ expr: primary %prec UPRIMARY
   | expr ASTERISK expr
   | expr SLASH expr
   | expr PERCENTAGE expr
-  | CAST '<' type '>'  '(' expr ')' %prec UTYPE
+  | CAST LESS_THAN type MORE_THAN  '(' expr ')' %prec UTYPE
+  | CAST LESS_THAN type MORE_THAN  '(' expr ',' expr ')' %prec UTYPE
   | AMPERSAND expr %prec UAMPERSAND
-  /* | expr ASTERISK expr %prec UASTERISK */
   | NOT expr %prec UNOT
   | PLUS expr %prec UPLUS
   | MINUS expr %prec UMINUS
@@ -260,6 +284,7 @@ expr: primary %prec UPRIMARY
 
 arrayIndex : arrayDef '[' expr ']'
   | IDENTIFIER '[' expr ']'
+  | arrayIndex '[' expr ']'
   ;
 
 subprogramCall : IDENTIFIER '(' ')'
@@ -267,17 +292,16 @@ subprogramCall : IDENTIFIER '(' ')'
   ;
 arguments : expr | arguments ',' expr ;
 
-arrayDef : '[' ']' | '[' commaSeparatedExpr ']' ;
+arrayDef : '{' '}' | '{' commaSeparatedExpr '}' ;
 
 commaSeparatedExpr : expr
-  | expr ','
-  | expr ',' commaSeparatedExpr
+  | commaSeparatedExpr ',' expr
   ;
 
 enumDef : IDENTIFIER DOUBLE_COLON IDENTIFIER ;
 
-compoundTypeDef : type '{' '}'
-  | type '{' compoundTypeFields '}'
+compoundTypeDef : IDENTIFIER '{' '}'
+  | IDENTIFIER '{' compoundTypeFields '}'
   ;
 
 compoundTypeFields : type ':' expr
@@ -285,10 +309,8 @@ compoundTypeFields : type ':' expr
   | type ':' expr ',' compoundTypeFields
   ;
 
-//tupleDef : LESS_THAN commaSeparatedExpr MORE_THAN ;
-
-fieldAccess : expr '.' IDENTIFIER 
-  | expr
+fieldAccess : IDENTIFIER '.' IDENTIFIER
+  | fieldAccess '.' IDENTIFIER
   ;
 
 block : '{' '}'

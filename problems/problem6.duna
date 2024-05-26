@@ -10,8 +10,8 @@ struct ABB {
 
 proc inserir(No no, i32 chave) {
     if (no == null) {
-        no = new No{
-            chave = chave;
+        no = No{
+            chave : chave,
         };
         return;
     }
@@ -20,8 +20,8 @@ proc inserir(No no, i32 chave) {
         if (no.esq != null) {
             inserir(no.esq, chave);
         } else {
-            no.esq = new No{
-                chave = chave;
+            no.esq = No{
+                chave : chave,
             };
             return;
         }
@@ -29,8 +29,8 @@ proc inserir(No no, i32 chave) {
         if (no.dir != null) {
             inserir(no.dir, chave);
         } else {
-            no.dir = new No{
-                chave = chave;
+            no.dir = No{
+                chave : chave,
             };
             return;
         }
@@ -40,8 +40,8 @@ proc inserir(No no, i32 chave) {
     }
 }
 
-proc sequenciaDeValoresParaABB(ABB abb, i32[] sequencia) {
-    for (u32 i = 0; i < #sequencia; i += 1;) {
+proc sequenciaDeValoresParaABB(ABB abb, []i32 sequencia) {
+    for (u32 i = 0; i < #sequencia; i += 1) {
         inserir(abb.raiz, sequencia[i]);
     }
 }
@@ -105,16 +105,16 @@ proc imprimirNivel(No no, u32 nivel) {
 }
 
 proc imprimirABBPorNivel(ABB abb) {
-    for (u32 nivel = 1; nivel <= altura(abb.raiz); nivel++;) {
+    for (u32 nivel = 1; nivel <= altura(abb.raiz); nivel += 1) {
         imprimirNivel(abb.raiz, nivel);
         print("\n");
     }
 }
 
 proc main() {
-    ABB abb = new ABB{};
+    ABB abb = ABB{};
 
-    i32[] sequencia = [10, 5, 15, 1, 7, 20];
+    []i32 sequencia = {10, 5, 15, 1, 7, 20};
 
     sequenciaDeValoresParaABB(abb);
 

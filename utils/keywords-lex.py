@@ -1,6 +1,10 @@
 for symbol, name in [
     ("==", "equality"),
     ("!=", "inequality"),
+    ("+=", "add_assign"),
+    ("-=", "sub_assign"),
+    ("*=", "mult_assign"),
+    ("/=", "div_assign"),
     ("=", "assign"),
     ("<=", "less_than_equals"),
     (">=", "more_than_equals"),
@@ -50,7 +54,6 @@ for identifier in [
     "enum",
     "union",
     "struct",
-    "tuple",
     "const",
     "static",
     "usize",
@@ -74,6 +77,7 @@ for identifier in [
     "delete",
     "print",
     "cast",
-    "typedef"
+    "typedef",
+    "null",
 ]:
     print(f'"{identifier.lower()}"          {{ printf("TOKEN(%s)\\n", yytext); return({identifier.upper()}); }}')
