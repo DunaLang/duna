@@ -215,65 +215,6 @@ type : USIZE
   /* | type ASTERISK */
   ;
 
-/* expr : logicalOr ;
-
-logicalOr : logicalOr OR logicalAnd
-  | logicalAnd
-  ;
-
-logicalAnd : logicalAnd AND comparison
-  | comparison
-  ;
-
-comparison : comparison LESS_THAN equality
-  | comparison MORE_THAN equality
-  | comparison LESS_THAN_EQUALS equality
-  | comparison MORE_THAN_EQUALS equality
-  | equality
-  ;
-
-equality : equality EQUALITY term
-  | equality INEQUALITY term
-  | term
-  ;
-
-term : term PLUS factor
-  | term MINUS factor
-  | factor
-  ;
-
-factor : factor ASTERISK cast
-  | factor SLASH cast
-  | factor PERCENTAGE cast 
-  | cast
-  ;
-
-cast : '(' type ')' addressOf
-  | addressOf
-  ;
-
-addressOf : AMPERSAND dereference
-  | dereference
-  ;
-
-dereference : ASTERISK negation
-  | negation
-  ;
-
-negation : NOT unary
-  | unary
-  ;
-
-unary : INCREMENT primary
-  | DECREMENT primary
-  | primary INCREMENT
-  | primary DECREMENT
-  | PLUS primary
-  | MINUS primary
-  | HASHTAG primary
-  | primary
-  ; */
-
 primary : IDENTIFIER
   | subprogramCall
   | NEW type
