@@ -27,9 +27,25 @@ extern FILE * yyin;
 %token IF ELSE WHILE FOR FOREACH FUNC PROC RETURN BREAK CONTINUE 
 %token MATCH ENUM UNION STRUCT TUPLE CONST STATIC
 %token USIZE U8 U16 U32 U64 I8 I16 I32 I64 F32 F64 BOOL STRING CHAR TYPEDEF
-%token NOT AND OR NEW DELETE PRINT
-%token EQUALITY INEQUALITY ASSIGN LESS_THAN_EQUALS MORE_THAN_EQUALS LESS_THAN MORE_THAN PLUS MINUS ASTERISK SLASH INCREMENT DECREMENT DOUBLE_COLON EQUALS_ARROW AMPERSAND HASHTAG PERCENTAGE
+%token NOT AND OR NEW DELETE PRINT STATIC_CAST
+%token EQUALITY INEQUALITY ASSIGN LESS_THAN_EQUALS MORE_THAN_EQUALS LESS_THAN MORE_THAN PLUS MINUS ASTERISK SLASH DOUBLE_COLON EQUALS_ARROW AMPERSAND HASHTAG PERCENTAGE
 %token <sValue> IDENTIFIER
+
+%nonassoc ULITERAL UPRIMARY
+%nonassoc UHASHTAG UMINUS UPLUS
+%nonassoc UNOT
+%nonassoc UASTERISK
+%nonassoc UAMPERSAND
+%nonassoc UTYPE
+%left PERCENTAGE SLASH ASTERISK
+%left MINUS PLUS
+%left EQUALITY INEQUALITY
+%left LESS_THAN MORE_THAN LESS_THAN_EQUALS MORE_THAN_EQUALS
+%left AND
+%left OR
+%nonassoc UPARENTESISEXPR
+
+
 
 %start program
 
@@ -199,7 +215,7 @@ type : USIZE
   /* | type ASTERISK */
   ;
 
-expr : logicalOr ;
+/* expr : logicalOr ;
 
 logicalOr : logicalOr OR logicalAnd
   | logicalAnd
@@ -256,13 +272,11 @@ unary : INCREMENT primary
   | MINUS primary
   | HASHTAG primary
   | primary
-  ;
+  ; */
 
-primary : literal
-  | IDENTIFIER
+primary : IDENTIFIER
   | subprogramCall
   | NEW type
-  /* | '(' expr ')' */
   /* | arrayIndex */
   | arrayDef
   | enumDef
@@ -277,6 +291,30 @@ literal : CHAR_LITERAL
   | INT_LITERAL
   | BOOLEAN_LITERAL
   ;
+
+expr: primary %prec UPRIMARY 
+  | literal %prec ULITERAL
+  | expr OR expr
+  | expr AND expr
+  | expr LESS_THAN expr
+  | expr MORE_THAN expr
+  | expr LESS_THAN_EQUALS expr
+  | expr MORE_THAN_EQUALS expr
+  | expr EQUALITY expr
+  | expr INEQUALITY expr
+  | expr PLUS expr
+  | expr MINUS expr
+  | expr ASTERISK expr
+  | expr SLASH expr
+  | expr PERCENTAGE expr
+  | STATIC_CAST '<' type '>'  '(' expr ')' %prec UTYPE
+  | AMPERSAND expr %prec UAMPERSAND
+  /* | expr ASTERISK expr %prec UASTERISK */
+  | NOT expr %prec UNOT
+  | PLUS expr %prec UPLUS
+  | MINUS expr %prec UMINUS
+  | HASHTAG expr %prec UHASHTAG
+  | '(' expr ')' %prec UPARENTESISEXPR
 
 arrayIndex : arrayDef '[' expr ']'
   | IDENTIFIER '[' expr ']'
