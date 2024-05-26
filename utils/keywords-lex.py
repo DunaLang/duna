@@ -75,6 +75,6 @@ for identifier in [
     "new",
     "delete",
     "print",
-    "static_cast"
+    "cast"
 ]:
     print(f'"{identifier.lower()}"          {{ printf("TOKEN(%s)\\n", yytext); return({identifier.upper()}); }}')

@@ -88,7 +88,7 @@ commentary       (\/\*([^*]|[\r\n]|(\*+([^*\/]|[\r\n])))*\*+\/)|(\/\/.*)
 "new"          { printf("TOKEN(%s)\n", yytext); return(NEW); }
 "delete"          { printf("TOKEN(%s)\n", yytext); return(DELETE); }
 "print"          { printf("TOKEN(%s)\n", yytext); return(PRINT); }
-"static_cast"          { printf("TOKEN(%s)\n", yytext); return(STATIC_CAST); }
+"cast"          { printf("TOKEN(%s)\n", yytext); return(CAST); }
 
 {booleanLiteral}  {printf("LITERAL(%s)\n", yytext); yylval.iValue = process_bool_literal(yytext); return BOOLEAN_LITERAL;}
 {intLiteral}      {printf("LITERAL(%s)\n", yytext); yylval.iValue = atoi(yytext); return INT_LITERAL; }
