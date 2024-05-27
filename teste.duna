@@ -1,25 +1,27 @@
-proc quickSort<T>(T[]* @arr, usize inicio, usize fim) {
+proc quickSort([]i32* @arr, usize inicio, usize fim) {
   if (inicio < fim) {
     usize p = partition(@arr, inicio, fim);
     quickSort(@arr, inicio, p - 1);
     quickSort(@arr, p + 1, fim);
   }
 }
-func partition<T>(T[]* @arr, usize inicio, usize fim) usize {
-  T pivot = @arr[fim];
+
+// Uma particao criada 2
+func partition([]i32* @arr, usize inicio, usize fim): usize {
+  i32 pivot = @arr[fim];
   usize i = inicio - 1;
 
-  for (usize j = inicio; j < fim -1; j++) {
+  for (usize j = inicio; j < fim -1; j += 1) {
     if (@arr[j] < pivot) {
       i += 1;
-      T temp = @arr[i];
+      i32 temp = @arr[i];
       @arr[i] = @arr[j];
       @arr[j] = temp;
     }
   }
 
   if (pivot < @arr[i + 1]) {
-    T temp = @arr[i + 1];
+    i32 temp = @arr[i + 1];
     @arr[i + 1] = @arr[fim];
     @arr[fim] = temp;
   }
@@ -27,3 +29,10 @@ func partition<T>(T[]* @arr, usize inicio, usize fim) usize {
   return i + 1;
 }
 
+proc main() {
+  []i32 arr = {57, 5, 82, 64, 76, 81, 39, 23, 33, 75};
+  quickSort(*arr, 0, #arr);
+
+  // 5, 23, 33, 39, 57, 64, 75, 76, 81, 82
+  print(cast<string>(arr) ++ "\n");
+}

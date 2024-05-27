@@ -1,0 +1,129 @@
+struct No {
+    i32 chave;
+    No esq;
+    No dir;
+}
+
+struct ABB {
+    No raiz;
+}
+
+proc inserir(No no, i32 chave) {
+    if (no == null) {
+        no = No{
+            chave : chave,
+        };
+        return;
+    }
+
+    if (chave < no.chave) {
+        if (no.esq != null) {
+            inserir(no.esq, chave);
+        } else {
+            no.esq = No{
+                chave : chave,
+            };
+            return;
+        }
+    } else if (chave > no.chave) {
+        if (no.dir != null) {
+            inserir(no.dir, chave);
+        } else {
+            no.dir = No{
+                chave : chave,
+            };
+            return;
+        }
+    } else {
+        // chave já existe na ABB
+        return;
+    }
+}
+
+proc sequenciaDeValoresParaABB(ABB abb, []i32 sequencia) {
+    for (u32 i = 0; i < #sequencia; i += 1) {
+        inserir(abb.raiz, sequencia[i]);
+    }
+}
+
+func chaveMinima(No no, u32 nivel): u32 {
+    if (no.esq == null) {
+        return nivel;
+    } else {
+        nivel += 1;
+        return chaveMinima(no.esq, nivel);
+    }
+}
+
+func chaveMinimaABB(ABB abb): u32 {
+    u32 nivel = 0;
+
+    return chaveMinima(abb.raiz, nivel);
+}
+
+func chaveMaxima(No no, u32 nivel): u32 {
+    if (no.dir == null) {
+        return nivel;
+    } else {
+        nivel += 1;
+        return chaveMaxima(no.dir, nivel);
+    }
+}
+
+func chaveMaximaABB(ABB abb): u32 {
+    u32 nivel = 0;
+
+    return chaveMaxima(abb.raiz, nivel);
+}
+
+func altura(No no): u32 {
+    if (no == null) {
+        return 0;
+    } else {
+        u32 alturaEsq = altura(no.esq);
+        u32 alturaDir = altura(no.dir);
+
+        if (alturaEsq > alturaDir) {
+            return alturaEsq + 1;
+        } else {
+            return alturaDir + 1;
+        }
+    }
+}
+
+proc imprimirNivel(No no, u32 nivel) {
+    if (no == null or nivel < 1) {
+        return;
+    }
+
+    if (nivel == 1) {
+        print(cast<string>(no.chave));
+    } else {
+        imprimirNivel(no.esq, nivel - 1);
+        imprimirNivel(no.dir, nivel - 1);
+    }
+}
+
+proc imprimirABBPorNivel(ABB abb) {
+    for (u32 nivel = 1; nivel <= altura(abb.raiz); nivel += 1) {
+        imprimirNivel(abb.raiz, nivel);
+        print("\n");
+    }
+}
+
+proc main() {
+    ABB abb = ABB{};
+
+    []i32 sequencia = {10, 5, 15, 1, 7, 20};
+
+    sequenciaDeValoresParaABB(abb);
+
+    u32 nivelChaveMinima = chaveMinimaABB(abb);
+    u32 nivelChaveMaxima = chaveMaximaABB(abb);
+
+    print("Nível da chave mínima: " ++ cast<string>(nivelChaveMinima) ++ "\n");
+    print("Nível da chave máxima: " ++ cast<string>(nivelChaveMaxima) ++ "\n");
+
+    print("ABB por nível:\n");
+    imprimirABBPorNivel(abb);
+}

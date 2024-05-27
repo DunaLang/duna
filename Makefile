@@ -1,12 +1,12 @@
 CC = gcc
 C_FLAGS = -Wall -Wextra
 
-duna: lex
-	$(CC) $(C_FLAGS) lex.yy.c -o duna
-lex:
+build:
+	yacc -d -v src/duna.y
 	lex src/duna.l
-run: duna
-	./duna teste.duna 
+	${CC} -o duna y.tab.c lex.yy.c -ll
+run: build
+	./duna sintatico.duna
 
-clean:	
-	rm -f duna lex.yy.c
+clean:
+	rm -f duna y.tab.c lex.yy.c

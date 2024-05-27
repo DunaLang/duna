@@ -1,0 +1,80 @@
+struct rational_t {
+    i32 numerador;
+    i32 denominador;
+}
+
+func init_rational_t(i32 a, i32 b): rational_t {
+    return rational_t{
+        numerador: a,
+        denominador: b,
+    };
+}
+
+proc print_rational_t(rational_t r) {
+    string num = cast<string>(r.numerador);
+    string den = cast<string>(r.denominador);
+
+    print(num ++ "/" ++ den ++ " (numerador=" ++ num ++ ";denominador=" ++ den ++ ")");
+}
+
+func equals(rational_t a, rational_t b): bool {
+    return a.numerador * b.denominador == b.numerador * a.denominador;
+}
+
+func soma(rational_t a, rational_t b): rational_t {
+    i32 num = a.numerador * b.denominador + a.denominador * b.numerador;
+    i32 den = a.denominador * b.denominador;
+
+    return init_rational_t(num, den);
+}
+
+func negacao(rational_t r): rational_t {
+    return init_rational_t(-r.numerador, r.denominador);
+}
+
+func subtracao(rational_t a, rational_t b): rational_t {
+    return soma(a, negacao(b));
+}
+
+func multiplicacao(rational_t a, rational_t b): rational_t {
+    return init_rational_t(a.numerador * b.numerador, a.denominador * b.denominador);
+}
+
+func inverso(rational_t r): rational_t {
+    return init_rational_t(r.denominador, r.numerador);
+}
+
+func divisao(rational_t a, rational_t b): rational_t {
+    return multiplicacao(a, inverso(b));
+}
+
+proc main() {
+    rational_t r1 = init_rational_t(5, 2);
+    rational_t r2 = init_rational_t(2, 5);
+
+    print("Iguais?=" ++ cast<string>(equals(r1, r2)) ++ "\n");
+
+    print("Soma: ");
+    print_rational_t(soma(r1, r2));
+
+    print("Negação (r1): ");
+    print_rational_t(negacao(r1));
+
+    print("Negação (r2): ");
+    print_rational_t(negacao(r2));
+
+    print("Subtração: ");
+    print_rational_t(subtracao(r1, r2));
+
+    print("Multiplicação: ");
+    print_rational_t(multiplicacao(r1, r2));
+
+    print("Inverso (r1): ");
+    print_rational_t(inverso(r1));
+
+    print("Inverso (r2): ");
+    print_rational_t(inverso(r2));
+
+    print("Divisão: ");
+    print_rational_t(divisao(r1, r2));
+}

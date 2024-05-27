@@ -1,25 +1,41 @@
 for symbol, name in [
     ("==", "equality"),
-    ("=", "equals"),
+    ("!=", "inequality"),
+    ("+=", "add_assign"),
+    ("-=", "sub_assign"),
+    ("*=", "mult_assign"),
+    ("/=", "div_assign"),
+    ("=", "assign"),
     ("<=", "less_than_equals"),
     (">=", "more_than_equals"),
     ("<", "less_than"),
     (">", "more_than"),
-    ("(", "left_paren"),
-    (")", "right_paren"),
-    ("[", "left_brace"),
-    ("]", "right_brace"),
-    ("{", "left_bracket"),
-    ("}", "right_bracket"),
-    (".", "dot"),
-    (",", "comma"),
-    (";", "semicolon"),
     ("+", "plus"),
     ("-", "minus"),
     ("*", "asterisk"),
     ("/", "slash"),
+    ("::", "double_colon"),
+    ("=>", "equals_arrow"),
+    ("&", "ampersand"),
+    ("#", "hashtag"),
+    ('%', "percentage")
 ]:
-    print(f'"{symbol.lower()}" {{printf("{name.upper()}\\n");}}')
+    print(f'"{symbol.lower()}"   {{ printf("TOKEN(%s)\\n", yytext); return({name.upper()});}}')
+
+for symbol, name in [
+    ("(", "left_paren"),
+    (")", "right_paren"),
+    ("[", "left_bracket"),
+    ("]", "right_bracket"),
+    ("{", "block_begin"),
+    ("}", "block_end"),
+    (".", "dot"),
+    (",", "comma"),
+    (";", "semicolon"),
+    ("_", "underline"),
+    (":", "colon"),
+]:
+    print(f'"{symbol.lower()}"   {{ printf("TOKEN(%s)\\n", yytext); return(yytext[0]);}}')
 
 print()
 
@@ -38,7 +54,6 @@ for identifier in [
     "enum",
     "union",
     "struct",
-    "tuple",
     "const",
     "static",
     "usize",
@@ -55,10 +70,14 @@ for identifier in [
     "bool",
     "string",
     "char",
-    "true",
-    "false",
     "not",
     "and",
-    "or"
+    "or",
+    "new",
+    "delete",
+    "print",
+    "cast",
+    "typedef",
+    "null",
 ]:
-    print(f'"{identifier.lower()}" {{ printf("{identifier.upper()}\\n"); }}')
+    print(f'"{identifier.lower()}"          {{ printf("TOKEN(%s)\\n", yytext); return({identifier.upper()}); }}')

@@ -1,0 +1,70 @@
+proc main() {
+    i32 largura_m1 = cast<i32>(read(), null);
+    i32 altura_m1 = cast<i32>(read(), null);
+
+    [altura_m1][largura_m1]f32 m1;
+
+    for (i32 y = 0; y < altura_m1; y += 1) {
+        for (i32 x = 0; x < largura_m1; x += 1) {
+            m1[y][x] = cast<f32>(read(), null);
+        }
+    }
+
+
+    i32 largura_m2 = cast<i32>(read(), null);
+    i32 altura_m2 = cast<i32>(read(), null);
+
+    [altura_m2][largura_m2]f32 m2;
+
+    for (i32 y = 0; y < altura_m2; y += 1) {
+        for (i32 x = 0; x < largura_m2; x += 1) {
+            m2[y][x] = cast<f32>(read());
+        }
+    }
+
+
+    if (largura_m1 != largura_m2 or altura_m1 != altura_m2) {
+        print("Não é possível calcular a soma das matrizes\n");
+    } else {
+        // Soma aqui
+        [altura_m2][largura_m2]f32 m;
+
+        for (i32 y = 0; y < altura_m2; y += 1) {
+            for (i32 x = 0; x < largura_m2; x += 1) {
+                m2[y][x] = cast<f32>(read(), null);
+            }
+        }
+
+        print("Soma:\n");
+        for (i32 y = 0; y < altura_m2; y += 1) {
+            for (i32 x = 0; x < largura_m2; x += 1) {
+                print(cast<string>(m[y][x]) ++ " ");
+                print("\n");
+            }
+        }
+    }
+
+    if (largura_m1 != altura_m2) {
+        print("Não é possível calcular o produto das matrizes\n");
+    } else {
+        [altura_m1][largura_m2]f32 m;
+
+        for (i32 y = 0; y < altura_m1; y += 1) {
+            for (i32 x = 0; x < largura_m2; x += 1) {
+                m[y][x] = 0;
+                
+                for (i32 i = 0; i < altura_m2; i += 1) {
+                    m[y][x] += m1[y][i] * m2[i][x];
+                }
+            }
+        }
+
+        print("Produto:\n");
+        for (i32 y = 0; y < altura_m1; y += 1) {
+            for (i32 x = 0; x < largura_m2; x += 1) {
+                print(cast<string>(m[y][x]) ++ " ");
+                print("\n");
+            }
+        }
+    }
+}
