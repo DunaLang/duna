@@ -6,12 +6,6 @@ struct Pessoa {
   int idade;
 }
 
-// Struct v2
-//struct Calculadora <T>{
-//  T n1;
-//  T n2;
-//}
-
 // Union
 union yylval {
   i32 iValue;    
@@ -33,20 +27,11 @@ proc testeComParams (i16 i, bool isTrue) {
   if(true) {}
 }
 
-// Proc v3 - Templates
-//proc testeTemplate <T, U>(T param1, U param2) {}
-
 // Func v1
 func main () : i8 {}
 
-// Func v2
-//func testeFuncTemplate <T>() : T {}
-
 // Func v3
 func equals(string msg, string msg2) : bool {}
-
-// Func v4
-//func soma <T>(T n1, T n2) : T {}
 
 // Proc main
 proc main() {
@@ -63,7 +48,7 @@ proc main() {
 
   // Testando ponteiros e arrays
   i32* @ptr;
-  i16[] arr;
+  []i16 arr;
 
   // Declaração v3
   static string msg;
