@@ -291,7 +291,10 @@ subprogramCall : IDENTIFIER '(' ')'
   ;
 arguments : expr | arguments ',' expr ;
 
-arrayDef : '{' '}' | '{' commaSeparatedExpr '}' ;
+arrayDef : '{' '}'
+  | '{' commaSeparatedExpr '}'
+  | '{' commaSeparatedExpr ',' '}'
+  ;
 
 commaSeparatedExpr : expr
   | commaSeparatedExpr ',' expr
