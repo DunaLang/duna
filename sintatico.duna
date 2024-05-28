@@ -14,6 +14,19 @@ union yylval {
   char cValue;
 }
 
+// Enum
+enum Cor {
+  VERMELHO,
+  VERDE,
+  AZUL
+}
+
+enum Cor2 {
+  VERMELHO = 0,
+  VERDE = 1,
+  AZUL,
+}
+
 // Proc v1
 proc testeSintatico () {}
 
@@ -28,7 +41,9 @@ proc testeComParams (i16 i, bool isTrue) {
 }
 
 // Func v1
-func main () : i8 {}
+func retorna1() : i8 {
+  return 1;
+}
 
 // Func v3
 func equals(string msg, string msg2) : bool {}
@@ -104,4 +119,65 @@ proc main() {
 
   // Foreach v2
   foreach(const i16 element : arr) {}
+
+  i32 compound = 0;
+
+  compound += 2;
+  compound *= 2;
+  compound -= 2;
+  compound /= 2;
+
+  Cor c = Cor::AZUL;
+
+  testeSintatico();
+  i8 valor1 = retorna1();
+  
+  [3]i8 arr1;
+  []i8 arr2 = {0,1,2,3};
+  arr1[0] = 20;
+  i8 valor2 = arr2[2];
+
+  Pessoa p1 = Pessoa{};
+  Pessoa p2 = Pessoa{nome: "João", idade: 45};
+  p1.idade = 18;
+  bool maiorDeIdade = p1.idade >= 18;
+
+  i8* @ptr;
+  i8* @ptr2 = null;
+  @ptr = new i8;
+  *@ptr = 10;
+  
+  for(;;) {
+    break;
+  }
+  for(;;valor2 += 1) {
+    continue;
+  }
+  for(;valor2 < 10; valor2 += 1) {
+    testeSintatico();
+  }
+  for(i8 i = 0;i < 10; i += 1) {
+    testeSintatico();
+  }
+  for(i8 j = 0; j < 20;) {
+    j += 1;
+  }
+  for(;valor2 < 10;) {
+    valor2 += 1;
+  }
+
+  match(valor2) {
+    1 | 2 => {  testeSintatico(); },
+    5 => { },
+    _ => { *@ptr = valor2; }
+  }
+
+  match(valor2) {
+    1 | 2 => {  testeSintatico(); },
+    5 => { },
+    _ => { *@ptr = valor2; },
+  }
+
+  delete @ptr;
+  
 }
