@@ -34,6 +34,7 @@ for symbol, name in [
     (";", "semicolon"),
     ("_", "underline"),
     (":", "colon"),
+    ("|", "pipe"),
 ]:
     print(f'"{symbol.lower()}"   {{ printf("TOKEN(%s)\\n", yytext); return(yytext[0]);}}')
 
