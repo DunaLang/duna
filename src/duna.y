@@ -82,14 +82,13 @@ func : FUNC IDENTIFIER '(' ')' ':' type block
   ;
 
 enum : ENUM IDENTIFIER '{' enumValues '}'
-  | ENUM IDENTIFIER LESS_THAN type MORE_THAN '{' enumValues '}'
+  | ENUM IDENTIFIER '{' enumValues ',' '}'
   ;
 
 enumValues : IDENTIFIER
-  | IDENTIFIER ','
+  | enumValues ',' IDENTIFIER
   | IDENTIFIER ASSIGN INT_LITERAL
-  | IDENTIFIER ASSIGN INT_LITERAL ','
-  | enumValues IDENTIFIER ASSIGN INT_LITERAL ','
+  | enumValues ',' IDENTIFIER ASSIGN INT_LITERAL
   ;
 
 union : UNION IDENTIFIER '{' fields '}'                       {printf(">>> Union\n");}
@@ -104,7 +103,7 @@ statements : statement
 
 statement : varDecl
   | assignment
-  | increment_assignment ';'
+  | compound_assignment ';'
   | while
   | for
   | foreach
@@ -124,7 +123,7 @@ assignment : IDENTIFIER ASSIGN expr ';' { printf(">>> Assignment\n"); }
   | fieldAccess ASSIGN expr ';'
   ;
 
-increment_assignment : add_assignment
+compound_assignment : add_assignment
   | sub_assignment 
   | mul_assignment 
   | div_assignment
@@ -156,11 +155,11 @@ while : WHILE '(' expr ')' block            {printf(">>> While\n");}
 
 for : FOR '(' forHeader ')' block ;
 forHeader : ';' ';'
-  | statement expr ';' increment_assignment
-  | ';' expr ';' increment_assignment
-  | ';' ';' increment_assignment
-  | statement ';' ';'
-  | statement ';' expr ';'
+  | statement expr ';' compound_assignment
+  | ';' expr ';' compound_assignment
+  | ';' ';' compound_assignment
+  | statement ';'
+  | statement expr ';'
   | ';' expr ';'
   ;
 
