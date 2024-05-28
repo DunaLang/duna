@@ -1,7 +1,6 @@
 %{
   #include <stdio.h>
   #include "y.tab.h"
-  // Para tipos é melhor: {yylval.sValue = strdup("u8"); return TYPE;} ?
   extern int yyerror (char *msg);
   int count_newlines(char* text);
   int process_bool_literal(char* text);
@@ -52,6 +51,7 @@ commentary       (\/\*([^*]|[\r\n]|(\*+([^*\/]|[\r\n])))*\*+\/)|(\/\/.*)
 ";"   { printf("TOKEN(%s)\n", yytext); return(yytext[0]);}
 "_"   { printf("TOKEN(%s)\n", yytext); return(yytext[0]);}
 ":"   { printf("TOKEN(%s)\n", yytext); return(yytext[0]);}
+"|"   { printf("TOKEN(%s)\n", yytext); return(yytext[0]);}
 
 "if"          { printf("TOKEN(%s)\n", yytext); return(IF); }
 "else"          { printf("TOKEN(%s)\n", yytext); return(ELSE); }
