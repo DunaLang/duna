@@ -93,9 +93,9 @@ commentary       (\/\*([^*]|[\r\n]|(\*+([^*\/]|[\r\n])))*\*+\/)|(\/\/.*)
 "typedef"          { printf("TOKEN(%s)\n", yytext); return(TYPEDEF); }
 "null"          { printf("TOKEN(%s)\n", yytext); return(T_NULL); }
 
-{booleanLiteral}  {printf("LITERAL(%s)\n", yytext); yylval.iValue = process_bool_literal(yytext); return BOOLEAN_LITERAL;}
-{intLiteral}      {printf("LITERAL(%s)\n", yytext); yylval.iValue = atoi(yytext); return INT_LITERAL; }
-{floatLiteral}    {printf("LITERAL(%s)\n", yytext); yylval.fValue = atof(yytext); return FLOAT_LITERAL; }
+{booleanLiteral}  {printf("LITERAL(%s)\n", yytext); yylval.sValue = strdup(yytext); return BOOLEAN_LITERAL;}
+{intLiteral}      {printf("LITERAL(%s)\n", yytext); yylval.sValue = strdup(yytext); return INT_LITERAL; }
+{floatLiteral}    {printf("LITERAL(%s)\n", yytext); yylval.sValue = strdup(yytext); return FLOAT_LITERAL; }
 {stringLiteral}   {printf("LITERAL(%s)\n", yytext); yylval.sValue = strdup(yytext); return STRING_LITERAL; }
 {charLiteral}     {printf("LITERAL(%s)\n", yytext); yylval.cValue = yytext[1]; return CHAR_LITERAL; }
 {identifier}      {printf("ID(%s)\n", yytext); yylval.sValue = strdup(yytext); return IDENTIFIER;}
@@ -118,12 +118,4 @@ int count_newlines(char *text) {
         text++;
     }
     return count;
-}
-
-int process_bool_literal(char* text) {
-   if (strcmp(text, "true") == 0) {
-        return 1;
-    } else {
-        return 0;
-    }
 }

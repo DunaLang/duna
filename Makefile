@@ -4,7 +4,7 @@ C_FLAGS = -Wall -Wextra
 build:
 	yacc -d -v src/duna.y
 	lex src/duna.l
-	${CC} -o duna y.tab.c lex.yy.c -ll
+	${CC} -o duna y.tab.c lex.yy.c lib/record.c -ll
 run: build
 	./duna sintatico.duna
 

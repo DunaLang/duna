@@ -2,28 +2,31 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "lib/record.h"
 
 int yylex(void);
 int yyerror(char *s);
 extern int yylineno;
 extern char * yytext;
 extern FILE * yyin;
+extern FILE * yyout;
+
+char * cat(char *, char *, char *, char *, char *);
 %}
 
 %union {
-    int iValue;    
-    float fValue;
     char* sValue;
     char cValue;
+	  struct record * rec;
 };
 
 
 // Tokens terminais
-%token <iValue> INT_LITERAL
-%token <fValue> FLOAT_LITERAL
+%token <sValue> INT_LITERAL
+%token <sValue> FLOAT_LITERAL
 %token <sValue> STRING_LITERAL
 %token <cValue> CHAR_LITERAL
-%token <iValue> BOOLEAN_LITERAL
+%token <sValue> BOOLEAN_LITERAL
 %token IF ELSE WHILE FOR FOREACH FUNC PROC RETURN BREAK CONTINUE 
 %token MATCH ENUM UNION STRUCT CONST STATIC
 %token USIZE U8 U16 U32 U64 I8 I16 I32 I64 F32 F64 BOOL STRING CHAR TYPEDEF
@@ -47,10 +50,14 @@ extern FILE * yyin;
 %left OR
 %nonassoc UPARENTESISEXPR
 
+%type <rec> declarations declaration varDecl block proc type expr pointer statements statement literal
+
 %start program
 
 %%
-program : declarations ;
+program : declarations {fprintf(yyout, "%s\n", $1->code);
+                          freeRecord($1);               
+                       };
 
 declarations : declaration
   | declaration declarations
@@ -65,15 +72,29 @@ declaration : varDecl
   | struct
   ;
 
-varDecl : type IDENTIFIER ';'
-  | type IDENTIFIER ASSIGN expr ';'
-  | typequalifiers type IDENTIFIER ';'
-  | typequalifiers type IDENTIFIER ASSIGN expr ';'
+varDecl : type IDENTIFIER ';' {char* s1 = cat($1->code, $2, "", "", "");
+                                      free($2);
+                                      $$ = createRecord(s1, "");
+                                      free(s1);
+                                    }
+  | type IDENTIFIER ASSIGN expr ';' {char* s1 = cat($1->code, $2, " = ", $4->code, "");
+                                      free($2);
+                                      free($4);
+                                      $$ = createRecord(s1, "");
+                                      free(s1);
+                                    }
+  | typequalifiers type IDENTIFIER ';' {$$ = createRecord("", "");}
+  | typequalifiers type IDENTIFIER ASSIGN expr ';'{$$ = createRecord("", "");}
 
 typedef : TYPEDEF type IDENTIFIER ';' 
   ;
 
-proc : PROC IDENTIFIER '(' ')' block
+proc : PROC IDENTIFIER '(' ')' block {char* s1 = cat("void", " ", $2, "()", $5->code);
+                                        free($2);
+                                        freeRecord($5);
+                                        $$ = createRecord(s1, "");
+                                        free(s1);
+                                      }
   | PROC IDENTIFIER '(' params ')' block
   ;
 
@@ -98,10 +119,17 @@ struct : STRUCT IDENTIFIER '{' fields '}'                     {printf(">>> Struc
   ;
 
 statements : statement
-  | statements statement
+  | statements statement {
+    char* s1 = cat($1->code, "\n", $2->code, "", "");
+    freeRecord($1);
+    freeRecord($2);
+    $$ = createRecord(s1, ""); free(s1);}
   ;
 
-statement : varDecl
+statement : varDecl {
+  char* s1 = cat($1->code, ";", "", "", "");
+  freeRecord($1);
+  $$ = createRecord(s1, "");  free(s1);}
   | assignment
   | compound_assignment ';'
   | while
@@ -214,27 +242,44 @@ typequalifier : CONST
   | STATIC
   ;
 
-type : USIZE
-  | U8
-  | U16
-  | U32
-  | U64
-  | I8
-  | I16
-  | I32
-  | I64
-  | F32
-  | F64
-  | BOOL
-  | STRING
-  | CHAR
-  | IDENTIFIER
-  | '[' expr ']' type %prec ARRAY_TYPE
-  | '[' ']' type %prec ARRAY_TYPE
-  | pointer
+type : USIZE {$$ = createRecord("size_t ", "");}
+  | U8  {$$ = createRecord("u_int8_t ", "");}
+  | U16 {$$ = createRecord("u_int16_t ", "");}
+  | U32 {$$ = createRecord("u_int32_t ", "");}
+  | U64 {$$ = createRecord("u_int64_t ", "");}
+  | I8  {$$ = createRecord("int8_t ", "");}
+  | I16 {$$ = createRecord("int16_t ", "");}
+  | I32 {$$ = createRecord("int32_t ", "");}
+  | I64 {$$ = createRecord("int64_t ", "");}
+  | F32 {$$ = createRecord("float ", "");}
+  | F64 {$$ = createRecord("double ", "");}
+  | BOOL {$$ = createRecord("short ", "");}
+  | STRING {$$ = createRecord("std::string ", "");}
+  | CHAR {$$ = createRecord("char ", "");}
+  | IDENTIFIER {$$ = createRecord($1, "");
+                free($1);
+                }
+  | '[' expr ']' type %prec ARRAY_TYPE {
+                char* s1 = cat("[", $2->code ,"]", "", "");
+                freeRecord($2);
+                $$ = createRecord($4->code, s1);
+                freeRecord($4);
+                free(s1);
+                }
+  | '[' ']' type %prec ARRAY_TYPE {
+                $$ = createRecord($3->code, "[]");
+                freeRecord($3);
+                }
+  | pointer {$$ = createRecord($1->code, ""); freeRecord($1);}
   ;
 
-pointer : type ASTERISK;
+pointer : type ASTERISK {
+  char* s1 = cat($1->code, "*", "","","");
+  freeRecord($1);
+  $$ = createRecord(s1, "");
+  free(s1);
+  }
+  ;
 
 primary : IDENTIFIER
   | subprogramCall
@@ -251,14 +296,14 @@ derreferencing : ASTERISK IDENTIFIER;
 
 literal : CHAR_LITERAL
   | STRING_LITERAL
-  | FLOAT_LITERAL
-  | INT_LITERAL
+  | FLOAT_LITERAL {$$ = createRecord($1, ""); free($1);}
+  | INT_LITERAL {$$ = createRecord($1, ""); free($1);}
   | BOOLEAN_LITERAL
   | T_NULL
   ;
 
 expr: primary %prec UPRIMARY 
-  | literal %prec ULITERAL
+  | literal %prec ULITERAL {$$ = createRecord($1->code, ""); freeRecord($1);}
   | expr OR expr
   | expr AND expr
   | expr LESS_THAN expr
@@ -312,8 +357,13 @@ fieldAccess : IDENTIFIER '.' IDENTIFIER
   | fieldAccess '.' IDENTIFIER
   ;
 
-block : '{' '}'
-  | '{' statements '}'
+block : '{' '}' {$$ = createRecord("{}", "");}
+  | '{' statements '}' {
+    char* s1 = cat("{\n",$2->code,"\n}", "", "");
+    freeRecord($2);
+    $$ = createRecord(s1, "");
+    free(s1);
+    }
   ;
 
 %%
@@ -324,20 +374,41 @@ int yyerror(char* msg) {
 }
 
 int main(int argc, char **argv) {
+    int code;
     if (argc < 2) {
         fprintf(stderr, "Uso: %s arquivo_de_entrada\n", argv[0]);
         return 1;
     }
 
     yyin = fopen(argv[1], "r");
+    yyout = fopen("duna.c", "w");
+    
     if (!yyin) {
         fprintf(stderr, "Não foi possível abrir o arquivo %s\n", argv[1]);
         return 1;
     }
 
-    yyparse();
+    code = yyparse();
 
     fclose(yyin);
+    fclose(yyout);
 
     return 0;
+}
+
+char * cat(char * s1, char * s2, char * s3, char * s4, char * s5){
+  int tam;
+  char * output;
+
+  tam = strlen(s1) + strlen(s2) + strlen(s3) + strlen(s4) + strlen(s5)+ 1;
+  output = (char *) malloc(sizeof(char) * tam);
+  
+  if (!output){
+    printf("Allocation problem. Closing application...\n");
+    exit(0);
+  }
+  
+  sprintf(output, "%s%s%s%s%s", s1, s2, s3, s4, s5);
+  
+  return output;
 }
