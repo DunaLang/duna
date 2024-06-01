@@ -50,14 +50,19 @@ char * cat(char *, char *, char *, char *, char *);
 %left OR
 %nonassoc UPARENTESISEXPR
 
-%type <rec> declarations declaration varDecl block proc type expr pointer statements statement literal
+%type <rec> declarations declaration varDecl block proc type expr pointer statements statement literal primary
 
 %start program
 
 %%
-program : declarations {fprintf(yyout, "%s\n", $1->code);
-                          freeRecord($1);               
-                       };
+program : declarations
+  {
+    fprintf(yyout, "#include <stddef.h>\n");
+    fprintf(yyout, "#include <stdint.h>\n");
+    fprintf(yyout, "#include <stdio.h>\n");
+    fprintf(yyout, "%s\n", $1->code);
+    freeRecord($1);
+  };
 
 declarations : declaration
   | declaration declarations
@@ -72,29 +77,35 @@ declaration : varDecl
   | struct
   ;
 
-varDecl : type IDENTIFIER ';' {char* s1 = cat($1->code, $2, "", "", "");
-                                      free($2);
-                                      $$ = createRecord(s1, "");
-                                      free(s1);
-                                    }
-  | type IDENTIFIER ASSIGN expr ';' {char* s1 = cat($1->code, $2, " = ", $4->code, "");
-                                      free($2);
-                                      free($4);
-                                      $$ = createRecord(s1, "");
-                                      free(s1);
-                                    }
-  | typequalifiers type IDENTIFIER ';' {$$ = createRecord("", "");}
-  | typequalifiers type IDENTIFIER ASSIGN expr ';'{$$ = createRecord("", "");}
+varDecl : type IDENTIFIER ';'
+  {
+    char* s1 = cat($1->code, $2, "", "", "");
+    free($2);
+    $$ = createRecord(s1, "");
+    free(s1);
+  }
+  | type IDENTIFIER ASSIGN expr ';'
+  {
+    char* s1 = cat($1->code, $2, " = ", $4->code, "");
+    free($2);
+    free($4);
+    $$ = createRecord(s1, "");
+    free(s1);
+  }
+  | typequalifiers type IDENTIFIER ';' { $$ = createRecord("", ""); }
+  | typequalifiers type IDENTIFIER ASSIGN expr ';'{ $$ = createRecord("", ""); }
 
 typedef : TYPEDEF type IDENTIFIER ';' 
   ;
 
-proc : PROC IDENTIFIER '(' ')' block {char* s1 = cat("void", " ", $2, "()", $5->code);
-                                        free($2);
-                                        freeRecord($5);
-                                        $$ = createRecord(s1, "");
-                                        free(s1);
-                                      }
+proc : PROC IDENTIFIER '(' ')' block
+  {
+    char* s1 = cat("void", " ", $2, "()", $5->code);
+    free($2);
+    freeRecord($5);
+    $$ = createRecord(s1, "");
+    free(s1);
+  }
   | PROC IDENTIFIER '(' params ')' block
   ;
 
@@ -112,24 +123,26 @@ enumValues : IDENTIFIER
   | enumValues ',' IDENTIFIER ASSIGN INT_LITERAL
   ;
 
-union : UNION IDENTIFIER '{' fields '}'                       {printf(">>> Union\n");}
-  ;
+union : UNION IDENTIFIER '{' fields '}';
 
-struct : STRUCT IDENTIFIER '{' fields '}'                     {printf(">>> Struct v1\n");}
-  ;
+struct : STRUCT IDENTIFIER '{' fields '}';
 
 statements : statement
-  | statements statement {
+  | statements statement
+  {
     char* s1 = cat($1->code, "\n", $2->code, "", "");
     freeRecord($1);
     freeRecord($2);
-    $$ = createRecord(s1, ""); free(s1);}
+    $$ = createRecord(s1, ""); free(s1);
+  }
   ;
 
-statement : varDecl {
-  char* s1 = cat($1->code, ";", "", "", "");
-  freeRecord($1);
-  $$ = createRecord(s1, "");  free(s1);}
+statement : varDecl
+  {
+    char* s1 = cat($1->code, ";", "", "", "");
+    freeRecord($1);
+    $$ = createRecord(s1, "");  free(s1);
+  }
   | assignment
   | compound_assignment ';'
   | while
@@ -138,6 +151,12 @@ statement : varDecl {
   | BREAK ';'
   | CONTINUE ';'
   | PRINT expr ';'
+  {
+    char* s1 = cat("printf(\"%s\", ", $2->code, ");", "", "");
+    $$ = createRecord(s1, "");
+    freeRecord($2);
+    free(s1);
+  }
   | DELETE expr ';'
   | match
   | return
@@ -145,7 +164,7 @@ statement : varDecl {
   | subprogramCall ';'
   ;
 
-assignment : IDENTIFIER ASSIGN expr ';' { printf(">>> Assignment\n"); }
+assignment : IDENTIFIER ASSIGN expr ';'
   | arrayIndex ASSIGN expr ';'
   | derreferencing ASSIGN expr ';'
   | fieldAccess ASSIGN expr ';'
@@ -178,10 +197,9 @@ div_assignment : IDENTIFIER DIV_ASSIGN expr
   | fieldAccess DIV_ASSIGN expr
   ;
 
-while : WHILE '(' expr ')' block            {printf(">>> While\n");}
-  ;
+while : WHILE '(' expr ')' block;
 
-for : FOR '(' forHeader ')' block ;
+for : FOR '(' forHeader ')' block;
 forHeader : ';' ';'
   | statement expr ';' compound_assignment
   | ';' expr ';' compound_assignment
@@ -191,8 +209,8 @@ forHeader : ';' ';'
   | ';' expr ';'
   ;
 
-foreach : FOREACH '(' type IDENTIFIER ':' IDENTIFIER ')' block        {printf(">>> Foreach v1\n");}
-  | FOREACH '(' typequalifier type IDENTIFIER ':' IDENTIFIER ')' block {printf(">>> Foreach v2\n");}
+foreach : FOREACH '(' type IDENTIFIER ':' IDENTIFIER ')' block
+  | FOREACH '(' typequalifier type IDENTIFIER ':' IDENTIFIER ')' block
   ;
 
 match : MATCH '(' expr ')' '{' matchCases '}'
@@ -211,10 +229,10 @@ return : RETURN ';'
   | RETURN expr ';'
   ;
 
-if : IF '(' expr ')' block                   {printf(">>> If v1\n");}
-  | IF '(' expr ')' block elseifs            {printf(">>> If v2\n");}
-  | IF '(' expr ')' block ELSE block         {printf(">>> If v3\n");}
-  | IF '(' expr ')' block elseifs ELSE block {printf(">>> If v4\n");}
+if : IF '(' expr ')' block
+  | IF '(' expr ')' block elseifs
+  | IF '(' expr ')' block ELSE block
+  | IF '(' expr ')' block elseifs ELSE block
   ;
 
 elseifs : elseif
@@ -242,46 +260,46 @@ typequalifier : CONST
   | STATIC
   ;
 
-type : USIZE {$$ = createRecord("size_t ", "");}
-  | U8  {$$ = createRecord("u_int8_t ", "");}
-  | U16 {$$ = createRecord("u_int16_t ", "");}
-  | U32 {$$ = createRecord("u_int32_t ", "");}
-  | U64 {$$ = createRecord("u_int64_t ", "");}
-  | I8  {$$ = createRecord("int8_t ", "");}
-  | I16 {$$ = createRecord("int16_t ", "");}
-  | I32 {$$ = createRecord("int32_t ", "");}
-  | I64 {$$ = createRecord("int64_t ", "");}
-  | F32 {$$ = createRecord("float ", "");}
-  | F64 {$$ = createRecord("double ", "");}
-  | BOOL {$$ = createRecord("short ", "");}
-  | STRING {$$ = createRecord("std::string ", "");}
-  | CHAR {$$ = createRecord("char ", "");}
-  | IDENTIFIER {$$ = createRecord($1, "");
-                free($1);
-                }
-  | '[' expr ']' type %prec ARRAY_TYPE {
-                char* s1 = cat("[", $2->code ,"]", "", "");
-                freeRecord($2);
-                $$ = createRecord($4->code, s1);
-                freeRecord($4);
-                free(s1);
-                }
-  | '[' ']' type %prec ARRAY_TYPE {
-                $$ = createRecord($3->code, "[]");
-                freeRecord($3);
-                }
-  | pointer {$$ = createRecord($1->code, ""); freeRecord($1);}
-  ;
-
-pointer : type ASTERISK {
-  char* s1 = cat($1->code, "*", "","","");
-  freeRecord($1);
-  $$ = createRecord(s1, "");
-  free(s1);
+type : USIZE { $$ = createRecord("size_t ", ""); }
+  | U8  { $$ = createRecord("uint8_t ", ""); }
+  | U16 { $$ = createRecord("uint16_t ", ""); }
+  | U32 { $$ = createRecord("uint32_t ", ""); }
+  | U64 { $$ = createRecord("uint64_t ", ""); }
+  | I8  { $$ = createRecord("int8_t ", ""); }
+  | I16 { $$ = createRecord("int16_t ", ""); }
+  | I32 { $$ = createRecord("int32_t ", ""); }
+  | I64 { $$ = createRecord("int64_t ", ""); }
+  | F32 { $$ = createRecord("float ", ""); }
+  | F64 { $$ = createRecord("double ", ""); }
+  | BOOL { $$ = createRecord("_Bool ", ""); }
+  | STRING { $$ = createRecord("string ", ""); }
+  | CHAR { $$ = createRecord("char ", ""); }
+  | IDENTIFIER { $$ = createRecord($1, ""); }
+  | '[' expr ']' type %prec ARRAY_TYPE
+  {
+    char* s1 = cat("[", $2->code ,"]", "", "");
+    freeRecord($2);
+    $$ = createRecord($4->code, s1);
+    freeRecord($4);
+    free(s1);
   }
+  | '[' ']' type %prec ARRAY_TYPE
+  {
+    $$ = createRecord($3->code, "[]");
+    freeRecord($3);
+  }
+  | pointer { $$ = createRecord($1->code, ""); freeRecord($1); }
   ;
 
-primary : IDENTIFIER
+pointer : type ASTERISK
+  {
+    char* s1 = cat($1->code, "*", "","","");
+    freeRecord($1);
+    $$ = createRecord(s1, "");
+    free(s1);
+  };
+
+primary : IDENTIFIER { $$ = createRecord($1, ""); }
   | subprogramCall
   | NEW type %prec UNEW
   | arrayIndex
@@ -295,15 +313,15 @@ primary : IDENTIFIER
 derreferencing : ASTERISK IDENTIFIER;
 
 literal : CHAR_LITERAL
-  | STRING_LITERAL
-  | FLOAT_LITERAL {$$ = createRecord($1, ""); free($1);}
-  | INT_LITERAL {$$ = createRecord($1, ""); free($1);}
+  | STRING_LITERAL { $$ = createRecord($1, ""); free($1); }
+  | FLOAT_LITERAL { $$ = createRecord($1, ""); free($1);}
+  | INT_LITERAL { $$ = createRecord($1, ""); free($1);}
   | BOOLEAN_LITERAL
   | T_NULL
   ;
 
 expr: primary %prec UPRIMARY 
-  | literal %prec ULITERAL {$$ = createRecord($1->code, ""); freeRecord($1);}
+  | literal %prec ULITERAL { $$ = createRecord($1->code, ""); freeRecord($1); }
   | expr OR expr
   | expr AND expr
   | expr LESS_THAN expr
@@ -312,16 +330,74 @@ expr: primary %prec UPRIMARY
   | expr MORE_THAN_EQUALS expr
   | expr EQUALITY expr
   | expr INEQUALITY expr
+  /*
+    Operações numéricas são verificadas utilizando os seguintes passos, sequencialmente:
+    1. Tipos tem que ser numéricos (f32, f64, u8, u16, u32, u64, i8, i16, i32, i64)
+    2.
+      a. Tipo da esquerda tem que ser igual ao da direita.
+      OU
+      b. Um tipo deve ser possível de realizar a coerção para o outro sem perda de informação
+        Casos de coerção:
+        - i8 -> i16 -> i32 -> i64
+        - u8 -> u16 -> u32 -> u64
+        - f32 -> f64
+        - u8 -> i16
+        - u16 -> i32
+        - u32 -> i64
+    3. Tipo de retorno é igual ao maior tipo
+  */
   | expr PLUS expr
+  {
+    char* s1 = cat($1->code, " + ", $3->code, "", "");
+    $$ = createRecord(s1, "");
+    free($1);
+    free($3);
+  }
   | expr MINUS expr
+  {
+    char* s1 = cat($1->code, " - ", $3->code, "", "");
+    $$ = createRecord(s1, "");
+    free($1);
+    free($3);
+  }
   | expr ASTERISK expr
+  {
+    char* s1 = cat($1->code, " * ", $3->code, "", "");
+    $$ = createRecord(s1, "");
+    free($1);
+    free($3);
+  }
   | expr SLASH expr
+  {
+    char* s1 = cat($1->code, " / ", $3->code, "", "");
+    $$ = createRecord(s1, "");
+    free($1);
+    free($3);
+  }
   | expr PERCENTAGE expr
+  {
+    char* s1 = cat($1->code, " % ", $3->code, "", "");
+    $$ = createRecord(s1, "");
+    free($1);
+    free($3);
+  }
   | CAST LESS_THAN type MORE_THAN  '(' expr ')' %prec UTYPE
+  {
+    // Checar se o tipo é string para casos especiais
+    char* s1 = cat("(", $3->code, ")", $6->code, "");
+    $$ = createRecord(s1, "");
+    free($3);
+    free($6);
+  }
   | CAST LESS_THAN type MORE_THAN  '(' expr ',' expr ')' %prec UTYPE
   | AMPERSAND expr %prec UAMPERSAND
   | NOT expr %prec UNOT
   | PLUS expr %prec UPLUS
+  {
+    char* s1 = cat(" + ", $2->code, "", "", "");
+    $$ = createRecord(s1, "");
+    free($2);
+  }
   | MINUS expr %prec UMINUS
   | HASHTAG expr %prec UHASHTAG
   | '(' expr ')' %prec UPARENTESISEXPR
@@ -357,14 +433,14 @@ fieldAccess : IDENTIFIER '.' IDENTIFIER
   | fieldAccess '.' IDENTIFIER
   ;
 
-block : '{' '}' {$$ = createRecord("{}", "");}
-  | '{' statements '}' {
+block : '{' '}' { $$ = createRecord("{}", ""); }
+  | '{' statements '}'
+  {
     char* s1 = cat("{\n",$2->code,"\n}", "", "");
     freeRecord($2);
     $$ = createRecord(s1, "");
     free(s1);
-    }
-  ;
+  };
 
 %%
 
@@ -396,7 +472,7 @@ int main(int argc, char **argv) {
     return 0;
 }
 
-char * cat(char * s1, char * s2, char * s3, char * s4, char * s5){
+char* cat(char * s1, char * s2, char * s3, char * s4, char * s5) {
   int tam;
   char * output;
 
