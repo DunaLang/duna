@@ -10,4 +10,5 @@
 
 ### Execução
 `make run`
+
 `./duna <arquivo.duna>`
