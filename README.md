@@ -6,7 +6,8 @@
 - Bison (yacc)
 
 ### Desenvolvimento
-- Extensão Yash
+- Extensão Yash para VS Code
 
 ### Execução
 `make run`
+`./duna <arquivo.duna>`
