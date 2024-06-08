@@ -13,4 +13,4 @@ run: build
 	./out/problem1
 
 clean:
-	rm -f out
+	rm -rf out
