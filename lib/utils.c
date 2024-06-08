@@ -43,13 +43,13 @@ record *cast(record *dst_type, record *src_expr)
     {
         // string
         char *s1 = cat("", "", "", "", "");
-        record *rec = createRecord(s1, "");
+        record *rec = createRecord(s1, "", "");
         free(s1);
         return rec;
     }
 
     char *s1 = cat("(", dst_type->code, ")", src_expr->code, "");
-    return createRecord(s1, "");
+    return createRecord(s1, "", "");
 }
 
 _Bool equalTypes(record *r1, record *r2)
@@ -59,9 +59,12 @@ _Bool equalTypes(record *r1, record *r2)
 
 _Bool isNumeric(record *rec)
 {
+    printf("Record code: %s\n", rec->code);
+    printf("Record type: %s\n", rec->opt1);
     _Bool isFloat = strcmp(rec->opt1, "f32") == 0 || strcmp(rec->opt1, "f64") == 0;
     _Bool isUnsigned = strcmp(rec->opt1, "u8") == 0 || strcmp(rec->opt1, "u16") == 0 || strcmp(rec->opt1, "u32") == 0 || strcmp(rec->opt1, "u64") == 0;
     _Bool isSigned = strcmp(rec->opt1, "i8") == 0 || strcmp(rec->opt1, "i16") == 0 || strcmp(rec->opt1, "i32") == 0 || strcmp(rec->opt1, "i64") == 0;
+    printf("Record result: %d\n-----\n", (isFloat || isUnsigned || isSigned));
     return isFloat || isUnsigned || isSigned;
 }
 

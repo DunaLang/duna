@@ -4,6 +4,6 @@ proc main() {
     i32 c = 10;
 
     f32 resultado = x*x - y + cast<f32>(c);
-    // print cast<string>(resultado);
-    // print "\n";
+    print cast<string>(resultado);
+    print "\n";
 }

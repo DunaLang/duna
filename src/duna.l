@@ -20,86 +20,86 @@ commentary       (\/\*([^*]|[\r\n]|(\*+([^*\/]|[\r\n])))*\*+\/)|(\/\/.*)
 [ \t]   {}
 [\n]    {yylineno++;}
 
-"++"   { printf("TOKEN(%s)\n", yytext); return(CONCAT);}
-"=="   { printf("TOKEN(%s)\n", yytext); return(EQUALITY);}
-"!="   { printf("TOKEN(%s)\n", yytext); return(INEQUALITY);}
-"+="   { printf("TOKEN(%s)\n", yytext); return(ADD_ASSIGN);}
-"-="   { printf("TOKEN(%s)\n", yytext); return(SUB_ASSIGN);}
-"*="   { printf("TOKEN(%s)\n", yytext); return(MULT_ASSIGN);}
-"/="   { printf("TOKEN(%s)\n", yytext); return(DIV_ASSIGN);}
-"="   { printf("TOKEN(%s)\n", yytext); return(ASSIGN);}
-"<="   { printf("TOKEN(%s)\n", yytext); return(LESS_THAN_EQUALS);}
-">="   { printf("TOKEN(%s)\n", yytext); return(MORE_THAN_EQUALS);}
-"<"   { printf("TOKEN(%s)\n", yytext); return(LESS_THAN);}
-">"   { printf("TOKEN(%s)\n", yytext); return(MORE_THAN);}
-"+"   { printf("TOKEN(%s)\n", yytext); return(PLUS);}
-"-"   { printf("TOKEN(%s)\n", yytext); return(MINUS);}
-"*"   { printf("TOKEN(%s)\n", yytext); return(ASTERISK);}
-"/"   { printf("TOKEN(%s)\n", yytext); return(SLASH);}
-"::"   { printf("TOKEN(%s)\n", yytext); return(DOUBLE_COLON);}
-"=>"   { printf("TOKEN(%s)\n", yytext); return(EQUALS_ARROW);}
-"&"   { printf("TOKEN(%s)\n", yytext); return(AMPERSAND);}
-"#"   { printf("TOKEN(%s)\n", yytext); return(HASHTAG);}
-"%"   { printf("TOKEN(%s)\n", yytext); return(PERCENTAGE);}
-"("   { printf("TOKEN(%s)\n", yytext); return(yytext[0]);}
-")"   { printf("TOKEN(%s)\n", yytext); return(yytext[0]);}
-"["   { printf("TOKEN(%s)\n", yytext); return(yytext[0]);}
-"]"   { printf("TOKEN(%s)\n", yytext); return(yytext[0]);}
-"{"   { printf("TOKEN(%s)\n", yytext); return(yytext[0]);}
-"}"   { printf("TOKEN(%s)\n", yytext); return(yytext[0]);}
-"."   { printf("TOKEN(%s)\n", yytext); return(yytext[0]);}
-","   { printf("TOKEN(%s)\n", yytext); return(yytext[0]);}
-";"   { printf("TOKEN(%s)\n", yytext); return(yytext[0]);}
-"_"   { printf("TOKEN(%s)\n", yytext); return(yytext[0]);}
-":"   { printf("TOKEN(%s)\n", yytext); return(yytext[0]);}
-"|"   { printf("TOKEN(%s)\n", yytext); return(yytext[0]);}
+"++"   {return(CONCAT);}
+"=="   {return(EQUALITY);}
+"!="   {return(INEQUALITY);}
+"+="   {return(ADD_ASSIGN);}
+"-="   {return(SUB_ASSIGN);}
+"*="   {return(MULT_ASSIGN);}
+"/="   {return(DIV_ASSIGN);}
+"="   {return(ASSIGN);}
+"<="   {return(LESS_THAN_EQUALS);}
+">="   {return(MORE_THAN_EQUALS);}
+"<"   {return(LESS_THAN);}
+">"   {return(MORE_THAN);}
+"+"   {return(PLUS);}
+"-"   {return(MINUS);}
+"*"   {return(ASTERISK);}
+"/"   {return(SLASH);}
+"::"   {return(DOUBLE_COLON);}
+"=>"   {return(EQUALS_ARROW);}
+"&"   {return(AMPERSAND);}
+"#"   {return(HASHTAG);}
+"%"   {return(PERCENTAGE);}
+"("   {return(yytext[0]);}
+")"   {return(yytext[0]);}
+"["   {return(yytext[0]);}
+"]"   {return(yytext[0]);}
+"{"   {return(yytext[0]);}
+"}"   {return(yytext[0]);}
+"."   {return(yytext[0]);}
+","   {return(yytext[0]);}
+";"   {return(yytext[0]);}
+"_"   {return(yytext[0]);}
+":"   {return(yytext[0]);}
+"|"   {return(yytext[0]);}
 
-"if"          { printf("TOKEN(%s)\n", yytext); return(IF); }
-"else"          { printf("TOKEN(%s)\n", yytext); return(ELSE); }
-"while"          { printf("TOKEN(%s)\n", yytext); return(WHILE); }
-"for"          { printf("TOKEN(%s)\n", yytext); return(FOR); }
-"foreach"          { printf("TOKEN(%s)\n", yytext); return(FOREACH); }
-"func"          { printf("TOKEN(%s)\n", yytext); return(FUNC); }
-"proc"          { printf("TOKEN(%s)\n", yytext); return(PROC); }
-"return"          { printf("TOKEN(%s)\n", yytext); return(RETURN); }
-"break"          { printf("TOKEN(%s)\n", yytext); return(BREAK); }
-"continue"          { printf("TOKEN(%s)\n", yytext); return(CONTINUE); }
-"match"          { printf("TOKEN(%s)\n", yytext); return(MATCH); }
-"enum"          { printf("TOKEN(%s)\n", yytext); return(ENUM); }
-"union"          { printf("TOKEN(%s)\n", yytext); return(UNION); }
-"struct"          { printf("TOKEN(%s)\n", yytext); return(STRUCT); }
-"const"          { printf("TOKEN(%s)\n", yytext); return(CONST); }
-"static"          { printf("TOKEN(%s)\n", yytext); return(STATIC); }
-"usize"          { printf("TOKEN(%s)\n", yytext); return(USIZE); }
-"u8"          { printf("TOKEN(%s)\n", yytext); return(U8); }
-"u16"          { printf("TOKEN(%s)\n", yytext); return(U16); }
-"u32"          { printf("TOKEN(%s)\n", yytext); return(U32); }
-"u64"          { printf("TOKEN(%s)\n", yytext); return(U64); }
-"i8"          { printf("TOKEN(%s)\n", yytext); return(I8); }
-"i16"          { printf("TOKEN(%s)\n", yytext); return(I16); }
-"i32"          { printf("TOKEN(%s)\n", yytext); return(I32); }
-"i64"          { printf("TOKEN(%s)\n", yytext); return(I64); }
-"f32"          { printf("TOKEN(%s)\n", yytext); return(F32); }
-"f64"          { printf("TOKEN(%s)\n", yytext); return(F64); }
-"bool"          { printf("TOKEN(%s)\n", yytext); return(BOOL); }
-"string"          { printf("TOKEN(%s)\n", yytext); return(STRING); }
-"char"          { printf("TOKEN(%s)\n", yytext); return(CHAR); }
-"not"          { printf("TOKEN(%s)\n", yytext); return(NOT); }
-"and"          { printf("TOKEN(%s)\n", yytext); return(AND); }
-"or"          { printf("TOKEN(%s)\n", yytext); return(OR); }
-"new"          { printf("TOKEN(%s)\n", yytext); return(NEW); }
-"delete"          { printf("TOKEN(%s)\n", yytext); return(DELETE); }
-"print"          { printf("TOKEN(%s)\n", yytext); return(PRINT); }
-"cast"          { printf("TOKEN(%s)\n", yytext); return(CAST); }
-"typedef"          { printf("TOKEN(%s)\n", yytext); return(TYPEDEF); }
-"null"          { printf("TOKEN(%s)\n", yytext); return(T_NULL); }
+"if"          {return(IF); }
+"else"          {return(ELSE); }
+"while"          {return(WHILE); }
+"for"          {return(FOR); }
+"foreach"          {return(FOREACH); }
+"func"          {return(FUNC); }
+"proc"          {return(PROC); }
+"return"          {return(RETURN); }
+"break"          {return(BREAK); }
+"continue"          {return(CONTINUE); }
+"match"          {return(MATCH); }
+"enum"          {return(ENUM); }
+"union"          {return(UNION); }
+"struct"          {return(STRUCT); }
+"const"          {return(CONST); }
+"static"          {return(STATIC); }
+"usize"          {return(USIZE); }
+"u8"          {return(U8); }
+"u16"          {return(U16); }
+"u32"          {return(U32); }
+"u64"          {return(U64); }
+"i8"          {return(I8); }
+"i16"          {return(I16); }
+"i32"          {return(I32); }
+"i64"          {return(I64); }
+"f32"          {return(F32); }
+"f64"          {return(F64); }
+"bool"          {return(BOOL); }
+"string"          {return(STRING); }
+"char"          {return(CHAR); }
+"not"          {return(NOT); }
+"and"          {return(AND); }
+"or"          {return(OR); }
+"new"          {return(NEW); }
+"delete"          {return(DELETE); }
+"print"          {return(PRINT); }
+"cast"          {return(CAST); }
+"typedef"          {return(TYPEDEF); }
+"null"          {return(T_NULL); }
 
-{booleanLiteral}  {printf("LITERAL(%s)\n", yytext); yylval.sValue = strdup(yytext); return BOOLEAN_LITERAL;}
-{intLiteral}      {printf("LITERAL(%s)\n", yytext); yylval.sValue = strdup(yytext); return INT_LITERAL; }
-{floatLiteral}    {printf("LITERAL(%s)\n", yytext); yylval.sValue = strdup(yytext); return FLOAT_LITERAL; }
-{stringLiteral}   {printf("LITERAL(%s)\n", yytext); yylval.sValue = strdup(yytext); return STRING_LITERAL; }
-{charLiteral}     {printf("LITERAL(%s)\n", yytext); yylval.cValue = yytext[1]; return CHAR_LITERAL; }
-{identifier}      {printf("ID(%s)\n", yytext); yylval.sValue = strdup(yytext); return IDENTIFIER;}
+{booleanLiteral}  {yylval.sValue = strdup(yytext); return BOOLEAN_LITERAL;}
+{intLiteral}      {yylval.sValue = strdup(yytext); return INT_LITERAL; }
+{floatLiteral}    {yylval.sValue = strdup(yytext); return FLOAT_LITERAL; }
+{stringLiteral}   {yylval.sValue = strdup(yytext); return STRING_LITERAL; }
+{charLiteral}     {yylval.cValue = yytext[1]; return CHAR_LITERAL; }
+{identifier}      {yylval.sValue = strdup(yytext); return IDENTIFIER;}
 {commentary}      {yylineno += count_newlines(yytext);}
 
 . {yyerror("Unrecognized character"); }

@@ -33,12 +33,14 @@ SymbolTable createSymbolTable()
 char *lookup(SymbolTable *table, char *key)
 {
     size_t index = hash(key);
-
+    printf("Hash: %ld\n", index);
     SymbolTableNode *node = table->nodes[index];
     while (node != NULL)
     {
+        printf("Node: %s, %s\n", node->key, node->value);
         if (strcmp(key, node->key) == 0)
         {
+            printf("Identifier '%s' found. Type: %s\n", node->key, node->value);
             return node->value;
         }
         node = node->next;
@@ -49,10 +51,12 @@ char *lookup(SymbolTable *table, char *key)
 
 void insert(SymbolTable *table, char *key, char *type)
 {
+    printf("Creating new node: %s\n", key);
     size_t index = hash(key);
+    // printf("Hash: %ld\n", index);
     SymbolTableNode *node = table->nodes[index];
     SymbolTableNode *previous = NULL;
-
+    // printf("Node is null: %d\n", node == NULL);
     while (node != NULL && strcmp(key, node->key) != 0)
     {
         previous = node;
@@ -63,7 +67,7 @@ void insert(SymbolTable *table, char *key, char *type)
     newNode->key = key;
     newNode->value = type;
     newNode->next = NULL;
-
+    // printf("Previous is null: %d\n", previous == NULL);
     if (previous == NULL)
     {
         table->nodes[index] = newNode;
@@ -72,4 +76,5 @@ void insert(SymbolTable *table, char *key, char *type)
     {
         previous->next = newNode;
     }
+    printf("New node: %s, %s\n", newNode->key, newNode->value);
 }
