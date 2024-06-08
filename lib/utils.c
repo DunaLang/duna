@@ -62,10 +62,16 @@ _Bool isNumeric(record *rec)
     printf("Record code: %s\n", rec->code);
     printf("Record type: %s\n", rec->opt1);
     _Bool isFloat = strcmp(rec->opt1, "f32") == 0 || strcmp(rec->opt1, "f64") == 0;
+    
+    printf("Record result (isNumeric): %s\n-----\n", (isFloat || isInteger(rec) == 1 ? "true" : "false"));
+    return isFloat || isInteger(rec);
+}
+
+_Bool isInteger(record *rec)
+{
     _Bool isUnsigned = strcmp(rec->opt1, "u8") == 0 || strcmp(rec->opt1, "u16") == 0 || strcmp(rec->opt1, "u32") == 0 || strcmp(rec->opt1, "u64") == 0;
     _Bool isSigned = strcmp(rec->opt1, "i8") == 0 || strcmp(rec->opt1, "i16") == 0 || strcmp(rec->opt1, "i32") == 0 || strcmp(rec->opt1, "i64") == 0;
-    printf("Record result: %d\n-----\n", (isFloat || isUnsigned || isSigned));
-    return isFloat || isUnsigned || isSigned;
+    return isUnsigned || isSigned;
 }
 
 _Bool isString(record *rec)

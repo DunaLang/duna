@@ -63,6 +63,7 @@ program : declarations
     fprintf(yyout, "#include <stddef.h>\n");
     fprintf(yyout, "#include <stdint.h>\n");
     fprintf(yyout, "#include <stdio.h>\n");
+    fprintf(yyout, "#include <string.h>\n");
     fprintf(yyout, "%s\n", $1->code);
     freeRecord($1);
   };
@@ -340,7 +341,7 @@ primary : IDENTIFIER {
 derreferencing : ASTERISK IDENTIFIER;
 
 literal : CHAR_LITERAL
-  | STRING_LITERAL { $$ = createRecord($1, "", ""); free($1); }
+  | STRING_LITERAL { $$ = createRecord($1, "string", ""); free($1); }
   | FLOAT_LITERAL { $$ = createRecord($1, "", ""); free($1);}
   | INT_LITERAL { $$ = createRecord($1, "", ""); free($1);}
   | BOOLEAN_LITERAL
@@ -348,7 +349,7 @@ literal : CHAR_LITERAL
   ;
 
 expr: primary %prec UPRIMARY { $$ = $1; }
-  | literal %prec ULITERAL { $$ = createRecord($1->code, "", ""); freeRecord($1); }
+  | literal %prec ULITERAL { $$ = $1; }
   | expr OR expr
   | expr AND expr
   | expr LESS_THAN expr
@@ -359,7 +360,23 @@ expr: primary %prec UPRIMARY { $$ = $1; }
   | expr INEQUALITY expr
   | expr CONCAT expr
   {
-    $$ = createRecord($1->code, "", ""); freeRecord($1);
+    /// TODO: Mudar nomes das variáveis
+    if (!(strcmp($1->opt1, "string") == 0 && strcmp($3->opt1, "string") == 0))
+    {
+      printf("++, operandos devem ser string\n");
+      exit(-1);
+    }
+    // Adicionar no prefix
+    char *prefix1 = cat($1->prefix, $3->prefix, "char concat_str[", "strlen(", $1->code);
+    char *prefix2 = cat(prefix1, ") + strlen(", $3->code, ")];\nstrcpy(concat_str, ", $1->code);
+    char *prefix3 = cat(prefix2, ");", "\nstrcat(concat_str, ", $3->code, ");");
+
+    $$ = createRecord("concat_str", "string", prefix3);
+
+    free(prefix1);
+    free(prefix2);
+    free(prefix3);
+    freeRecord($1);
   }
   | CAST LESS_THAN type MORE_THAN  '(' expr ',' expr ')' %prec UTYPE
   | AMPERSAND expr %prec UAMPERSAND
@@ -469,14 +486,24 @@ expr: primary %prec UPRIMARY { $$ = $1; }
     // Checar se o tipo é string para casos especiais
     if (strcmp($3->opt1, "string") == 0)
     {
-      /// TODO: Checar se o tipo origem é numérico.
       /// TODO: Boolean, struct, union, enum, são casos especiais e devem ser tratados.
-
+      char* typeFormat;
+      if(isInteger($6)) {
+        typeFormat = "\"%ld\"";
+      }
+      else if(isNumeric($6)) {
+        typeFormat = "\"%f\"";
+      }
+      
       char *s1 = cat("str", "", "", "", "");
-      char *s2 = cat("int length = snprintf(NULL, 0, \"%f\", ", $6->code, ");\nchar str[length + 1];\nsnprintf(str, length + 1, \"%f\", ", $6->code, ");\n");
-
-      $$ = createRecord(s1, "string", s2);
+      char *s2 = cat("int length = snprintf(NULL, 0,", typeFormat, ", ", $6->code, ");\n");
+      char *s3 = cat(s2, "char str[length + 1];\nsnprintf(str, length + 1,", typeFormat, ", ", $6->code);
+      char *s4 = cat(s3, ");\n", "", "", "");
+      $$ = createRecord(s1, "string", s4);
       free(s1);
+      free(s2);
+      free(s3);
+      free(s4);
     }
     else if (strcmp($6->opt1, "string") == 0)
     {
