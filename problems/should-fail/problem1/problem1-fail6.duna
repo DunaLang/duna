@@ -1,0 +1,8 @@
+proc main() {
+    f32 x = 10.0;
+    f32 y = 10.0;
+    i32 c = 10;
+
+    f32 resultado = x*x - y + cast<f32>(c);
+    print cast<string>(resultado) + "\n";
+}

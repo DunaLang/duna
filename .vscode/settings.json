@@ -1,0 +1,14 @@
+{
+    "files.associations": {
+        "stdio.h": "c",
+        "string.h": "c",
+        "type_traits": "c",
+        "utility": "c",
+        "record.h": "c",
+        "stdint.h": "c",
+        "stddef.h": "c"
+    },
+    "material-icon-theme.files.associations": {
+        "**.duna": "../../icons/duna-logo",
+    },
+}

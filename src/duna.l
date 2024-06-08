@@ -20,6 +20,7 @@ commentary       (\/\*([^*]|[\r\n]|(\*+([^*\/]|[\r\n])))*\*+\/)|(\/\/.*)
 [ \t]   {}
 [\n]    {yylineno++;}
 
+"++"   { printf("TOKEN(%s)\n", yytext); return(CONCAT);}
 "=="   { printf("TOKEN(%s)\n", yytext); return(EQUALITY);}
 "!="   { printf("TOKEN(%s)\n", yytext); return(INEQUALITY);}
 "+="   { printf("TOKEN(%s)\n", yytext); return(ADD_ASSIGN);}

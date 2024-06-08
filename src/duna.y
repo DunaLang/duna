@@ -1,8 +1,11 @@
 %{
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include "lib/record.h"
+#include "lib/utils.h"
+#include "lib/symbol_table.h"
 
 int yylex(void);
 int yyerror(char *s);
@@ -11,15 +14,14 @@ extern char * yytext;
 extern FILE * yyin;
 extern FILE * yyout;
 
-char * cat(char *, char *, char *, char *, char *);
+SymbolTable symbolTable;
 %}
 
 %union {
     char* sValue;
     char cValue;
-	  struct record * rec;
+	  struct record *rec;
 };
-
 
 // Tokens terminais
 %token <sValue> INT_LITERAL
@@ -32,7 +34,7 @@ char * cat(char *, char *, char *, char *, char *);
 %token USIZE U8 U16 U32 U64 I8 I16 I32 I64 F32 F64 BOOL STRING CHAR TYPEDEF
 %token NOT AND OR NEW DELETE PRINT CAST T_NULL
 %token ADD_ASSIGN SUB_ASSIGN MULT_ASSIGN DIV_ASSIGN
-%token EQUALITY INEQUALITY ASSIGN LESS_THAN_EQUALS MORE_THAN_EQUALS LESS_THAN MORE_THAN PLUS MINUS ASTERISK SLASH DOUBLE_COLON EQUALS_ARROW AMPERSAND HASHTAG PERCENTAGE
+%token EQUALITY INEQUALITY ASSIGN LESS_THAN_EQUALS MORE_THAN_EQUALS LESS_THAN MORE_THAN PLUS MINUS ASTERISK SLASH DOUBLE_COLON EQUALS_ARROW AMPERSAND HASHTAG PERCENTAGE CONCAT
 %token <sValue> IDENTIFIER
 
 %nonassoc ULITERAL UPRIMARY
@@ -44,6 +46,7 @@ char * cat(char *, char *, char *, char *, char *);
 %nonassoc UNEW
 %left PERCENTAGE SLASH ASTERISK
 %left MINUS PLUS
+%left CONCAT
 %left EQUALITY INEQUALITY
 %left LESS_THAN MORE_THAN LESS_THAN_EQUALS MORE_THAN_EQUALS
 %left AND
@@ -86,11 +89,22 @@ varDecl : type IDENTIFIER ';'
   }
   | type IDENTIFIER ASSIGN expr ';'
   {
-    char* s1 = cat($1->code, $2, " = ", $4->code, "");
-    free($2);
-    free($4);
-    $$ = createRecord(s1, "");
-    free(s1);
+    // assert $1 == $4.tipo
+    // Mudar nome de variável para colocar subprograma atual
+
+    if (isString($4)) {
+      /*
+        size_t a_len = TAMANHO_CALCULADO DE $4;
+        char* a = malloc(sizeof(char*) * a_len);
+        *a = "ola mundo";
+      */
+    } else {
+      char* s1 = cat($1->code, $2, " = ", $4->code, "");
+      free($2);
+      free($4);
+      $$ = createRecord(s1, "");
+      free(s1);
+    }
   }
   | typequalifiers type IDENTIFIER ';' { $$ = createRecord("", ""); }
   | typequalifiers type IDENTIFIER ASSIGN expr ';'{ $$ = createRecord("", ""); }
@@ -152,6 +166,8 @@ statement : varDecl
   | CONTINUE ';'
   | PRINT expr ';'
   {
+    /// TODO: Tipo esperado de $2 é string
+
     char* s1 = cat("printf(\"%s\", ", $2->code, ");", "", "");
     $$ = createRecord(s1, "");
     freeRecord($2);
@@ -320,7 +336,7 @@ literal : CHAR_LITERAL
   | T_NULL
   ;
 
-expr: primary %prec UPRIMARY 
+expr: primary %prec UPRIMARY { $$ = createRecord($1->code, ""); freeRecord($1); }
   | literal %prec ULITERAL { $$ = createRecord($1->code, ""); freeRecord($1); }
   | expr OR expr
   | expr AND expr
@@ -330,6 +346,19 @@ expr: primary %prec UPRIMARY
   | expr MORE_THAN_EQUALS expr
   | expr EQUALITY expr
   | expr INEQUALITY expr
+  | expr CONCAT expr
+  {
+    $$ = createRecord($1->code, ""); freeRecord($1);
+  }
+  | CAST LESS_THAN type MORE_THAN  '(' expr ',' expr ')' %prec UTYPE
+  | AMPERSAND expr %prec UAMPERSAND
+  | NOT expr %prec UNOT
+  | HASHTAG expr %prec UHASHTAG
+  | '(' expr ')' %prec UPARENTESISEXPR {
+    char* s1 = cat("(", $2->code, ")", "", "");
+    $$ = createRecord(s1, "");
+    free($2);
+  }
   /*
     Operações numéricas são verificadas utilizando os seguintes passos, sequencialmente:
     1. Tipos tem que ser numéricos (f32, f64, u8, u16, u32, u64, i8, i16, i32, i64)
@@ -344,12 +373,27 @@ expr: primary %prec UPRIMARY
         - u8 -> i16
         - u16 -> i32
         - u32 -> i64
-    3. Tipo de retorno é igual ao maior tipo
+
+    3. Por fim, tipo de retorno é igual ao maior tipo
   */
   | expr PLUS expr
   {
+    if (!isNumeric($1) || !isNumeric($3)) {
+      // Erro (1)
+      printf("Erro 1\n");
+      exit(-1);
+    }
+
+    char *resultType = resultNumericType($1->opt1, $3->opt1);
+
+    if (resultType == NULL) {
+      // Erro (2)
+      printf("Erro 2\n");
+      exit(-1);
+    }
+
     char* s1 = cat($1->code, " + ", $3->code, "", "");
-    $$ = createRecord(s1, "");
+    $$ = createRecord(s1, resultType);
     free($1);
     free($3);
   }
@@ -389,9 +433,6 @@ expr: primary %prec UPRIMARY
     free($3);
     free($6);
   }
-  | CAST LESS_THAN type MORE_THAN  '(' expr ',' expr ')' %prec UTYPE
-  | AMPERSAND expr %prec UAMPERSAND
-  | NOT expr %prec UNOT
   | PLUS expr %prec UPLUS
   {
     char* s1 = cat(" + ", $2->code, "", "", "");
@@ -399,8 +440,7 @@ expr: primary %prec UPRIMARY
     free($2);
   }
   | MINUS expr %prec UMINUS
-  | HASHTAG expr %prec UHASHTAG
-  | '(' expr ')' %prec UPARENTESISEXPR
+  ;
 
 arrayIndex : arrayDef '[' expr ']'
   | IDENTIFIER '[' expr ']'
@@ -467,27 +507,12 @@ int main(int argc, char **argv) {
         return 1;
     }
 
+    symbolTable = createSymbolTable();
+
     code = yyparse();
 
     fclose(yyin);
     fclose(yyout);
 
     return 0;
-}
-
-char* cat(char * s1, char * s2, char * s3, char * s4, char * s5) {
-  int tam;
-  char * output;
-
-  tam = strlen(s1) + strlen(s2) + strlen(s3) + strlen(s4) + strlen(s5)+ 1;
-  output = (char *) malloc(sizeof(char) * tam);
-  
-  if (!output){
-    printf("Allocation problem. Closing application...\n");
-    exit(0);
-  }
-  
-  sprintf(output, "%s%s%s%s%s", s1, s2, s3, s4, s5);
-  
-  return output;
 }
