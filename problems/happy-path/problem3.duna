@@ -4,8 +4,8 @@ proc main() {
 
     [altura_m1][largura_m1]f32 m1;
 
-    for (i32 y = 0; y < altura_m1; y += 1) {
-        for (i32 x = 0; x < largura_m1; x += 1) {
+    for (i32 y = 0; y < altura_m1; y = y + 1) {
+        for (i32 x = 0; x < largura_m1; x = x + 1) {
             m1[y][x] = cast<f32>(read(), null);
         }
     }
@@ -16,8 +16,8 @@ proc main() {
 
     [altura_m2][largura_m2]f32 m2;
 
-    for (i32 y = 0; y < altura_m2; y += 1) {
-        for (i32 x = 0; x < largura_m2; x += 1) {
+    for (i32 y = 0; y < altura_m2; y = y + 1) {
+        for (i32 x = 0; x < largura_m2; x = x + 1) {
             m2[y][x] = cast<f32>(read());
         }
     }
@@ -29,15 +29,15 @@ proc main() {
         // Soma aqui
         [altura_m2][largura_m2]f32 m;
 
-        for (i32 y = 0; y < altura_m2; y += 1) {
-            for (i32 x = 0; x < largura_m2; x += 1) {
+        for (i32 y = 0; y < altura_m2; y = y + 1) {
+            for (i32 x = 0; x < largura_m2; x = x + 1) {
                 m2[y][x] = cast<f32>(read(), null);
             }
         }
 
         print("Soma:\n");
-        for (i32 y = 0; y < altura_m2; y += 1) {
-            for (i32 x = 0; x < largura_m2; x += 1) {
+        for (i32 y = 0; y < altura_m2; y = y + 1) {
+            for (i32 x = 0; x < largura_m2; x = x + 1) {
                 print(cast<string>(m[y][x]) ++ " ");
                 print("\n");
             }
@@ -49,19 +49,19 @@ proc main() {
     } else {
         [altura_m1][largura_m2]f32 m;
 
-        for (i32 y = 0; y < altura_m1; y += 1) {
-            for (i32 x = 0; x < largura_m2; x += 1) {
+        for (i32 y = 0; y < altura_m1; y = y + 1) {
+            for (i32 x = 0; x < largura_m2; x = x + 1) {
                 m[y][x] = 0;
                 
-                for (i32 i = 0; i < altura_m2; i += 1) {
-                    m[y][x] += m1[y][i] * m2[i][x];
+                for (i32 i = 0; i < altura_m2; i = i + 1) {
+                    m[y][x] = m[y][x] + m1[y][i] * m2[i][x];
                 }
             }
         }
 
         print("Produto:\n");
-        for (i32 y = 0; y < altura_m1; y += 1) {
-            for (i32 x = 0; x < largura_m2; x += 1) {
+        for (i32 y = 0; y < altura_m1; y = y + 1) {
+            for (i32 x = 0; x < largura_m2; x = x + 1) {
                 print(cast<string>(m[y][x]) ++ " ");
                 print("\n");
             }

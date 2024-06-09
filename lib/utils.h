@@ -9,3 +9,6 @@ _Bool isInteger(record *rec);
 _Bool isString(record *rec);
 
 char *resultNumericType(char *type1, char *type2);
+
+char *itoa(int i);
+char *formatStr(const char *fmt, ...);

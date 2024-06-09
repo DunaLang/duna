@@ -41,7 +41,7 @@ proc inserir(No no, i32 chave) {
 }
 
 proc sequenciaDeValoresParaABB(ABB abb, []i32 sequencia) {
-    for (u32 i = 0; i < #sequencia; i += 1) {
+    for (u32 i = 0; i < #sequencia; i = i + 1) {
         inserir(abb.raiz, sequencia[i]);
     }
 }
@@ -50,7 +50,7 @@ func chaveMinima(No no, u32 nivel): u32 {
     if (no.esq == null) {
         return nivel;
     } else {
-        nivel += 1;
+        nivel = nivel + 1;
         return chaveMinima(no.esq, nivel);
     }
 }
@@ -65,7 +65,7 @@ func chaveMaxima(No no, u32 nivel): u32 {
     if (no.dir == null) {
         return nivel;
     } else {
-        nivel += 1;
+        nivel = nivel + 1;
         return chaveMaxima(no.dir, nivel);
     }
 }
@@ -105,7 +105,7 @@ proc imprimirNivel(No no, u32 nivel) {
 }
 
 proc imprimirABBPorNivel(ABB abb) {
-    for (u32 nivel = 1; nivel <= altura(abb.raiz); nivel += 1) {
+    for (u32 nivel = 1; nivel <= altura(abb.raiz); nivel = nivel + 1) {
         imprimirNivel(abb.raiz, nivel);
         print("\n");
     }

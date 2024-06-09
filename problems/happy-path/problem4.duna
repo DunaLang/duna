@@ -10,7 +10,7 @@ func init_rational_t(i32 a, i32 b): rational_t {
     };
 }
 
-proc print_rational_t(rational_t r) {
+proc print_rational_t(rational_t r) {TODO
     string num = cast<string>(r.numerador);
     string den = cast<string>(r.denominador);
 

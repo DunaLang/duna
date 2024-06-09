@@ -29,10 +29,11 @@ SymbolTable symbolTable;
 %token <sValue> STRING_LITERAL
 %token <cValue> CHAR_LITERAL
 %token <sValue> BOOLEAN_LITERAL
+%token <sValue> T_NULL
 %token IF ELSE WHILE FOR FOREACH FUNC PROC RETURN BREAK CONTINUE 
 %token MATCH ENUM UNION STRUCT CONST STATIC
 %token USIZE U8 U16 U32 U64 I8 I16 I32 I64 F32 F64 BOOL STRING CHAR TYPEDEF
-%token NOT AND OR NEW DELETE PRINT CAST T_NULL
+%token NOT AND OR NEW DELETE PRINT CAST 
 %token ADD_ASSIGN SUB_ASSIGN MULT_ASSIGN DIV_ASSIGN
 %token EQUALITY INEQUALITY ASSIGN LESS_THAN_EQUALS MORE_THAN_EQUALS LESS_THAN MORE_THAN PLUS MINUS ASTERISK SLASH DOUBLE_COLON EQUALS_ARROW AMPERSAND HASHTAG PERCENTAGE CONCAT
 %token <sValue> IDENTIFIER
@@ -53,13 +54,14 @@ SymbolTable symbolTable;
 %left MINUS PLUS
 %left PERCENTAGE SLASH ASTERISK
 
-%type <rec> declarations declaration varDecl block proc type expr pointer statements statement literal primary
+%type <rec> declarations declaration varDecl block proc type expr pointer statements statement literal primary while
 
 %start program
 
 %%
 program : declarations
   {
+    fprintf(yyout, "#include <stdbool.h>\n");
     fprintf(yyout, "#include <stddef.h>\n");
     fprintf(yyout, "#include <stdint.h>\n");
     fprintf(yyout, "#include <stdio.h>\n");
@@ -83,7 +85,7 @@ declaration : varDecl
 
 varDecl : type IDENTIFIER ';'
   {
-    char* s1 = cat($1->code, $2, "", "", "");
+    char* s1 = cat($1->code, " ", $2, "", "");
     // free($2);
     $$ = createRecord(s1, $1->opt1, "");
     free($1);
@@ -102,7 +104,7 @@ varDecl : type IDENTIFIER ';'
       */
     } else {
       insert(&symbolTable, $2, $1->opt1);
-      char* s1 = cat($1->code, $2, " = ", $4->code, "");
+      char* s1 = cat($1->code, " ", $2, " = ", $4->code);
       //free($2);
       free($4);
       $$ = createRecord(s1, "", "");
@@ -162,15 +164,17 @@ statement : varDecl
   }
   | assignment
   | compound_assignment ';'
-  | while
+  | while { $$ = $1; }
   | for
   | foreach
   | BREAK ';'
   | CONTINUE ';'
   | PRINT expr ';'
   {
-    if (strcmp($2->opt1, "string") != 0) {
-      printf("Esperado expressão de tipo \"string\" para print. Tipo obtido=%s\n.", $2->opt1);
+    if (!isString($2)) {
+      printf("AAAAA=%s\n", $2->opt1);
+      char* errorMsg = cat("Expected print expression type to be string. Actual type: ", $2->opt1, "","","");
+      yyerror(errorMsg);
       exit(0);
     }
 
@@ -186,8 +190,8 @@ statement : varDecl
   | subprogramCall ';'
   ;
 
-assignment : IDENTIFIER ASSIGN expr ';'
-  | arrayIndex ASSIGN expr ';'
+assignment : IDENTIFIER ASSIGN expr ';' {/* TODO Problema 2 precisa disso*/}
+  | arrayIndex ASSIGN expr ';' {/* Problema 3 precisa disso*/}
   | derreferencing ASSIGN expr ';'
   | fieldAccess ASSIGN expr ';'
   ;
@@ -219,7 +223,18 @@ div_assignment : IDENTIFIER DIV_ASSIGN expr
   | fieldAccess DIV_ASSIGN expr
   ;
 
-while : WHILE '(' expr ')' block;
+while : WHILE '(' expr ')' block
+{
+  char *s1 = formatStr(
+    "%swhile_l%d:\n%s\nif (%s) goto while_l%d;\n",
+    $3->prefix, yylineno, $5->code, $3->code, yylineno
+  );
+
+  $$ = createRecord(s1, "", "");
+  free(s1);
+  freeRecord($3);
+  freeRecord($5);
+};
 
 for : FOR '(' forHeader ')' block;
 forHeader : ';' ';'
@@ -282,20 +297,20 @@ typequalifier : CONST
   | STATIC
   ;
 
-type : USIZE { $$ = createRecord("size_t ", "usize", ""); }
-  | U8  { $$ = createRecord("uint8_t ", "u8", ""); }
-  | U16 { $$ = createRecord("uint16_t ", "u16", ""); }
-  | U32 { $$ = createRecord("uint32_t ", "u32", ""); }
-  | U64 { $$ = createRecord("uint64_t ", "u64", ""); }
-  | I8  { $$ = createRecord("int8_t ", "i8", ""); }
-  | I16 { $$ = createRecord("int16_t ", "i16", ""); }
-  | I32 { $$ = createRecord("int32_t ", "i32", ""); }
-  | I64 { $$ = createRecord("int64_t ", "i64", ""); }
-  | F32 { $$ = createRecord("float ", "f32", ""); }
-  | F64 { $$ = createRecord("double ", "f64", ""); }
-  | BOOL { $$ = createRecord("_Bool ", "bool", ""); }
-  | STRING { $$ = createRecord("string ", "string", ""); }
-  | CHAR { $$ = createRecord("char ", "char", ""); }
+type : USIZE { $$ = createRecord("size_t", "usize", ""); }
+  | U8  { $$ = createRecord("uint8_t", "u8", ""); }
+  | U16 { $$ = createRecord("uint16_t", "u16", ""); }
+  | U32 { $$ = createRecord("uint32_t", "u32", ""); }
+  | U64 { $$ = createRecord("uint64_t", "u64", ""); }
+  | I8  { $$ = createRecord("int8_t", "i8", ""); }
+  | I16 { $$ = createRecord("int16_t", "i16", ""); }
+  | I32 { $$ = createRecord("int32_t", "i32", ""); }
+  | I64 { $$ = createRecord("int64_t", "i64", ""); }
+  | F32 { $$ = createRecord("float", "f32", ""); }
+  | F64 { $$ = createRecord("double", "f64", ""); }
+  | BOOL { $$ = createRecord("_Bool", "bool", ""); }
+  | STRING { $$ = createRecord("string", "string", ""); }
+  | CHAR { $$ = createRecord("char", "char", ""); }
   | IDENTIFIER { $$ = createRecord($1, "", ""); }
   | '[' expr ']' type %prec ARRAY_TYPE
   {
@@ -323,8 +338,12 @@ pointer : type ASTERISK
 
 primary : IDENTIFIER {
     char* type = lookup(&symbolTable, $1);
+    if (type == NULL || strlen(type) == 1) {
+      printf("[Line %d] Variable %s is not defined\n", yylineno, $1);
+      exit(1);
+    }
     $$ = createRecord($1, type, "");
-    // free($1);
+    free($1);
   }
   | subprogramCall
   | NEW type %prec UNEW
@@ -340,10 +359,10 @@ derreferencing : ASTERISK IDENTIFIER;
 
 literal : CHAR_LITERAL
   | STRING_LITERAL { $$ = createRecord($1, "string", ""); free($1); }
-  | FLOAT_LITERAL { $$ = createRecord($1, "", ""); free($1);}
-  | INT_LITERAL { $$ = createRecord($1, "", ""); free($1);}
-  | BOOLEAN_LITERAL
-  | T_NULL
+  | FLOAT_LITERAL { $$ = createRecord($1, "f32", ""); free($1);}
+  | INT_LITERAL { $$ = createRecord($1, "i32", ""); free($1);}
+  | BOOLEAN_LITERAL { $$ = createRecord($1, "bool", ""); free($1);}
+  | T_NULL { $$ = createRecord($1, "null", ""); free($1);}
   ;
 
 expr: primary %prec UPRIMARY { $$ = $1; }
@@ -359,21 +378,27 @@ expr: primary %prec UPRIMARY { $$ = $1; }
   | expr CONCAT expr
   {
     /// TODO: Mudar nomes das variáveis
-    if (!(strcmp($1->opt1, "string") == 0 && strcmp($3->opt1, "string") == 0))
+    if (!(isString($1) && isString($3)))
     {
-      printf("++, operandos devem ser string\n");
+      printf("++, operands must be string\n");
       exit(-1);
     }
     // Adicionar no prefix
-    char *prefix1 = cat($1->prefix, $3->prefix, "char concat_str[", "strlen(", $1->code);
-    char *prefix2 = cat(prefix1, ") + strlen(", $3->code, ")];\nstrcpy(concat_str, ", $1->code);
-    char *prefix3 = cat(prefix2, ");", "\nstrcat(concat_str, ", $3->code, ");");
+    char *lineStr3 = itoa(yylineno);
+    char *currentConcatStr = cat("concat_str_", lineStr3, "", "", "");
+    char *prefix1 = cat($1->prefix, $3->prefix, "char ", currentConcatStr, "[strlen(");
+    char *prefix2 = cat(prefix1, $1->code, ") + strlen(", $3->code, ")];\nstrcpy(");
+    char *prefix3 = cat(prefix2, currentConcatStr,",", $1->code, ");\nstrcat(");
+    char *prefix4 = cat(prefix3, currentConcatStr, ",", $3->code, ");");
 
-    $$ = createRecord("concat_str", "string", prefix3);
+    $$ = createRecord(currentConcatStr, "string", prefix4);
 
     free(prefix1);
     free(prefix2);
     free(prefix3);
+    free(prefix4);
+    free(lineStr3);
+    free(currentConcatStr);
     freeRecord($1);
   }
   | CAST LESS_THAN type MORE_THAN  '(' expr ',' expr ')' %prec UTYPE
@@ -382,7 +407,7 @@ expr: primary %prec UPRIMARY { $$ = $1; }
   | HASHTAG expr %prec UHASHTAG
   | '(' expr ')' %prec UPARENTESISEXPR {
     char* s1 = cat("(", $2->code, ")", "", "");
-    $$ = createRecord(s1, "", "");
+    $$ = createRecord(s1, $2->opt1, $2->prefix);
     free($2);
   }
   /*
@@ -405,16 +430,14 @@ expr: primary %prec UPRIMARY { $$ = $1; }
   | expr PLUS expr
   {
     if (!isNumeric($1) || !isNumeric($3)) {
-      // Erro (1)
-      printf("Erro 1\n");
+      yyerror("Operation invalid: one of the operands is not numeric.");
       exit(-1);
     }
 
     char *resultType = resultNumericType($1->opt1, $3->opt1);
 
     if (resultType == NULL) {
-      // Erro (2)
-      printf("Erro 2\n");
+       yyerror("Cohersion error: operands types does not match automatic cohersion. Consider a cast instead.");
       exit(-1);
     }
 
@@ -426,16 +449,14 @@ expr: primary %prec UPRIMARY { $$ = $1; }
   | expr MINUS expr
   {
     if (!isNumeric($1) || !isNumeric($3)) {
-      // Erro (1)
-      printf("Erro 1\n");
+      yyerror("Operation invalid: one of the operands is not numeric.");
       exit(-1);
     }
 
     char *resultType = resultNumericType($1->opt1, $3->opt1);
 
     if (resultType == NULL) {
-      // Erro (2)
-      printf("Erro 2\n");
+      yyerror("Cohersion error: operands types does not match automatic cohersion. Consider a cast instead.");
       exit(-1);
     }
     
@@ -447,16 +468,14 @@ expr: primary %prec UPRIMARY { $$ = $1; }
   | expr ASTERISK expr
   {
     if (!isNumeric($1) || !isNumeric($3)) {
-      // Erro (1)
-      printf("Erro 1\n");
+      yyerror("Operation invalid: one of the operands is not numeric.");
       exit(-1);
     }
 
     char *resultType = resultNumericType($1->opt1, $3->opt1);
 
     if (resultType == NULL) {
-      // Erro (2)
-      printf("Erro 2\n");
+      yyerror("Cohersion error: operands types does not match automatic cohersion. Consider a cast instead.");
       exit(-1);
     }
     
@@ -482,7 +501,7 @@ expr: primary %prec UPRIMARY { $$ = $1; }
   | CAST LESS_THAN type MORE_THAN '(' expr ')' %prec UTYPE
   {
     // Checar se o tipo é string para casos especiais
-    if (strcmp($3->opt1, "string") == 0)
+    if (isString($3))
     {
       /// TODO: Boolean, struct, union, enum, são casos especiais e devem ser tratados.
       char* typeFormat;
@@ -493,17 +512,34 @@ expr: primary %prec UPRIMARY { $$ = $1; }
         typeFormat = "\"%f\"";
       }
       
-      char *s1 = cat("str", "", "", "", "");
-      char *s2 = cat("int length = snprintf(NULL, 0,", typeFormat, ", ", $6->code, ");\n");
-      char *s3 = cat(s2, "char str[length + 1];\nsnprintf(str, length + 1,", typeFormat, ", ", $6->code);
-      char *s4 = cat(s3, ");\n", "", "", "");
-      $$ = createRecord(s1, "string", s4);
+      /*
+      -      char *s2 = cat("int length = snprintf(NULL, 0,", typeFormat, ", ", $6->code, ");\n");
+      -      char *s3 = cat(s2, "char str[length + 1];\nsnprintf(str, length + 1,", typeFormat, ", ", $6->code);
+      -      char *s4 = cat(s3, ");\n", "", "", "");
+      -      $$ = createRecord(s1, "string", s4);
+      */
+      
+      char *lineStr2 = itoa(yylineno);
+      char *currentStr = cat("str_", lineStr2, "", "", "");
+      char *length = cat("length_", lineStr2, "", "", "");
+      char *code = cat(currentStr, "", "", "", "");
+      char *s1 = cat("int ", length, " = snprintf(NULL, 0,", typeFormat, ", ");
+      char *s2 = cat(s1, $6->code, ");\n", "char ", currentStr);
+      char *s3 = cat(s2, "[", length," + 1];\nsnprintf(", currentStr); 
+      char *s4 = cat(s3, ", ", length, "+ 1, ", typeFormat); 
+      char *s5 = cat(s4, ", ", $6->code, ");\n", "");
+      $$ = createRecord(code, "string", s5);
       free(s1);
       free(s2);
       free(s3);
       free(s4);
+      free(s5);
+      free(code);
+      free(lineStr2);
+      free(length);
+      free(currentStr);
     }
-    else if (strcmp($6->opt1, "string") == 0)
+    else if (isString($6))
     {
 
     }

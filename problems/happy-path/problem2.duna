@@ -12,13 +12,13 @@ proc main() {
         }
 
         if (num <= 25) {
-            range25 += 1;
+            range25 = range25 + 1;
         } else if (num <= 50) {
-            range50 += 1;
+            range50 = range50 + 1;
         } else if (num <= 75) {
-            range75 += 1;
+            range75 = range75 + 1;
         } else if (num <= 100) {
-            range100 += 1;
+            range100 = range100 + 1;
         }
     }
 

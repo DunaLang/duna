@@ -3,6 +3,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <stdarg.h>
 
 typedef struct
 {
@@ -62,7 +63,7 @@ _Bool isNumeric(record *rec)
     printf("Record code: %s\n", rec->code);
     printf("Record type: %s\n", rec->opt1);
     _Bool isFloat = strcmp(rec->opt1, "f32") == 0 || strcmp(rec->opt1, "f64") == 0;
-    
+
     printf("Record result (isNumeric): %s\n-----\n", (isFloat || isInteger(rec) == 1 ? "true" : "false"));
     return isFloat || isInteger(rec);
 }
@@ -92,6 +93,30 @@ int sizeNumericType(char *type)
     }
 
     return numericSize;
+}
+
+char *itoa(int i)
+{
+    int length = snprintf(NULL, 0, "%d", i);
+    char *str = malloc(length + 1);
+    snprintf(str, length + 1, "%d", i);
+    return str;
+}
+
+char *formatStr(const char *fmt, ...)
+{
+    va_list args;
+
+    va_start(args, fmt);
+    size_t sz = vsnprintf(NULL, 0, fmt, args);
+    va_end(args);
+
+    char *s1 = malloc(sz + 1);
+    va_start(args, fmt);
+    vsnprintf(s1, sz + 1, fmt, args);
+    va_end(args);
+
+    return s1;
 }
 
 // somente utilizar quando ambos os types forem numericos (i, u, f)
