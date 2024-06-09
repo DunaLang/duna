@@ -169,14 +169,12 @@ statement : varDecl
   | CONTINUE ';'
   | PRINT expr ';'
   {
-    /// TODO: Tipo esperado de $2 é string
-    char* s1;
-    if($2->prefix != NULL) {
-      s1 = cat($2->prefix, "\n", "printf(\"%s\", ", $2->code, ");");
+    if (strcmp($2->opt1, "string") != 0) {
+      printf("Esperado expressão de tipo \"string\" para print. Tipo obtido=%s\n.", $2->opt1);
+      exit(0);
     }
-    else {
-      s1 = cat("printf(\"%s\", ", $2->code, ");", "", "");
-    }
+
+    char* s1 = cat($2->prefix, "\n", "printf(\"%s\", ", $2->code, ");");
     $$ = createRecord(s1, "", "");
     freeRecord($2);
     free(s1);
