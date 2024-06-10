@@ -30,10 +30,10 @@ SymbolTable symbolTable;
 %token <cValue> CHAR_LITERAL
 %token <sValue> BOOLEAN_LITERAL
 %token <sValue> T_NULL
-%token IF ELSE WHILE FOR FOREACH FUNC PROC RETURN BREAK CONTINUE 
+%token IF ELSE WHILE FOR FOREACH FUNC PROC RETURN BREAK CONTINUE
 %token MATCH ENUM UNION STRUCT CONST STATIC
 %token USIZE U8 U16 U32 U64 I8 I16 I32 I64 F32 F64 BOOL STRING CHAR TYPEDEF
-%token NOT AND OR NEW DELETE PRINT CAST 
+%token NOT AND OR NEW DELETE PRINT CAST
 %token ADD_ASSIGN SUB_ASSIGN MULT_ASSIGN DIV_ASSIGN
 %token EQUALITY INEQUALITY ASSIGN LESS_THAN_EQUALS MORE_THAN_EQUALS LESS_THAN MORE_THAN PLUS MINUS ASTERISK SLASH DOUBLE_COLON EQUALS_ARROW AMPERSAND HASHTAG PERCENTAGE CONCAT
 %token <sValue> IDENTIFIER
@@ -384,20 +384,25 @@ expr: primary %prec UPRIMARY { $$ = $1; }
       exit(-1);
     }
     // Adicionar no prefix
-    char *lineStr3 = itoa(yylineno);
-    char *currentConcatStr = cat("concat_str_", lineStr3, "", "", "");
-    char *prefix1 = cat($1->prefix, $3->prefix, "char ", currentConcatStr, "[strlen(");
-    char *prefix2 = cat(prefix1, $1->code, ") + strlen(", $3->code, ")];\nstrcpy(");
-    char *prefix3 = cat(prefix2, currentConcatStr,",", $1->code, ");\nstrcat(");
-    char *prefix4 = cat(prefix3, currentConcatStr, ",", $3->code, ");");
+    char *currentConcatStr = formatStr("concat_str_%d", yylineno);
+    // char *currentConcatStr = cat("concat_str_", lineStr3, "", "", "");
+    // char *prefix1 = cat($1->prefix, $3->prefix, "char ", currentConcatStr, "[strlen(");
+    // char *prefix2 = cat(prefix1, $1->code, ") + strlen(", $3->code, ")];\nstrcpy(");
+    // char *prefix3 = cat(prefix2, currentConcatStr,",", $1->code, ");\nstrcat(");
+    // char *prefix4 = cat(prefix3, currentConcatStr, ",", $3->code, ");");
 
-    $$ = createRecord(currentConcatStr, "string", prefix4);
+    char *prefix = formatStr(
+      "%s%schar %s[strlen(%s) + strlen(%s)];\nstrcpy(%s, %s);\nstrcat(%s, %s);\n",
+      $1->prefix, $3->prefix, currentConcatStr, $1->code, $3->code, currentConcatStr, $1->code, currentConcatStr, $3->code
+    );
 
-    free(prefix1);
-    free(prefix2);
-    free(prefix3);
-    free(prefix4);
-    free(lineStr3);
+    $$ = createRecord(currentConcatStr, "string", prefix);
+
+    // free(prefix1);
+    // free(prefix2);
+    // free(prefix3);
+    // free(prefix4);
+    free(prefix);
     free(currentConcatStr);
     freeRecord($1);
   }
@@ -495,6 +500,7 @@ expr: primary %prec UPRIMARY { $$ = $1; }
   {
     char* s1 = cat($1->code, " % ", $3->code, "", "");
     $$ = createRecord(s1, "", "");
+    free(s1);
     free($1);
     free($3);
   }
