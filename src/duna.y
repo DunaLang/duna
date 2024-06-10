@@ -147,6 +147,10 @@ union : UNION IDENTIFIER '{' fields '}';
 struct : STRUCT IDENTIFIER '{' fields '}';
 
 statements : statement
+  {
+    $$ = createRecord($1->code, "", "");
+    free(s1);
+  }
   | statements statement
   {
     char* s1 = cat($1->code, "\n", $2->code, "", "");
@@ -172,7 +176,6 @@ statement : varDecl
   | PRINT expr ';'
   {
     if (!isString($2)) {
-      printf("AAAAA=%s\n", $2->opt1);
       char* errorMsg = cat("Expected print expression type to be string. Actual type: ", $2->opt1, "","","");
       yyerror(errorMsg);
       exit(0);
@@ -370,9 +373,81 @@ expr: primary %prec UPRIMARY { $$ = $1; }
   | expr OR expr
   | expr AND expr
   | expr LESS_THAN expr
+  {
+    if (!(isNumeric($1) && isNumeric($3)))
+    {
+      char* errorMsg = "<, operands must be numeric\n";
+      yyerror(errorMsg);
+      exit(-1);
+    }
+
+    char *s1 = formatStr("%s < %s", $1->prefix, $3->prefix);
+    char *prefix = formatStr("%s%s", $1->prefix, $3->prefix);
+
+    $$ = createRecord(s1, "bool", prefix);
+
+    free(s1);
+    free(prefix);
+    freeRecord($1);
+    freeRecord($3);
+  }
   | expr MORE_THAN expr
+  {
+    if (!(isNumeric($1) && isNumeric($3)))
+    {
+      char* errorMsg = ">, operands must be numeric\n";
+      yyerror(errorMsg);
+      exit(-1);
+    }
+
+    char *s1 = formatStr("%s > %s", $1->prefix, $3->prefix);
+    char *prefix = formatStr("%s%s", $1->prefix, $3->prefix);
+
+    $$ = createRecord(s1, "bool", prefix);
+
+    free(s1);
+    free(prefix);
+    freeRecord($1);
+    freeRecord($3);
+  }
   | expr LESS_THAN_EQUALS expr
+  {
+    if (!(isNumeric($1) && isNumeric($3)))
+    {
+      char* errorMsg = "<=, operands must be numeric\n";
+      yyerror(errorMsg);
+      exit(-1);
+    }
+
+    char *s1 = formatStr("%s <= %s", $1->prefix, $3->prefix);
+    char *prefix = formatStr("%s%s", $1->prefix, $3->prefix);
+
+    $$ = createRecord(s1, "bool", prefix);
+
+    free(s1);
+    free(prefix);
+    freeRecord($1);
+    freeRecord($3);
+  }
   | expr MORE_THAN_EQUALS expr
+  {
+    if (!(isNumeric($1) && isNumeric($3)))
+    {
+      char* errorMsg = ">=, operands must be numeric\n";
+      yyerror(errorMsg);
+      exit(-1);
+    }
+
+    char *s1 = formatStr("%s >= %s", $1->prefix, $3->prefix);
+    char *prefix = formatStr("%s%s", $1->prefix, $3->prefix);
+
+    $$ = createRecord(s1, "bool", prefix);
+
+    free(s1);
+    free(prefix);
+    freeRecord($1);
+    freeRecord($3);
+  }
   | expr EQUALITY expr
   | expr INEQUALITY expr
   | expr CONCAT expr
