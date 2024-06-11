@@ -66,6 +66,9 @@ program : declarations
     fprintf(yyout, "#include <stdint.h>\n");
     fprintf(yyout, "#include <stdio.h>\n");
     fprintf(yyout, "#include <string.h>\n");
+
+    fprintf(yyout, "void readInput(char *dest) { char buf[1024]; scanf(\"%%[^\\n]\", buf); strcpy(dest, buf); }\n");
+
     fprintf(yyout, "%s\n", $1->code);
     freeRecord($1);
   };
@@ -92,22 +95,26 @@ varDecl : type IDENTIFIER ';'
   }
   | type IDENTIFIER ASSIGN expr ';'
   {
-    // assert $1 == $4.tipo
-    // Mudar nome de variável para colocar subprograma atual
+    if (strcmp($1->opt1, $4->opt1) != 0)
+    {
+      printf("Identifier type is not expected. Actual: \"%s\". Expected: \"%s\"\n", $4->opt1, $1->opt1);
+      exit(-1);
+    }
+
+    insert(&symbolTable, $2, $1->opt1);
 
     if (isString($4)) {
-      /*
-        size_t a_len = TAMANHO_CALCULADO DE $4;
-        char* a = malloc(sizeof(char*) * a_len);
-        *a = "ola mundo";
-      */
+      char *code = formatStr("%schar %s[strlen(%s)];\nstrcpy(%s, %s)", $4->prefix, $2, $4->code, $2, $4->code);
+      $$ = createRecord(code, "", "");
+      free(code);
     } else {
-      insert(&symbolTable, $2, $1->opt1);
-      char *code = formatStr("%s %s = %s", $1->code, $2, $4->code);
-      free($4);
+      char *code = formatStr("%s%s %s = %s", $4->prefix, $1->code, $2, $4->code);
       $$ = createRecord(code, "", "");
       free(code);
     }
+
+    free($1);
+    free($4);
   }
   | typequalifiers type IDENTIFIER ';' { $$ = createRecord("", "", ""); }
   | typequalifiers type IDENTIFIER ASSIGN expr ';'{ $$ = createRecord("", "", ""); }
@@ -357,6 +364,14 @@ primary : IDENTIFIER {
   | fieldAccess
   | derreferencing
   | READ '(' ')'
+  {
+    char *code = generateVariable();
+    char *prefix = formatStr("char %s[1024];\nreadInput(%s);\n", code, code);
+    $$ = createRecord(code, "string", prefix);
+
+    free(code);
+    free(prefix);
+  }
   ;
 
 derreferencing : ASTERISK IDENTIFIER;
