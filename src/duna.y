@@ -33,7 +33,7 @@ SymbolTable symbolTable;
 %token IF ELSE WHILE FOR FOREACH FUNC PROC RETURN BREAK CONTINUE
 %token MATCH ENUM UNION STRUCT CONST STATIC
 %token USIZE U8 U16 U32 U64 I8 I16 I32 I64 F32 F64 BOOL STRING CHAR TYPEDEF
-%token NOT AND OR NEW DELETE PRINT CAST
+%token NOT AND OR NEW DELETE PRINT READ CAST
 %token ADD_ASSIGN SUB_ASSIGN MULT_ASSIGN DIV_ASSIGN
 %token EQUALITY INEQUALITY ASSIGN LESS_THAN_EQUALS MORE_THAN_EQUALS LESS_THAN MORE_THAN PLUS MINUS ASTERISK SLASH DOUBLE_COLON EQUALS_ARROW AMPERSAND HASHTAG PERCENTAGE CONCAT
 %token <sValue> IDENTIFIER
@@ -167,7 +167,7 @@ statement : varDecl
   }
   | assignment
   | compound_assignment ';'
-  | while { $$ = $1; }
+  | while
   | for
   | foreach
   | BREAK ';'
@@ -356,6 +356,7 @@ primary : IDENTIFIER {
   | compoundTypeDef
   | fieldAccess
   | derreferencing
+  | READ '(' ')'
   ;
 
 derreferencing : ASTERISK IDENTIFIER;
@@ -368,8 +369,8 @@ literal : CHAR_LITERAL
   | T_NULL { $$ = createRecord($1, "null", ""); free($1);}
   ;
 
-expr: primary %prec UPRIMARY { $$ = $1; }
-  | literal %prec ULITERAL { $$ = $1; }
+expr: primary %prec UPRIMARY
+  | literal %prec ULITERAL
   | expr OR expr
   | expr AND expr
   | expr LESS_THAN expr

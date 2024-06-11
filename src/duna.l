@@ -90,6 +90,7 @@ commentary     (\/\*([^*]|[\r\n]|(\*+([^*\/]|[\r\n])))*\*+\/)|(\/\/.*)
 "new"      { return NEW; }
 "delete"   { return DELETE; }
 "print"    { return PRINT; }
+"read"     { return READ; }
 "cast"     { return CAST; }
 "typedef"  { return TYPEDEF; }
 "null"     { return T_NULL; }
