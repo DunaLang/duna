@@ -11,25 +11,6 @@ typedef struct
     char *str;
 } string;
 
-char *cat(char *s1, char *s2, char *s3, char *s4, char *s5)
-{
-    int tam;
-    char *output;
-
-    tam = strlen(s1) + strlen(s2) + strlen(s3) + strlen(s4) + strlen(s5) + 1;
-    output = (char *)malloc(sizeof(char) * tam);
-
-    if (!output)
-    {
-        printf("Allocation problem. Closing application...\n");
-        exit(0);
-    }
-
-    sprintf(output, "%s%s%s%s%s", s1, s2, s3, s4, s5);
-
-    return output;
-}
-
 string createString(char *str)
 {
     string s;
@@ -38,19 +19,35 @@ string createString(char *str)
     return s;
 }
 
-record *cast(record *dst_type, record *src_expr)
+record *cast(char *dest_type, const record *src_expr)
 {
-    if (strcmp("string", dst_type->code))
+    if (strcmp("string", dest_type) == 0)
     {
-        // string
-        char *s1 = cat("", "", "", "", "");
-        record *rec = createRecord(s1, "", "");
-        free(s1);
+        char *typeFormat;
+        if (isInteger(src_expr))
+        {
+            typeFormat = "\"%ld\"";
+        }
+        else if (isNumeric(src_expr))
+        {
+            typeFormat = "\"%f\"";
+        }
+        char *length = generateVariable();
+        char *casted_str = generateVariable();
+        char *prefix = formatStr(
+            "int %s = snprintf(NULL, 0, %s, %s);\nchar %s[%s - 1];\nsnprintf(%s, %s - 1, %s, %s);\n",
+            length, typeFormat, src_expr->code, casted_str, length, casted_str, length, typeFormat, src_expr->code);
+        record *rec = createRecord(casted_str, dest_type, prefix);
+        printf("Struct cast:\nCode:%s\nOpt1:%s\nPrefix:\n%s\n", rec->code, rec->opt1, rec->prefix);
         return rec;
+        // free(typeFormat);
+        // free(length);
+        // free(casted_str);
+        // free(prefix);
     }
 
-    char *s1 = cat("(", dst_type->code, ")", src_expr->code, "");
-    return createRecord(s1, "", "");
+    char *code = formatStr("(%s) %s", dest_type, src_expr->code);
+    return createRecord(code, "", "");
 }
 
 _Bool equalTypes(record *r1, record *r2)
@@ -58,7 +55,7 @@ _Bool equalTypes(record *r1, record *r2)
     return strcmp(r1->opt1, r2->opt1) == 0;
 }
 
-_Bool isNumeric(record *rec)
+_Bool isNumeric(const record *rec)
 {
     printf("Record code: %s\n", rec->code);
     printf("Record type: %s\n", rec->opt1);
@@ -68,14 +65,14 @@ _Bool isNumeric(record *rec)
     return isFloat || isInteger(rec);
 }
 
-_Bool isInteger(record *rec)
+_Bool isInteger(const record *rec)
 {
     _Bool isUnsigned = strcmp(rec->opt1, "u8") == 0 || strcmp(rec->opt1, "u16") == 0 || strcmp(rec->opt1, "u32") == 0 || strcmp(rec->opt1, "u64") == 0;
     _Bool isSigned = strcmp(rec->opt1, "i8") == 0 || strcmp(rec->opt1, "i16") == 0 || strcmp(rec->opt1, "i32") == 0 || strcmp(rec->opt1, "i64") == 0;
     return isUnsigned || isSigned;
 }
 
-_Bool isString(record *rec)
+_Bool isString(const record *rec)
 {
     return strcmp(rec->opt1, "string") == 0;
 }
@@ -101,6 +98,12 @@ char *itoa(int i)
     char *str = malloc(length + 1);
     snprintf(str, length + 1, "%d", i);
     return str;
+}
+
+char *generateVariable()
+{
+    counter += 1;
+    return formatStr("temp_%ld", counter - 1);
 }
 
 char *formatStr(const char *fmt, ...)

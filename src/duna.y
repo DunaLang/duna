@@ -85,11 +85,10 @@ declaration : varDecl
 
 varDecl : type IDENTIFIER ';'
   {
-    char* s1 = cat($1->code, " ", $2, "", "");
-    // free($2);
-    $$ = createRecord(s1, $1->opt1, "");
+    char *code = formatStr("%s %s", $1->code, $2);
+    $$ = createRecord(code, $1->opt1, "");
     free($1);
-    free(s1);
+    free(code);
   }
   | type IDENTIFIER ASSIGN expr ';'
   {
@@ -104,11 +103,10 @@ varDecl : type IDENTIFIER ';'
       */
     } else {
       insert(&symbolTable, $2, $1->opt1);
-      char* s1 = cat($1->code, " ", $2, " = ", $4->code);
-      //free($2);
+      char *code = formatStr("%s %s = %s", $1->code, $2, $4->code);
       free($4);
-      $$ = createRecord(s1, "", "");
-      free(s1);
+      $$ = createRecord(code, "", "");
+      free(code);
     }
   }
   | typequalifiers type IDENTIFIER ';' { $$ = createRecord("", "", ""); }
@@ -119,11 +117,11 @@ typedef : TYPEDEF type IDENTIFIER ';'
 
 proc : PROC IDENTIFIER '(' ')' block
   {
-    char* s1 = cat("void", " ", $2, "()", $5->code);
+    char *code = formatStr("void %s() %s", $2, $5->code);
     free($2);
     freeRecord($5);
-    $$ = createRecord(s1, "", "");
-    free(s1);
+    $$ = createRecord(code, "", "");
+    free(code);
   }
   | PROC IDENTIFIER '(' params ')' block
   ;
@@ -149,22 +147,23 @@ struct : STRUCT IDENTIFIER '{' fields '}';
 statements : statement
   {
     $$ = createRecord($1->code, "", "");
-    free(s1);
   }
   | statements statement
   {
-    char* s1 = cat($1->code, "\n", $2->code, "", "");
+    char *code = formatStr("%s\n%s", $1->code, $2->code);
     freeRecord($1);
     freeRecord($2);
-    $$ = createRecord(s1, "", ""); free(s1);
+    $$ = createRecord(code, "", "");
+    free(code);
   }
   ;
 
 statement : varDecl
   {
-    char* s1 = cat($1->code, ";", "", "", "");
+    char *code = formatStr("%s;", $1->code);
     freeRecord($1);
-    $$ = createRecord(s1, "", "");  free(s1);
+    $$ = createRecord(code, "", "");
+    free(code);
   }
   | assignment
   | compound_assignment ';'
@@ -176,15 +175,15 @@ statement : varDecl
   | PRINT expr ';'
   {
     if (!isString($2)) {
-      char* errorMsg = cat("Expected print expression type to be string. Actual type: ", $2->opt1, "","","");
+      char *errorMsg = formatStr("Expected print expression type to be string. Actual type: %s", $2->opt1);
       yyerror(errorMsg);
       exit(0);
     }
 
-    char* s1 = cat($2->prefix, "\n", "printf(\"%s\", ", $2->code, ");");
-    $$ = createRecord(s1, "", "");
+    char *code = formatStr("%s\nprintf(\"%s\", %s);", $2->prefix, $2->code);
+    $$ = createRecord(code, "", "");
     freeRecord($2);
-    free(s1);
+    free(code);
   }
   | DELETE expr ';'
   | match
@@ -228,13 +227,13 @@ div_assignment : IDENTIFIER DIV_ASSIGN expr
 
 while : WHILE '(' expr ')' block
 {
-  char *s1 = formatStr(
+  char *code = formatStr(
     "%swhile_l%d:\n%s\nif (%s) goto while_l%d;\n",
     $3->prefix, yylineno, $5->code, $3->code, yylineno
   );
 
-  $$ = createRecord(s1, "", "");
-  free(s1);
+  $$ = createRecord(code, "", "");
+  free(code);
   freeRecord($3);
   freeRecord($5);
 };
@@ -317,11 +316,11 @@ type : USIZE { $$ = createRecord("size_t", "usize", ""); }
   | IDENTIFIER { $$ = createRecord($1, "", ""); }
   | '[' expr ']' type %prec ARRAY_TYPE
   {
-    char* s1 = cat("[", $2->code ,"]", "", "");
+    char *code = formatStr("[%s]", $2->code);
     freeRecord($2);
-    $$ = createRecord($4->code, s1, "");
+    $$ = createRecord($4->code, code, "");
     freeRecord($4);
-    free(s1);
+    free(code);
   }
   | '[' ']' type %prec ARRAY_TYPE
   {
@@ -333,17 +332,18 @@ type : USIZE { $$ = createRecord("size_t", "usize", ""); }
 
 pointer : type ASTERISK
   {
-    char* s1 = cat($1->code, "*", "","","");
+    char *code = formatStr("%s*", $1->code);
     freeRecord($1);
-    $$ = createRecord(s1, "", "");
-    free(s1);
+    $$ = createRecord(code, "", "");
+    free(code);
   };
 
 primary : IDENTIFIER {
     char* type = lookup(&symbolTable, $1);
     if (type == NULL || strlen(type) == 1) {
-      printf("[Line %d] Variable %s is not defined\n", yylineno, $1);
-      exit(1);
+      char *errorMsg = formatStr("variable %s is not defined.", $1);
+      yyerror(errorMsg);
+      exit(0);
     }
     $$ = createRecord($1, type, "");
     free($1);
@@ -381,12 +381,12 @@ expr: primary %prec UPRIMARY { $$ = $1; }
       exit(-1);
     }
 
-    char *s1 = formatStr("%s < %s", $1->prefix, $3->prefix);
+    char *code = formatStr("%s < %s", $1->prefix, $3->prefix);
     char *prefix = formatStr("%s%s", $1->prefix, $3->prefix);
 
-    $$ = createRecord(s1, "bool", prefix);
+    $$ = createRecord(code, "bool", prefix);
 
-    free(s1);
+    free(code);
     free(prefix);
     freeRecord($1);
     freeRecord($3);
@@ -400,12 +400,12 @@ expr: primary %prec UPRIMARY { $$ = $1; }
       exit(-1);
     }
 
-    char *s1 = formatStr("%s > %s", $1->prefix, $3->prefix);
+    char *code = formatStr("%s > %s", $1->prefix, $3->prefix);
     char *prefix = formatStr("%s%s", $1->prefix, $3->prefix);
 
-    $$ = createRecord(s1, "bool", prefix);
+    $$ = createRecord(code, "bool", prefix);
 
-    free(s1);
+    free(code);
     free(prefix);
     freeRecord($1);
     freeRecord($3);
@@ -419,12 +419,12 @@ expr: primary %prec UPRIMARY { $$ = $1; }
       exit(-1);
     }
 
-    char *s1 = formatStr("%s <= %s", $1->prefix, $3->prefix);
+    char *code = formatStr("%s <= %s", $1->prefix, $3->prefix);
     char *prefix = formatStr("%s%s", $1->prefix, $3->prefix);
 
-    $$ = createRecord(s1, "bool", prefix);
+    $$ = createRecord(code, "bool", prefix);
 
-    free(s1);
+    free(code);
     free(prefix);
     freeRecord($1);
     freeRecord($3);
@@ -438,12 +438,12 @@ expr: primary %prec UPRIMARY { $$ = $1; }
       exit(-1);
     }
 
-    char *s1 = formatStr("%s >= %s", $1->prefix, $3->prefix);
+    char *code = formatStr("%s >= %s", $1->prefix, $3->prefix);
     char *prefix = formatStr("%s%s", $1->prefix, $3->prefix);
 
-    $$ = createRecord(s1, "bool", prefix);
+    $$ = createRecord(code, "bool", prefix);
 
-    free(s1);
+    free(code);
     free(prefix);
     freeRecord($1);
     freeRecord($3);
@@ -459,12 +459,7 @@ expr: primary %prec UPRIMARY { $$ = $1; }
       exit(-1);
     }
     // Adicionar no prefix
-    char *currentConcatStr = formatStr("concat_str_%d", yylineno);
-    // char *currentConcatStr = cat("concat_str_", lineStr3, "", "", "");
-    // char *prefix1 = cat($1->prefix, $3->prefix, "char ", currentConcatStr, "[strlen(");
-    // char *prefix2 = cat(prefix1, $1->code, ") + strlen(", $3->code, ")];\nstrcpy(");
-    // char *prefix3 = cat(prefix2, currentConcatStr,",", $1->code, ");\nstrcat(");
-    // char *prefix4 = cat(prefix3, currentConcatStr, ",", $3->code, ");");
+    char *currentConcatStr = generateVariable();
 
     char *prefix = formatStr(
       "%s%schar %s[strlen(%s) + strlen(%s)];\nstrcpy(%s, %s);\nstrcat(%s, %s);\n",
@@ -472,11 +467,6 @@ expr: primary %prec UPRIMARY { $$ = $1; }
     );
 
     $$ = createRecord(currentConcatStr, "string", prefix);
-
-    // free(prefix1);
-    // free(prefix2);
-    // free(prefix3);
-    // free(prefix4);
     free(prefix);
     free(currentConcatStr);
     freeRecord($1);
@@ -486,8 +476,8 @@ expr: primary %prec UPRIMARY { $$ = $1; }
   | NOT expr %prec UNOT
   | HASHTAG expr %prec UHASHTAG
   | '(' expr ')' %prec UPARENTESISEXPR {
-    char* s1 = cat("(", $2->code, ")", "", "");
-    $$ = createRecord(s1, $2->opt1, $2->prefix);
+    char *code = formatStr("(%s)", $2->code);
+    $$ = createRecord(code, $2->opt1, $2->prefix);
     free($2);
   }
   /*
@@ -521,8 +511,8 @@ expr: primary %prec UPRIMARY { $$ = $1; }
       exit(-1);
     }
 
-    char* s1 = cat($1->code, " + ", $3->code, "", "");
-    $$ = createRecord(s1, resultType, "");
+    char *code = formatStr("%s + %s", $1->code, $3->code);
+    $$ = createRecord(code, resultType, "");
     free($1);
     free($3);
   }
@@ -540,10 +530,8 @@ expr: primary %prec UPRIMARY { $$ = $1; }
       exit(-1);
     }
     
-    char* s1 = cat($1->code, " - ", $3->code, "", "");
-    $$ = createRecord(s1, resultType, "");
-    // free($1);
-    // free($3);
+    char *code = formatStr("%s - %s", $1->code, $3->code);
+    $$ = createRecord(code, resultType, "");
   }
   | expr ASTERISK expr
   {
@@ -559,23 +547,23 @@ expr: primary %prec UPRIMARY { $$ = $1; }
       exit(-1);
     }
     
-    char* s1 = cat($1->code, " * ", $3->code, "", "");
-    $$ = createRecord(s1, resultType, "");
+    char *code = formatStr("%s * %s", $1->code, $3->code);
+    $$ = createRecord(code, resultType, "");
     // free($1);
     // free($3);
   }
   | expr SLASH expr
   {
-    char* s1 = cat($1->code, " / ", $3->code, "", "");
-    $$ = createRecord(s1, "", "");
+    char *code = formatStr("%s / %s", $1->code, $3->code);
+    $$ = createRecord(code, "", "");
     free($1);
     free($3);
   }
   | expr PERCENTAGE expr
   {
-    char* s1 = cat($1->code, " % ", $3->code, "", "");
-    $$ = createRecord(s1, "", "");
-    free(s1);
+    char *code = formatStr("%s \% %s", $1->code, $3->code);
+    $$ = createRecord(code, "", "");
+    free(code);
     free($1);
     free($3);
   }
@@ -585,40 +573,7 @@ expr: primary %prec UPRIMARY { $$ = $1; }
     if (isString($3))
     {
       /// TODO: Boolean, struct, union, enum, são casos especiais e devem ser tratados.
-      char* typeFormat;
-      if(isInteger($6)) {
-        typeFormat = "\"%ld\"";
-      }
-      else if(isNumeric($6)) {
-        typeFormat = "\"%f\"";
-      }
-      
-      /*
-      -      char *s2 = cat("int length = snprintf(NULL, 0,", typeFormat, ", ", $6->code, ");\n");
-      -      char *s3 = cat(s2, "char str[length + 1];\nsnprintf(str, length + 1,", typeFormat, ", ", $6->code);
-      -      char *s4 = cat(s3, ");\n", "", "", "");
-      -      $$ = createRecord(s1, "string", s4);
-      */
-      
-      char *lineStr2 = itoa(yylineno);
-      char *currentStr = cat("str_", lineStr2, "", "", "");
-      char *length = cat("length_", lineStr2, "", "", "");
-      char *code = cat(currentStr, "", "", "", "");
-      char *s1 = cat("int ", length, " = snprintf(NULL, 0,", typeFormat, ", ");
-      char *s2 = cat(s1, $6->code, ");\n", "char ", currentStr);
-      char *s3 = cat(s2, "[", length," + 1];\nsnprintf(", currentStr); 
-      char *s4 = cat(s3, ", ", length, "+ 1, ", typeFormat); 
-      char *s5 = cat(s4, ", ", $6->code, ");\n", "");
-      $$ = createRecord(code, "string", s5);
-      free(s1);
-      free(s2);
-      free(s3);
-      free(s4);
-      free(s5);
-      free(code);
-      free(lineStr2);
-      free(length);
-      free(currentStr);
+      // $$ = cast($3->opt1, $6);
     }
     else if (isString($6))
     {
@@ -626,8 +581,8 @@ expr: primary %prec UPRIMARY { $$ = $1; }
     }
     else
     {
-      char* s1 = cat("(", $3->code, ")", $6->code, "");
-      $$ = createRecord(s1, $3->opt1, "");
+      char *code = formatStr("(%s) %s", $3->code, $6->code);
+      $$ = createRecord(code, $3->opt1, "");
     }
     
     free($3);
@@ -635,8 +590,8 @@ expr: primary %prec UPRIMARY { $$ = $1; }
   }
   | PLUS expr %prec UPLUS
   {
-    char* s1 = cat(" + ", $2->code, "", "", "");
-    $$ = createRecord(s1, "", "");
+    char *code = formatStr(" + %s", $2->code);
+    $$ = createRecord(code, "", "");
     free($2);
   }
   | MINUS expr %prec UMINUS
@@ -679,10 +634,10 @@ fieldAccess : IDENTIFIER '.' IDENTIFIER
 block : '{' '}' { $$ = createRecord("{}", "", ""); }
   | '{' statements '}'
   {
-    char* s1 = cat("{\n",$2->code,"\n}", "", "");
+    char *code = formatStr("{\n%s\n}", $2->code);
     freeRecord($2);
-    $$ = createRecord(s1, "", "");
-    free(s1);
+    $$ = createRecord(code, "", "");
+    free(code);
   };
 
 %%
@@ -695,7 +650,7 @@ int yyerror(char* msg) {
 int main(int argc, char **argv) {
     int code;
     if (argc < 2) {
-        fprintf(stderr, "Uso: %s arquivo_de_entrada\n", argv[0]);
+        fprintf(stderr, "Usage: %s entry_file\n", argv[0]);
         return 1;
     }
 
@@ -703,7 +658,7 @@ int main(int argc, char **argv) {
     yyout = fopen("./out/duna.c", "w");
     
     if (!yyin) {
-        fprintf(stderr, "Não foi possível abrir o arquivo %s\n", argv[1]);
+        fprintf(stderr, "Error while opening the file %s\n", argv[1]);
         return 1;
     }
 

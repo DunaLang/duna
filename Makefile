@@ -9,8 +9,27 @@ build:
 	${CC} -o ${OUTPUT_DIR}/duna ${OUTPUT_DIR}/y.tab.c ${OUTPUT_DIR}/lex.yy.c lib/record.c lib/utils.c lib/symbol_table.c -ll
 run: build
 	${OUTPUT_DIR}/duna ./problems/happy-path/problem1.duna
-	${CC} -o ./out/problem1 ./out/duna.c
+	${CC} ${C_FLAGS} -o ./out/problem1 ./out/duna.c
 	./out/problem1
+test: build
+	echo "----TESTING----"
+	${OUTPUT_DIR}/duna ./problems/happy-path/problem1.duna
+	echo "----HAPPY PATH----"
+	${CC} ${C_FLAGS} -o ./out/problem1 ./out/duna.c
+	./out/problem1
+
+	${OUTPUT_DIR}/duna ./problems/should-fail/problem1-fail1.duna
+	echo "----SHOULD FAIL - SEMICOLON MISSING----"
+	${CC} ${C_FLAGS} -o ./out/fail ./out/duna.c
+
+	${OUTPUT_DIR}/duna ./problems/should-fail/problem1-fail2.duna
+	${CC} ${C_FLAGS} -o ./out/fail ./out/duna.c
+	./out/fail
+
+	${OUTPUT_DIR}/duna ./problems/should-fail/problem1-fail3.duna
+	${CC} ${C_FLAGS} -o ./out/fail ./out/duna.c
+	./out/fail
+
 
 clean:
 	rm -rf out
