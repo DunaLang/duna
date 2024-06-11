@@ -180,7 +180,7 @@ statement : varDecl
       exit(0);
     }
 
-    char *code = formatStr("%s\nprintf(\"%s\", %s);", $2->prefix, $2->code);
+    char *code = formatStr("%s\nprintf(\"%%s\", %s);", $2->prefix, $2->code);
     $$ = createRecord(code, "", "");
     freeRecord($2);
     free(code);
@@ -561,7 +561,7 @@ expr: primary %prec UPRIMARY { $$ = $1; }
   }
   | expr PERCENTAGE expr
   {
-    char *code = formatStr("%s \% %s", $1->code, $3->code);
+    char *code = formatStr("%s %% %s", $1->code, $3->code);
     $$ = createRecord(code, "", "");
     free(code);
     free($1);
@@ -573,7 +573,7 @@ expr: primary %prec UPRIMARY { $$ = $1; }
     if (isString($3))
     {
       /// TODO: Boolean, struct, union, enum, são casos especiais e devem ser tratados.
-      // $$ = cast($3->opt1, $6);
+      $$ = cast($3->opt1, $6);
     }
     else if (isString($6))
     {
@@ -585,8 +585,8 @@ expr: primary %prec UPRIMARY { $$ = $1; }
       $$ = createRecord(code, $3->opt1, "");
     }
     
-    free($3);
-    free($6);
+    freeRecord($3);
+    freeRecord($6);
   }
   | PLUS expr %prec UPLUS
   {
