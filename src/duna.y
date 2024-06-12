@@ -90,7 +90,9 @@ varDecl : type IDENTIFIER ';'
   {
     char *code = formatStr("%s %s", $1->code, $2);
     $$ = createRecord(code, $1->opt1, "");
-    free($1);
+
+    freeRecord($1);
+    free($2);
     free(code);
   }
   | type IDENTIFIER ASSIGN expr ';'
@@ -113,8 +115,9 @@ varDecl : type IDENTIFIER ';'
       free(code);
     }
 
-    free($1);
-    free($4);
+    freeRecord($1);
+    free($2);
+    freeRecord($4);
   }
   | typequalifiers type IDENTIFIER ';' { $$ = createRecord("", "", ""); }
   | typequalifiers type IDENTIFIER ASSIGN expr ';'{ $$ = createRecord("", "", ""); }
@@ -125,9 +128,10 @@ typedef : TYPEDEF type IDENTIFIER ';'
 proc : PROC IDENTIFIER '(' ')' block
   {
     char *code = formatStr("void %s() %s", $2, $5->code);
+    $$ = createRecord(code, "", "");
+
     free($2);
     freeRecord($5);
-    $$ = createRecord(code, "", "");
     free(code);
   }
   | PROC IDENTIFIER '(' params ')' block
@@ -154,13 +158,15 @@ struct : STRUCT IDENTIFIER '{' fields '}';
 statements : statement
   {
     $$ = createRecord($1->code, "", "");
+    freeRecord($1);
   }
   | statements statement
   {
     char *code = formatStr("%s\n%s", $1->code, $2->code);
+    $$ = createRecord(code, "", "");
+
     freeRecord($1);
     freeRecord($2);
-    $$ = createRecord(code, "", "");
     free(code);
   }
   ;
@@ -168,8 +174,9 @@ statements : statement
 statement : varDecl
   {
     char *code = formatStr("%s;", $1->code);
-    freeRecord($1);
     $$ = createRecord(code, "", "");
+
+    freeRecord($1);
     free(code);
   }
   | assignment
@@ -189,6 +196,7 @@ statement : varDecl
 
     char *code = formatStr("%s\nprintf(\"%%s\", %s);", $2->prefix, $2->code);
     $$ = createRecord(code, "", "");
+
     freeRecord($2);
     free(code);
   }
@@ -240,9 +248,10 @@ while : WHILE '(' expr ')' block
   );
 
   $$ = createRecord(code, "", "");
-  free(code);
+
   freeRecord($3);
   freeRecord($5);
+  free(code);
 };
 
 for : FOR '(' forHeader ')' block;
@@ -320,12 +329,13 @@ type : USIZE { $$ = createRecord("size_t", "usize", ""); }
   | BOOL { $$ = createRecord("_Bool", "bool", ""); }
   | STRING { $$ = createRecord("string", "string", ""); }
   | CHAR { $$ = createRecord("char", "char", ""); }
-  | IDENTIFIER { $$ = createRecord($1, "", ""); }
+  | IDENTIFIER { $$ = createRecord($1, "", ""); free($1); }
   | '[' expr ']' type %prec ARRAY_TYPE
   {
     char *code = formatStr("[%s]", $2->code);
-    freeRecord($2);
     $$ = createRecord($4->code, code, "");
+
+    freeRecord($2);
     freeRecord($4);
     free(code);
   }
@@ -340,8 +350,9 @@ type : USIZE { $$ = createRecord("size_t", "usize", ""); }
 pointer : type ASTERISK
   {
     char *code = formatStr("%s*", $1->code);
-    freeRecord($1);
     $$ = createRecord(code, "", "");
+
+    freeRecord($1);
     free(code);
   };
 
@@ -353,6 +364,7 @@ primary : IDENTIFIER {
       exit(0);
     }
     $$ = createRecord($1, type, "");
+
     free($1);
   }
   | subprogramCall
@@ -378,10 +390,10 @@ derreferencing : ASTERISK IDENTIFIER;
 
 literal : CHAR_LITERAL
   | STRING_LITERAL { $$ = createRecord($1, "string", ""); free($1); }
-  | FLOAT_LITERAL { $$ = createRecord($1, "f32", ""); free($1);}
-  | INT_LITERAL { $$ = createRecord($1, "i32", ""); free($1);}
-  | BOOLEAN_LITERAL { $$ = createRecord($1, "bool", ""); free($1);}
-  | T_NULL { $$ = createRecord($1, "null", ""); free($1);}
+  | FLOAT_LITERAL { $$ = createRecord($1, "f32", ""); free($1); }
+  | INT_LITERAL { $$ = createRecord($1, "i32", ""); free($1); }
+  | BOOLEAN_LITERAL { $$ = createRecord($1, "bool", ""); free($1); }
+  | T_NULL { $$ = createRecord($1, "null", ""); free($1); }
   ;
 
 expr: primary %prec UPRIMARY
@@ -399,13 +411,12 @@ expr: primary %prec UPRIMARY
 
     char *code = formatStr("%s < %s", $1->prefix, $3->prefix);
     char *prefix = formatStr("%s%s", $1->prefix, $3->prefix);
-
     $$ = createRecord(code, "bool", prefix);
 
-    free(code);
-    free(prefix);
     freeRecord($1);
     freeRecord($3);
+    free(code);
+    free(prefix);
   }
   | expr MORE_THAN expr
   {
@@ -418,13 +429,12 @@ expr: primary %prec UPRIMARY
 
     char *code = formatStr("%s > %s", $1->prefix, $3->prefix);
     char *prefix = formatStr("%s%s", $1->prefix, $3->prefix);
-
     $$ = createRecord(code, "bool", prefix);
 
-    free(code);
-    free(prefix);
     freeRecord($1);
     freeRecord($3);
+    free(code);
+    free(prefix);
   }
   | expr LESS_THAN_EQUALS expr
   {
@@ -437,13 +447,12 @@ expr: primary %prec UPRIMARY
 
     char *code = formatStr("%s <= %s", $1->prefix, $3->prefix);
     char *prefix = formatStr("%s%s", $1->prefix, $3->prefix);
-
     $$ = createRecord(code, "bool", prefix);
 
-    free(code);
-    free(prefix);
     freeRecord($1);
     freeRecord($3);
+    free(code);
+    free(prefix);
   }
   | expr MORE_THAN_EQUALS expr
   {
@@ -456,36 +465,35 @@ expr: primary %prec UPRIMARY
 
     char *code = formatStr("%s >= %s", $1->prefix, $3->prefix);
     char *prefix = formatStr("%s%s", $1->prefix, $3->prefix);
-
     $$ = createRecord(code, "bool", prefix);
 
-    free(code);
-    free(prefix);
     freeRecord($1);
     freeRecord($3);
+    free(code);
+    free(prefix);
   }
   | expr EQUALITY expr
   | expr INEQUALITY expr
   | expr CONCAT expr
   {
-    /// TODO: Mudar nomes das variáveis
+
     if (!(isString($1) && isString($3)))
     {
       printf("++, operands must be string\n");
       exit(-1);
     }
-    // Adicionar no prefix
-    char *currentConcatStr = generateVariable();
 
+    char *code = generateVariable();
     char *prefix = formatStr(
       "%s%schar %s[strlen(%s) + strlen(%s)];\nstrcpy(%s, %s);\nstrcat(%s, %s);\n",
-      $1->prefix, $3->prefix, currentConcatStr, $1->code, $3->code, currentConcatStr, $1->code, currentConcatStr, $3->code
+      $1->prefix, $3->prefix, code, $1->code, $3->code, code, $1->code, code, $3->code
     );
+    $$ = createRecord(code, "string", prefix);
 
-    $$ = createRecord(currentConcatStr, "string", prefix);
-    free(prefix);
-    free(currentConcatStr);
     freeRecord($1);
+    freeRecord($3);
+    free(code);
+    free(prefix);
   }
   | CAST LESS_THAN type MORE_THAN  '(' expr ',' expr ')' %prec UTYPE
   | AMPERSAND expr %prec UAMPERSAND
@@ -494,7 +502,9 @@ expr: primary %prec UPRIMARY
   | '(' expr ')' %prec UPARENTESISEXPR {
     char *code = formatStr("(%s)", $2->code);
     $$ = createRecord(code, $2->opt1, $2->prefix);
-    free($2);
+
+    freeRecord($2);
+    free(code);
   }
   /*
     Operações numéricas são verificadas utilizando os seguintes passos, sequencialmente:
@@ -521,16 +531,17 @@ expr: primary %prec UPRIMARY
     }
 
     char *resultType = resultNumericType($1->opt1, $3->opt1);
-
     if (resultType == NULL) {
-       yyerror("Cohersion error: operands types does not match automatic cohersion. Consider a cast instead.");
+      yyerror("Cohersion error: operands types does not match automatic cohersion. Consider a cast instead.");
       exit(-1);
     }
 
     char *code = formatStr("%s + %s", $1->code, $3->code);
     $$ = createRecord(code, resultType, "");
-    free($1);
-    free($3);
+
+    freeRecord($1);
+    freeRecord($3);
+    free(code);
   }
   | expr MINUS expr
   {
@@ -540,14 +551,17 @@ expr: primary %prec UPRIMARY
     }
 
     char *resultType = resultNumericType($1->opt1, $3->opt1);
-
     if (resultType == NULL) {
       yyerror("Cohersion error: operands types does not match automatic cohersion. Consider a cast instead.");
       exit(-1);
     }
-    
+
     char *code = formatStr("%s - %s", $1->code, $3->code);
     $$ = createRecord(code, resultType, "");
+
+    freeRecord($1);
+    freeRecord($3);
+    free(code);
   }
   | expr ASTERISK expr
   {
@@ -557,7 +571,6 @@ expr: primary %prec UPRIMARY
     }
 
     char *resultType = resultNumericType($1->opt1, $3->opt1);
-
     if (resultType == NULL) {
       yyerror("Cohersion error: operands types does not match automatic cohersion. Consider a cast instead.");
       exit(-1);
@@ -565,23 +578,50 @@ expr: primary %prec UPRIMARY
     
     char *code = formatStr("%s * %s", $1->code, $3->code);
     $$ = createRecord(code, resultType, "");
-    // free($1);
-    // free($3);
+
+    freeRecord($1);
+    freeRecord($3);
+    free(code);
   }
   | expr SLASH expr
   {
+    if (!isNumeric($1) || !isNumeric($3)) {
+      yyerror("Operation invalid: one of the operands is not numeric.");
+      exit(-1);
+    }
+
+    char *resultType = resultNumericType($1->opt1, $3->opt1);
+    if (resultType == NULL) {
+      yyerror("Cohersion error: operands types does not match automatic cohersion. Consider a cast instead.");
+      exit(-1);
+    }
+
     char *code = formatStr("%s / %s", $1->code, $3->code);
     $$ = createRecord(code, "", "");
-    free($1);
-    free($3);
+
+    freeRecord($1);
+    freeRecord($3);
+    free(code);
   }
   | expr PERCENTAGE expr
   {
+    if (!isNumeric($1) || !isNumeric($3)) {
+      yyerror("Operation invalid: one of the operands is not numeric.");
+      exit(-1);
+    }
+
+    char *resultType = resultNumericType($1->opt1, $3->opt1);
+    if (resultType == NULL) {
+      yyerror("Cohersion error: operands types does not match automatic cohersion. Consider a cast instead.");
+      exit(-1);
+    }
+
     char *code = formatStr("%s %% %s", $1->code, $3->code);
     $$ = createRecord(code, "", "");
+
+    freeRecord($1);
+    freeRecord($3);
     free(code);
-    free($1);
-    free($3);
   }
   | CAST LESS_THAN type MORE_THAN '(' expr ')' %prec UTYPE
   {
@@ -599,6 +639,8 @@ expr: primary %prec UPRIMARY
     {
       char *code = formatStr("(%s) %s", $3->code, $6->code);
       $$ = createRecord(code, $3->opt1, "");
+
+      free(code);
     }
     
     freeRecord($3);
@@ -606,9 +648,16 @@ expr: primary %prec UPRIMARY
   }
   | PLUS expr %prec UPLUS
   {
+    if (!isNumeric($2)) {
+      yyerror("Operation invalid: operand is not numeric.");
+      exit(-1);
+    }
+
     char *code = formatStr(" + %s", $2->code);
-    $$ = createRecord(code, "", "");
-    free($2);
+    $$ = createRecord(code, $2->opt1, "");
+
+    freeRecord($2);
+    free(code);
   }
   | MINUS expr %prec UMINUS
   ;
@@ -651,8 +700,9 @@ block : '{' '}' { $$ = createRecord("{}", "", ""); }
   | '{' statements '}'
   {
     char *code = formatStr("{\n%s\n}", $2->code);
-    freeRecord($2);
     $$ = createRecord(code, "", "");
+
+    freeRecord($2);
     free(code);
   };
 

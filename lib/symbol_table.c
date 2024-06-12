@@ -64,8 +64,8 @@ void insert(SymbolTable *table, char *key, char *type)
     }
 
     SymbolTableNode *newNode = malloc(sizeof(SymbolTableNode));
-    newNode->key = key;
-    newNode->value = type;
+    newNode->key = strdup(key);
+    newNode->value = strdup(type);
     newNode->next = NULL;
     // printf("Previous is null: %d\n", previous == NULL);
     if (previous == NULL)
