@@ -19,7 +19,7 @@ size_t hash(char *key)
     return hashedKey;
 }
 
-SymbolTable createSymbolTable()
+SymbolTable createSymbolTable(void)
 {
     SymbolTable table;
     for (size_t i = 0; i < HASH_SIZE; i++)

@@ -14,6 +14,6 @@ typedef struct SymbolTableNode
     struct SymbolTableNode *next;
 } SymbolTableNode;
 
-SymbolTable createSymbolTable();
-char *lookup(SymbolTable *env, char *key);
-void insert(SymbolTable *env, char *key, char *type);
+SymbolTable createSymbolTable(void);
+char *lookup(SymbolTable *table, char *key);
+void insert(SymbolTable *table, char *key, char *type);

@@ -67,7 +67,7 @@ program : declarations
     fprintf(yyout, "#include <stdio.h>\n");
     fprintf(yyout, "#include <string.h>\n");
 
-    fprintf(yyout, "void readInput(char *dest) { char buf[1024]; scanf(\"%%[^\\n]\", buf); strcpy(dest, buf); }\n");
+    fprintf(yyout, "void $_readInput(char *dest) { char buf[1024]; scanf(\"%%[^\\n]\", buf); strcpy(dest, buf); }\n");
 
     fprintf(yyout, "%s\n", $1->code);
     freeRecord($1);
@@ -88,6 +88,12 @@ declaration : varDecl
 
 varDecl : type IDENTIFIER ';'
   {
+    if (lookup(&symbolTable, $2) != NULL)
+    {
+      printf("Identifier \"%s\" is already defined.\n", $2);
+      exit(0);
+    }
+
     char *code = formatStr("%s %s", $1->code, $2);
     $$ = createRecord(code, $1->opt1, "");
 
@@ -103,13 +109,21 @@ varDecl : type IDENTIFIER ';'
       exit(-1);
     }
 
+    if (lookup(&symbolTable, $2) != NULL)
+    {
+      printf("Identifier \"%s\" is already defined.\n", $2);
+      exit(-1);
+    }
     insert(&symbolTable, $2, $1->opt1);
 
-    if (isString($4)) {
+    if (isString($4))
+    {
       char *code = formatStr("%schar %s[strlen(%s)];\nstrcpy(%s, %s)", $4->prefix, $2, $4->code, $2, $4->code);
       $$ = createRecord(code, "", "");
       free(code);
-    } else {
+    }
+    else
+    {
       char *code = formatStr("%s%s %s = %s", $4->prefix, $1->code, $2, $4->code);
       $$ = createRecord(code, "", "");
       free(code);
@@ -378,7 +392,7 @@ primary : IDENTIFIER {
   | READ '(' ')'
   {
     char *code = generateVariable();
-    char *prefix = formatStr("char %s[1024];\nreadInput(%s);\n", code, code);
+    char *prefix = formatStr("char %s[1024];\n$_readInput(%s);\n", code, code);
     $$ = createRecord(code, "string", prefix);
 
     free(code);
@@ -476,7 +490,6 @@ expr: primary %prec UPRIMARY
   | expr INEQUALITY expr
   | expr CONCAT expr
   {
-
     if (!(isString($1) && isString($3)))
     {
       printf("++, operands must be string\n");
@@ -494,6 +507,29 @@ expr: primary %prec UPRIMARY
     freeRecord($3);
     free(code);
     free(prefix);
+  }
+  | CAST LESS_THAN type MORE_THAN '(' expr ')' %prec UTYPE
+  {
+    // Checar se o tipo é string para casos especiais
+    if (isString($3))
+    {
+      /// TODO: Boolean, struct, union, enum, são casos especiais e devem ser tratados.
+      $$ = cast($3->opt1, $6);
+    }
+    else if (isString($6))
+    {
+
+    }
+    else
+    {
+      char *code = formatStr("(%s) %s", $3->code, $6->code);
+      $$ = createRecord(code, $3->opt1, "");
+
+      free(code);
+    }
+
+    freeRecord($3);
+    freeRecord($6);
   }
   | CAST LESS_THAN type MORE_THAN  '(' expr ',' expr ')' %prec UTYPE
   | AMPERSAND expr %prec UAMPERSAND
@@ -537,11 +573,13 @@ expr: primary %prec UPRIMARY
     }
 
     char *code = formatStr("%s + %s", $1->code, $3->code);
-    $$ = createRecord(code, resultType, "");
+    char *prefix = formatStr("%s%s", $1->prefix, $3->prefix);
+    $$ = createRecord(code, resultType, prefix);
 
     freeRecord($1);
     freeRecord($3);
     free(code);
+    free(prefix);
   }
   | expr MINUS expr
   {
@@ -557,11 +595,13 @@ expr: primary %prec UPRIMARY
     }
 
     char *code = formatStr("%s - %s", $1->code, $3->code);
-    $$ = createRecord(code, resultType, "");
+    char *prefix = formatStr("%s%s", $1->prefix, $3->prefix);
+    $$ = createRecord(code, resultType, prefix);
 
     freeRecord($1);
     freeRecord($3);
     free(code);
+    free(prefix);
   }
   | expr ASTERISK expr
   {
@@ -577,11 +617,13 @@ expr: primary %prec UPRIMARY
     }
     
     char *code = formatStr("%s * %s", $1->code, $3->code);
-    $$ = createRecord(code, resultType, "");
+    char *prefix = formatStr("%s%s", $1->prefix, $3->prefix);
+    $$ = createRecord(code, resultType, prefix);
 
     freeRecord($1);
     freeRecord($3);
     free(code);
+    free(prefix);
   }
   | expr SLASH expr
   {
@@ -597,11 +639,13 @@ expr: primary %prec UPRIMARY
     }
 
     char *code = formatStr("%s / %s", $1->code, $3->code);
-    $$ = createRecord(code, "", "");
+    char *prefix = formatStr("%s%s", $1->prefix, $3->prefix);
+    $$ = createRecord(code, resultType, prefix);
 
     freeRecord($1);
     freeRecord($3);
     free(code);
+    free(prefix);
   }
   | expr PERCENTAGE expr
   {
@@ -617,34 +661,13 @@ expr: primary %prec UPRIMARY
     }
 
     char *code = formatStr("%s %% %s", $1->code, $3->code);
-    $$ = createRecord(code, "", "");
+    char *prefix = formatStr("%s%s", $1->prefix, $3->prefix);
+    $$ = createRecord(code, resultType, prefix);
 
     freeRecord($1);
     freeRecord($3);
     free(code);
-  }
-  | CAST LESS_THAN type MORE_THAN '(' expr ')' %prec UTYPE
-  {
-    // Checar se o tipo é string para casos especiais
-    if (isString($3))
-    {
-      /// TODO: Boolean, struct, union, enum, são casos especiais e devem ser tratados.
-      $$ = cast($3->opt1, $6);
-    }
-    else if (isString($6))
-    {
-
-    }
-    else
-    {
-      char *code = formatStr("(%s) %s", $3->code, $6->code);
-      $$ = createRecord(code, $3->opt1, "");
-
-      free(code);
-    }
-    
-    freeRecord($3);
-    freeRecord($6);
+    free(prefix);
   }
   | PLUS expr %prec UPLUS
   {
@@ -654,7 +677,7 @@ expr: primary %prec UPRIMARY
     }
 
     char *code = formatStr(" + %s", $2->code);
-    $$ = createRecord(code, $2->opt1, "");
+    $$ = createRecord(code, $2->opt1, $2->prefix);
 
     freeRecord($2);
     free(code);
