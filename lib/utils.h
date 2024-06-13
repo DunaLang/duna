@@ -15,4 +15,3 @@ char *resultNumericType(char *type1, char *type2);
 char *itoa(int i);
 char *formatStr(const char *fmt, ...);
 char *generateVariable();
-record *cast(char *dest_type, const record *src_expr);

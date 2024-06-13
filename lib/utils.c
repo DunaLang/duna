@@ -19,37 +19,6 @@ string createString(char *str)
     return s;
 }
 
-record *cast(char *dest_type, const record *src_expr)
-{
-    if (strcmp("string", dest_type) == 0)
-    {
-        char *typeFormat;
-        if (isInteger(src_expr))
-        {
-            typeFormat = "\"%ld\"";
-        }
-        else if (isNumeric(src_expr))
-        {
-            typeFormat = "\"%f\"";
-        }
-        char *length = generateVariable();
-        char *casted_str = generateVariable();
-        char *prefix = formatStr(
-            "int %s = snprintf(NULL, 0, %s, %s);\nchar %s[%s - 1];\nsnprintf(%s, %s - 1, %s, %s);\n",
-            length, typeFormat, src_expr->code, casted_str, length, casted_str, length, typeFormat, src_expr->code);
-        record *rec = createRecord(casted_str, dest_type, prefix);
-        printf("Struct cast:\nCode:%s\nOpt1:%s\nPrefix:\n%s\n", rec->code, rec->opt1, rec->prefix);
-        return rec;
-        // free(typeFormat);
-        // free(length);
-        // free(casted_str);
-        // free(prefix);
-    }
-
-    char *code = formatStr("(%s) %s", dest_type, src_expr->code);
-    return createRecord(code, "", "");
-}
-
 _Bool equalTypes(record *r1, record *r2)
 {
     return strcmp(r1->opt1, r2->opt1) == 0;
