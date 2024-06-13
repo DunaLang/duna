@@ -54,7 +54,7 @@ SymbolTable symbolTable;
 %left MINUS PLUS
 %left PERCENTAGE SLASH ASTERISK
 
-%type <rec> declarations declaration varDecl block proc type expr pointer statements statement literal primary while
+%type <rec> declarations declaration varDecl block proc type expr pointer statements statement literal primary while if elseif elseifs
 
 %start program
 
@@ -300,16 +300,77 @@ return : RETURN ';'
   ;
 
 if : IF '(' expr ')' block
+  {
+    char* s1 = formatStr("if (%s) %s", $3->code, $5->code);
+
+    $$ = createRecord(s1, "", "");
+
+    free(s1);
+    freeRecord($3);
+    freeRecord($5);
+  }
   | IF '(' expr ')' block elseifs
+  {
+    char* s1 = formatStr("if (%s) %s %s", $3->code, $5->code, $6->code);
+
+    $$ = createRecord(s1, "", "");
+
+    free(s1);
+    freeRecord($3);
+    freeRecord($5);
+    freeRecord($6);
+  }
   | IF '(' expr ')' block ELSE block
+  {
+    char* s1 = formatStr("if (%s) %s else %s", $3->code, $5->code, $7->code);
+
+    $$ = createRecord(s1, "", "");
+
+    free(s1);
+    freeRecord($3);
+    freeRecord($5);
+    freeRecord($7);
+  }
   | IF '(' expr ')' block elseifs ELSE block
+  {
+    char* s1 = formatStr("if (%s) %s %s else %s", $3->code, $5->code, $6->code, $8->code);
+
+    $$ = createRecord(s1, "", "");
+
+    free(s1);
+    freeRecord($3);
+    freeRecord($5);
+    freeRecord($6);
+    freeRecord($8);
+  }
   ;
 
 elseifs : elseif
+  {
+    $$ = $1;
+  }
   | elseifs elseif
+  {
+    char* s1 = formatStr("%s %s", $1->code, $2->code);
+
+    $$ = createRecord(s1, "", "");
+
+    free(s1);
+    freeRecord($1);
+    freeRecord($2);
+  }
   ;
 
 elseif : ELSE IF '(' expr ')' block
+  {
+    char* s1 = formatStr("else if (%s) %s", $4->code, $6->code);
+
+    $$ = createRecord(s1, "", "");
+
+    free(s1);
+    freeRecord($4);
+    freeRecord($6);
+  }
   ;
 
 fields : field ';'
