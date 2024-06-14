@@ -3,9 +3,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+#include "../../lib/symbol_table.h"
+#include "../../lib/scope_stack.h"
+#include "../../lib/symbol_utils.h"
 #include "../../lib/record.h"
 #include "../../lib/utils.h"
-#include "../../lib/symbol_table.h"
 
 int yylex(void);
 int yyerror(char *s);
@@ -14,7 +17,8 @@ extern char * yytext;
 extern FILE * yyin;
 extern FILE * yyout;
 
-SymbolTable symbolTable;
+extern SymbolTable symbolTable;
+extern ScopeStack scopeStack;
 %}
 
 %union {
@@ -899,6 +903,7 @@ int main(int argc, char **argv) {
     }
 
     symbolTable = createSymbolTable();
+    scopeStack = createScopeStack();
 
     code = yyparse();
 
