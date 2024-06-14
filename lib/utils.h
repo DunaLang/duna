@@ -6,6 +6,7 @@
 static size_t counter = 0;
 
 _Bool equalTypes(record *r1, record *r2);
+_Bool isBoolean(const record *rec);
 _Bool isNumeric(const record *rec);
 _Bool isInteger(const record *rec);
 _Bool isString(const record *rec);

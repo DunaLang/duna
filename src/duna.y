@@ -58,7 +58,8 @@ extern ScopeStack scopeStack;
 %left MINUS PLUS
 %left PERCENTAGE SLASH ASTERISK
 
-%type <rec> declarations declaration varDecl block proc type expr pointer statements statement literal primary while if elseif elseifs
+%type <rec> declarations declaration varDecl proc
+%type <rec> block type expr pointer statements statement literal primary while if elseif elseifs assignment
 
 %start program
 
@@ -204,6 +205,28 @@ statement : varDecl
   | for
   | foreach
   | BREAK ';'
+  {
+    Scope *scope = top(&scopeStack, 0);
+    if (scope == NULL)
+    {
+      printf("Break deve ser colocado em um escopo válido.\n");
+      exit(-1);
+    }
+    printf("Scope{name=\"%s\", type=\"%s\"}\n", scope->name, scope->type);
+
+    if (strcmp(scope->type, "while") != 0 && strcmp(scope->type, "for") != 0)
+    {
+      printf("Break deve ser colocado em uma estrutura de iteração válida (WHILE ou FOR)\n");
+      free(scope);
+      exit(-1);
+    }
+
+    char *code = formatStr("goto end_%s_%s;", scope->type, scope->name);
+
+    $$ = createRecord(code, "", "");
+    free(code);
+    free(scope);
+  }
   | CONTINUE ';'
   | PRINT expr ';'
   {
@@ -226,7 +249,40 @@ statement : varDecl
   | subprogramCall ';'
   ;
 
-assignment : IDENTIFIER ASSIGN expr ';' {/* TODO Problema 2 precisa disso*/}
+assignment : IDENTIFIER ASSIGN expr ';'
+  {
+    /*
+    - Checar se ID existe
+    - Checar se o tipo bate com expr
+    */
+
+    char *type = lookup(&symbolTable, $1);
+    if (type == NULL)
+    {
+      printf("Variável não definida");
+      exit(-1);
+    }
+
+    if (strcmp(type, $3->opt1) != 0)
+    {
+      printf("Expression type is not expected. Actual: \"%s\". Expected: \"%s\"\n", $3->opt1, type);
+      exit(-1);
+    }
+
+    if (isString($3))
+    {
+      // strcpy
+    }
+    else
+    {
+      char *code = formatStr("%s%s = %s;", $3->prefix, $1, $3->code);
+      $$ = createRecord(code, "", "");
+      free(code);
+    }
+
+    free($1);
+    freeRecord($3);
+  }
   | arrayIndex ASSIGN expr ';' {/* Problema 3 precisa disso*/}
   | derreferencing ASSIGN expr ';'
   | fieldAccess ASSIGN expr ';'
@@ -259,17 +315,31 @@ div_assignment : IDENTIFIER DIV_ASSIGN expr
   | fieldAccess DIV_ASSIGN expr
   ;
 
-while : WHILE '(' expr ')' block
+while : WHILE
+{ char *scope = generateVariable(); insertScope(&scopeStack, scope, "while"); }
+'(' expr ')' block
 {
+  Scope *scope = top(&scopeStack, 0);
+  printf("%s, %s\n", scope->name, scope->type);
+
+  if (scope == NULL)
+  {
+    // Não sei se isso é possível aqui
+    printf("Unreachable");
+    exit(-1);
+  }
+
   char *code = formatStr(
-    "%swhile_l%d:\n%s\nif (%s) goto while_l%d;\n",
-    $3->prefix, yylineno, $5->code, $3->code, yylineno
+    "%sbegin_while_%s:{\nif (!%s) goto end_while_%s;\n%s\ngoto begin_while_%s; \n} end_while_%s: ;\n",
+    $4->prefix, scope->name, $4->code, scope->name, $6->code, scope->name, scope->name
   );
 
   $$ = createRecord(code, "", "");
 
-  freeRecord($3);
-  freeRecord($5);
+  pop(&scopeStack);
+
+  freeRecord($4);
+  freeRecord($6);
   free(code);
 };
 
@@ -480,6 +550,23 @@ expr: primary %prec UPRIMARY
   | literal %prec ULITERAL
   | expr OR expr
   | expr AND expr
+  {
+    if (!(isBoolean($1) && isBoolean($3)))
+    {
+      char* errorMsg = "and, operands must be boolean\n";
+      yyerror(errorMsg);
+      exit(-1);
+    }
+
+    char *code = formatStr("%s && %s", $1->code, $3->code);
+    char *prefix = formatStr("%s%s", $1->prefix, $3->prefix);
+    $$ = createRecord(code, "bool", prefix);
+
+    freeRecord($1);
+    freeRecord($3);
+    free(code);
+    free(prefix);
+  }
   | expr LESS_THAN expr
   {
     if (!(isNumeric($1) && isNumeric($3)))
@@ -634,7 +721,7 @@ expr: primary %prec UPRIMARY
         char *casted_str = generateVariable();
 
         char *prefix = formatStr(
-            "int %s = snprintf(NULL, 0, \"%s\", %s);\nchar %s[%s - 1];\nsnprintf(%s, %s - 1, \"%s\", %s);\n",
+            "int %s = snprintf(NULL, 0, \"%s\", %s);\nchar %s[%s + 1];\nsnprintf(%s, %s + 1, \"%s\", %s);\n",
             length, typeFormat, $6->code, casted_str, length, casted_str, length, typeFormat, $6->code);
 
         $$ = createRecord(casted_str, $3->code, prefix);

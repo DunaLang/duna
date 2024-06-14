@@ -24,6 +24,11 @@ _Bool equalTypes(record *r1, record *r2)
     return strcmp(r1->opt1, r2->opt1) == 0;
 }
 
+_Bool isBoolean(const record *rec)
+{
+    return strcmp(rec->opt1, "bool") == 0;
+}
+
 _Bool isNumeric(const record *rec)
 {
     printf("Record code: %s\n", rec->code);
@@ -72,7 +77,7 @@ char *itoa(int i)
 char *generateVariable()
 {
     counter += 1;
-    return formatStr("temp_%ld", counter - 1);
+    return formatStr("$%ld", counter - 1);
 }
 
 char *formatStr(const char *fmt, ...)
