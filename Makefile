@@ -15,6 +15,9 @@ run: build
 runN: build
 	${OUTPUT_DIR}/duna ./problems/happy-path/problem$(n).duna
 	${CC} ${C_FLAGS} -o ./out/problem$(n) ./out/duna.c
+	echo "------------------- RUNNING -------------------"
+	echo
+	./out/problem$(n)
 
 test1: build
 	echo "----TESTING----"
