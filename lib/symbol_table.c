@@ -33,7 +33,7 @@ SymbolTable createSymbolTable(void)
 char *lookup(SymbolTable *table, char *key)
 {
     size_t index = hash(key);
-    printf("Hash: %ld\n", index);
+    printf("Key=%s; Hash=%ld\n", key, index);
     SymbolTableNode *node = table->nodes[index];
     while (node != NULL)
     {

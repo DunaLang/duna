@@ -64,7 +64,7 @@ extern ScopeStack scopeStack;
 %start program
 
 %%
-program : declarations
+program : { insertScope(&scopeStack, "GLOBAL", ""); } declarations
   {
     fprintf(yyout, "#include <stdbool.h>\n");
     fprintf(yyout, "#include <stddef.h>\n");
@@ -75,8 +75,9 @@ program : declarations
 
     fprintf(yyout, "void $_readInput(char *dest) { char buf[1024]; scanf(\"%%[^\\n]\", buf); getc(stdin); strcpy(dest, buf); }\n");
 
-    fprintf(yyout, "%s\n", $1->code);
-    freeRecord($1);
+    fprintf(yyout, "%s\n", $2->code);
+    freeRecord($2);
+    pop(&scopeStack);
   };
 
 declarations : declaration
@@ -85,7 +86,10 @@ declarations : declaration
 
 declaration : varDecl
   | typedef
-  | proc
+  |
+  { char *scope = generateVariable(); insertScope(&scopeStack, scope, "proc"); }
+  proc
+  { $$ = $2; pop(&scopeStack); }
   | func
   | enum
   | union
@@ -94,7 +98,7 @@ declaration : varDecl
 
 varDecl : type IDENTIFIER ';'
   {
-    if (lookup(&symbolTable, $2) != NULL)
+    if (symbolLookup($2) != NULL)
     {
       char *errorMsg = formatStr("Identifier \"%s\" is already defined.\n", $2);
       yyerror(errorMsg);
@@ -119,14 +123,14 @@ varDecl : type IDENTIFIER ';'
       exit(0);
     }
 
-    if (lookup(&symbolTable, $2) != NULL)
+    if (symbolLookup($2) != NULL)
     {
       char *errorMsg = formatStr("Identifier \"%s\" is already defined.\n", $2);
       yyerror(errorMsg);
       free(errorMsg);
       exit(0);
     }
-    insert(&symbolTable, $2, $1->opt1);
+    symbolInsert($2, $1->opt1);
 
     if (isString($4))
     {
@@ -151,6 +155,7 @@ varDecl : type IDENTIFIER ';'
 typedef : TYPEDEF type IDENTIFIER ';' 
   ;
 
+// Verificar unicidade do nome do subprograma
 proc : PROC IDENTIFIER '(' ')' block
   {
     char *code = formatStr("void %s() %s", $2, $5->code);
@@ -207,13 +212,16 @@ statement : varDecl
   }
   | assignment
   | compound_assignment ';'
-  | while
+  |
+  { char *scope = generateVariable(); insertScope(&scopeStack, scope, "while"); }
+  while
+  { $$ = $2; pop(&scopeStack); }
   | for
   | foreach
   | BREAK ';'
   {
-    Scope *scope = top(&scopeStack, 0);
-    if (strcmp(scope->type, "while") != 0 && strcmp(scope->type, "for") != 0)
+    Scope *scope = nearestIteration(&scopeStack);
+    if (scope == NULL)
     {
       char *errorMsg = formatStr("Break statement must be placed in a valid iteration statement (WHILE or FOR)\n");
       yyerror(errorMsg);
@@ -247,7 +255,10 @@ statement : varDecl
   | DELETE expr ';'
   | match
   | return
-  | if
+  |
+  { char *scope = generateVariable(); insertScope(&scopeStack, scope, ""); }
+  if
+  { $$ = $2; pop(&scopeStack); }
   | subprogramCall ';'
   ;
 
@@ -258,7 +269,7 @@ assignment : IDENTIFIER ASSIGN expr ';'
     - Checar se o tipo bate com expr
     */
 
-    char *type = lookup(&symbolTable, $1);
+    char *type = symbolLookup($1);
     if (type == NULL)
     {
       char *errorMsg = formatStr("Identifier \"%s\" is not defined.\n", $1);
@@ -321,13 +332,11 @@ div_assignment : IDENTIFIER DIV_ASSIGN expr
   | fieldAccess DIV_ASSIGN expr
   ;
 
-while : WHILE
-{ char *scope = generateVariable(); insertScope(&scopeStack, scope, "while"); }
-'(' expr ')' block
+while : WHILE '(' expr ')' block
 {
-  if (!isBoolean($4))
+  if (!isBoolean($3))
   {
-    char *errorMsg = formatStr("Expression in WHILE parenthesis %s must be type=\"boolean\". Actual type=\"%s\".", $4->opt1, $4->opt1);
+    char *errorMsg = formatStr("Expression in WHILE parenthesis %s must be type=\"boolean\". Actual type=\"%s\".", $3->opt1, $3->opt1);
     yyerror(errorMsg);
     free(errorMsg);
     exit(0);
@@ -336,15 +345,13 @@ while : WHILE
 
   char *code = formatStr(
     "%sbegin_while_%s:{\nif (!(%s)) goto end_while_%s;\n%s\ngoto begin_while_%s; \n} end_while_%s: ;\n",
-    $4->prefix, scope->name, $4->code, scope->name, $6->code, scope->name, scope->name
+    $3->prefix, scope->name, $3->code, scope->name, $5->code, scope->name, scope->name
   );
 
   $$ = createRecord(code, "", "");
 
-  pop(&scopeStack);
-
-  freeRecord($4);
-  freeRecord($6);
+  freeRecord($3);
+  freeRecord($5);
   free(code);
 };
 
@@ -512,7 +519,7 @@ pointer : type ASTERISK
   };
 
 primary : IDENTIFIER {
-    char* type = lookup(&symbolTable, $1);
+    char* type = symbolLookup($1);
     if (type == NULL || strlen(type) == 1) {
       char *errorMsg = formatStr("variable %s is not defined.", $1);
       yyerror(errorMsg);
