@@ -213,13 +213,6 @@ statement : varDecl
   | BREAK ';'
   {
     Scope *scope = top(&scopeStack, 0);
-    if (scope == NULL)
-    {
-      printf("Break deve ser colocado em um escopo válido.\n");
-      exit(-1);
-    }
-    printf("Scope{name=\"%s\", type=\"%s\"}\n", scope->name, scope->type);
-
     if (strcmp(scope->type, "while") != 0 && strcmp(scope->type, "for") != 0)
     {
       char *errorMsg = formatStr("Break statement must be placed in a valid iteration statement (WHILE or FOR)\n");
