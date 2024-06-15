@@ -96,7 +96,9 @@ varDecl : type IDENTIFIER ';'
   {
     if (lookup(&symbolTable, $2) != NULL)
     {
-      printf("Identifier \"%s\" is already defined.\n", $2);
+      char *errorMsg = formatStr("Identifier \"%s\" is already defined.\n", $2);
+      yyerror(errorMsg);
+      free(errorMsg);
       exit(0);
     }
 
@@ -111,14 +113,18 @@ varDecl : type IDENTIFIER ';'
   {
     if (strcmp($1->opt1, $4->opt1) != 0)
     {
-      printf("Identifier type is not expected. Actual: \"%s\". Expected: \"%s\"\n", $4->opt1, $1->opt1);
-      exit(-1);
+      char *errorMsg = formatStr("Identifier type is not expected. Actual: \"%s\". Expected: \"%s\"\n", $4->opt1, $1->opt1);
+      yyerror(errorMsg);
+      free(errorMsg);
+      exit(0);
     }
 
     if (lookup(&symbolTable, $2) != NULL)
     {
-      printf("Identifier \"%s\" is already defined.\n", $2);
-      exit(-1);
+      char *errorMsg = formatStr("Identifier \"%s\" is already defined.\n", $2);
+      yyerror(errorMsg);
+      free(errorMsg);
+      exit(0);
     }
     insert(&symbolTable, $2, $1->opt1);
 
@@ -216,9 +222,11 @@ statement : varDecl
 
     if (strcmp(scope->type, "while") != 0 && strcmp(scope->type, "for") != 0)
     {
-      printf("Break deve ser colocado em uma estrutura de iteração válida (WHILE ou FOR)\n");
+      char *errorMsg = formatStr("Break statement must be placed in a valid iteration statement (WHILE or FOR)\n");
+      yyerror(errorMsg);
+      free(errorMsg);
       free(scope);
-      exit(-1);
+      exit(0);
     }
 
     char *code = formatStr("goto end_%s_%s;", scope->type, scope->name);
@@ -233,6 +241,7 @@ statement : varDecl
     if (!isString($2)) {
       char *errorMsg = formatStr("Expected print expression type to be string. Actual type: %s", $2->opt1);
       yyerror(errorMsg);
+      free(errorMsg);
       exit(0);
     }
 
@@ -259,14 +268,18 @@ assignment : IDENTIFIER ASSIGN expr ';'
     char *type = lookup(&symbolTable, $1);
     if (type == NULL)
     {
-      printf("Variável não definida");
-      exit(-1);
+      char *errorMsg = formatStr("Identifier \"%s\" is not defined.\n", $1);
+      yyerror(errorMsg);
+      free(errorMsg);
+      exit(0);
     }
 
     if (strcmp(type, $3->opt1) != 0)
     {
-      printf("Expression type is not expected. Actual: \"%s\". Expected: \"%s\"\n", $3->opt1, type);
-      exit(-1);
+      char *errorMsg = formatStr("Expression type is not expected. Actual: \"%s\". Expected: \"%s\"\n", $3->opt1, type);
+      yyerror(errorMsg);
+      free(errorMsg);
+      exit(0);
     }
 
     if (isString($3))
@@ -319,18 +332,17 @@ while : WHILE
 { char *scope = generateVariable(); insertScope(&scopeStack, scope, "while"); }
 '(' expr ')' block
 {
-  Scope *scope = top(&scopeStack, 0);
-  printf("%s, %s\n", scope->name, scope->type);
-
-  if (scope == NULL)
+  if (!isBoolean($4))
   {
-    // Não sei se isso é possível aqui
-    printf("Unreachable");
-    exit(-1);
+    char *errorMsg = formatStr("Expression in WHILE parenthesis %s must be type=\"boolean\". Actual type=\"%s\".", $4->opt1, $4->opt1);
+    yyerror(errorMsg);
+    free(errorMsg);
+    exit(0);
   }
+  Scope *scope = top(&scopeStack, 0);
 
   char *code = formatStr(
-    "%sbegin_while_%s:{\nif (!%s) goto end_while_%s;\n%s\ngoto begin_while_%s; \n} end_while_%s: ;\n",
+    "%sbegin_while_%s:{\nif (!(%s)) goto end_while_%s;\n%s\ngoto begin_while_%s; \n} end_while_%s: ;\n",
     $4->prefix, scope->name, $4->code, scope->name, $6->code, scope->name, scope->name
   );
 
@@ -511,6 +523,7 @@ primary : IDENTIFIER {
     if (type == NULL || strlen(type) == 1) {
       char *errorMsg = formatStr("variable %s is not defined.", $1);
       yyerror(errorMsg);
+      free(errorMsg);
       exit(0);
     }
     $$ = createRecord($1, type, "");
@@ -555,7 +568,7 @@ expr: primary %prec UPRIMARY
     {
       char* errorMsg = "and, operands must be boolean\n";
       yyerror(errorMsg);
-      exit(-1);
+      exit(0);
     }
 
     char *code = formatStr("%s && %s", $1->code, $3->code);
@@ -573,7 +586,7 @@ expr: primary %prec UPRIMARY
     {
       char* errorMsg = "<, operands must be numeric\n";
       yyerror(errorMsg);
-      exit(-1);
+      exit(0);
     }
 
     char *code = formatStr("%s < %s", $1->code, $3->code);
@@ -591,7 +604,7 @@ expr: primary %prec UPRIMARY
     {
       char* errorMsg = ">, operands must be numeric\n";
       yyerror(errorMsg);
-      exit(-1);
+      exit(0);
     }
 
     char *code = formatStr("%s > %s", $1->code, $3->code);
@@ -609,7 +622,7 @@ expr: primary %prec UPRIMARY
     {
       char* errorMsg = "<=, operands must be numeric\n";
       yyerror(errorMsg);
-      exit(-1);
+      exit(0);
     }
 
     char *code = formatStr("%s <= %s", $1->code, $3->code);
@@ -627,7 +640,7 @@ expr: primary %prec UPRIMARY
     {
       char* errorMsg = ">=, operands must be numeric\n";
       yyerror(errorMsg);
-      exit(-1);
+      exit(0);
     }
 
     char *code = formatStr("%s >= %s", $1->code, $3->code);
@@ -646,7 +659,7 @@ expr: primary %prec UPRIMARY
     if (!(isString($1) && isString($3)))
     {
       printf("++, operands must be string\n");
-      exit(-1);
+      exit(0);
     }
 
     char *code = generateVariable();
@@ -801,13 +814,13 @@ expr: primary %prec UPRIMARY
   {
     if (!isNumeric($1) || !isNumeric($3)) {
       yyerror("Operation invalid: one of the operands is not numeric.");
-      exit(-1);
+      exit(0);
     }
 
     char *resultType = resultNumericType($1->opt1, $3->opt1);
     if (resultType == NULL) {
       yyerror("Cohersion error: operands types does not match automatic cohersion. Consider a cast instead.");
-      exit(-1);
+      exit(0);
     }
 
     char *code = formatStr("%s + %s", $1->code, $3->code);
@@ -823,13 +836,13 @@ expr: primary %prec UPRIMARY
   {
     if (!isNumeric($1) || !isNumeric($3)) {
       yyerror("Operation invalid: one of the operands is not numeric.");
-      exit(-1);
+      exit(0);
     }
 
     char *resultType = resultNumericType($1->opt1, $3->opt1);
     if (resultType == NULL) {
       yyerror("Cohersion error: operands types does not match automatic cohersion. Consider a cast instead.");
-      exit(-1);
+      exit(0);
     }
 
     char *code = formatStr("%s - %s", $1->code, $3->code);
@@ -845,13 +858,13 @@ expr: primary %prec UPRIMARY
   {
     if (!isNumeric($1) || !isNumeric($3)) {
       yyerror("Operation invalid: one of the operands is not numeric.");
-      exit(-1);
+      exit(0);
     }
 
     char *resultType = resultNumericType($1->opt1, $3->opt1);
     if (resultType == NULL) {
       yyerror("Cohersion error: operands types does not match automatic cohersion. Consider a cast instead.");
-      exit(-1);
+      exit(0);
     }
     
     char *code = formatStr("%s * %s", $1->code, $3->code);
@@ -867,13 +880,13 @@ expr: primary %prec UPRIMARY
   {
     if (!isNumeric($1) || !isNumeric($3)) {
       yyerror("Operation invalid: one of the operands is not numeric.");
-      exit(-1);
+      exit(0);
     }
 
     char *resultType = resultNumericType($1->opt1, $3->opt1);
     if (resultType == NULL) {
       yyerror("Cohersion error: operands types does not match automatic cohersion. Consider a cast instead.");
-      exit(-1);
+      exit(0);
     }
 
     char *code = formatStr("%s / %s", $1->code, $3->code);
@@ -889,13 +902,13 @@ expr: primary %prec UPRIMARY
   {
     if (!isNumeric($1) || !isNumeric($3)) {
       yyerror("Operation invalid: one of the operands is not numeric.");
-      exit(-1);
+      exit(0);
     }
 
     char *resultType = resultNumericType($1->opt1, $3->opt1);
     if (resultType == NULL) {
       yyerror("Cohersion error: operands types does not match automatic cohersion. Consider a cast instead.");
-      exit(-1);
+      exit(0);
     }
 
     char *code = formatStr("%s %% %s", $1->code, $3->code);
@@ -911,7 +924,7 @@ expr: primary %prec UPRIMARY
   {
     if (!isNumeric($2)) {
       yyerror("Operation invalid: operand is not numeric.");
-      exit(-1);
+      exit(0);
     }
 
     char *code = formatStr(" + %s", $2->code);
