@@ -17,7 +17,7 @@ void freeRecord(record *r)
   }
 }
 
-// c1 = code, c2 = attribute
+// c1 = code, c2 = attribute, c3 = prefix
 record *createRecord(char *c1, char *c2, char *c3)
 {
   record *r = (record *)malloc(sizeof(record));
