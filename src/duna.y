@@ -59,7 +59,8 @@ extern ScopeStack scopeStack;
 %left PERCENTAGE SLASH ASTERISK
 
 %type <rec> declarations declaration varDecl proc
-%type <rec> block type expr pointer statements statement literal primary while if elseif elseifs assignment
+%type <rec> block type expr pointer statements statement literal primary while assignment
+%type <rec> ifStatement if else elseifs elseif
 
 %start program
 
@@ -86,8 +87,7 @@ declarations : declaration
 
 declaration : varDecl
   | typedef
-  |
-  { char *scope = generateVariable(); insertScope(&scopeStack, scope, "proc"); }
+  | { char *scope = generateVariable(); insertScope(&scopeStack, scope, "proc"); }
   proc
   { $$ = $2; pop(&scopeStack); }
   | func
@@ -255,20 +255,23 @@ statement : varDecl
   | DELETE expr ';'
   | match
   | return
-  |
-  { char *scope = generateVariable(); insertScope(&scopeStack, scope, ""); }
-  if
-  { $$ = $2; pop(&scopeStack); }
+  | { insertScope(&scopeStack, generateVariable(), "" ); }
+    ifStatement
+    {
+      Scope *scope = top(&scopeStack, 0);
+      char *code = formatStr("%s\nend_%s:;", $2->code, scope->name);
+      $$ = createRecord(code, "", "");
+      pop(&scopeStack);
+
+      free(code);
+      free(scope);
+      freeRecord($2);
+    }
   | subprogramCall ';'
   ;
 
 assignment : IDENTIFIER ASSIGN expr ';'
   {
-    /*
-    - Checar se ID existe
-    - Checar se o tipo bate com expr
-    */
-
     char *type = symbolLookup($1);
     if (type == NULL)
     {
@@ -344,7 +347,7 @@ while : WHILE '(' expr ')' block
   Scope *scope = top(&scopeStack, 0);
 
   char *code = formatStr(
-    "%sbegin_while_%s:{\nif (!(%s)) goto end_while_%s;\n%s\ngoto begin_while_%s; \n} end_while_%s: ;\n",
+    "%sbegin_while_%s:{\nif (!(%s)) goto end_while_%s;\n%s\ngoto begin_while_%s; \n} end_while_%s:;\n",
     $3->prefix, scope->name, $3->code, scope->name, $5->code, scope->name, scope->name
   );
 
@@ -385,79 +388,97 @@ return : RETURN ';'
   | RETURN expr ';'
   ;
 
-if : IF '(' expr ')' block
+ifStatement : if
+  | if else
   {
-    char* s1 = formatStr("if (%s) %s", $3->code, $5->code);
-
-    $$ = createRecord(s1, "", "");
-
-    free(s1);
-    freeRecord($3);
-    freeRecord($5);
-  }
-  | IF '(' expr ')' block elseifs
-  {
-    char* s1 = formatStr("if (%s) %s %s", $3->code, $5->code, $6->code);
-
-    $$ = createRecord(s1, "", "");
-
-    free(s1);
-    freeRecord($3);
-    freeRecord($5);
-    freeRecord($6);
-  }
-  | IF '(' expr ')' block ELSE block
-  {
-    char* s1 = formatStr("if (%s) %s else %s", $3->code, $5->code, $7->code);
-
-    $$ = createRecord(s1, "", "");
-
-    free(s1);
-    freeRecord($3);
-    freeRecord($5);
-    freeRecord($7);
-  }
-  | IF '(' expr ')' block elseifs ELSE block
-  {
-    char* s1 = formatStr("if (%s) %s %s else %s", $3->code, $5->code, $6->code, $8->code);
-
-    $$ = createRecord(s1, "", "");
-
-    free(s1);
-    freeRecord($3);
-    freeRecord($5);
-    freeRecord($6);
-    freeRecord($8);
-  }
-  ;
-
-elseifs : elseif
-  {
-    $$ = $1;
-  }
-  | elseifs elseif
-  {
-    char* s1 = formatStr("%s %s", $1->code, $2->code);
-
-    $$ = createRecord(s1, "", "");
-
-    free(s1);
+    char *code = formatStr("%s\n%s", $1->code, $2->code);
+    $$ = createRecord(code, "", "");
+    free(code);
     freeRecord($1);
     freeRecord($2);
   }
+  | if elseifs
+  {
+    char *code = formatStr("%s\n%s", $1->code, $2->code);
+    $$ = createRecord(code, "", "");
+    free(code);
+    freeRecord($1);
+    freeRecord($2);
+  }
+  | if elseifs else
+  {
+    char *code = formatStr("%s\n%s%s", $1->code, $2->code, $3->code);
+    $$ = createRecord(code, "", "");
+    free(code);
+    freeRecord($1);
+    freeRecord($2);
+    freeRecord($3);
+  }
   ;
 
-elseif : ELSE IF '(' expr ')' block
+if : { insertScope(&scopeStack, generateVariable(), "" ); }
+  IF '(' expr ')' block
   {
-    char* s1 = formatStr("else if (%s) %s", $4->code, $6->code);
+    if (!isBoolean($4))
+    {
+      char *error = formatStr("Expected boolean expression in if conditional. Actual=%s\n", $4->opt1);
+      yyerror(error);
+      free(error);
+      exit(0);
+    }
+
+    Scope *scope = top(&scopeStack, 0);
+    Scope *outer = top(&scopeStack, 1);
+    char* s1 = formatStr("%sif (!(%s)) goto end_%s;\n%s\ngoto end_%s;\nend_%s:;", $4->prefix, $4->code, scope->name, $6->code, outer->name, scope->name);
 
     $$ = createRecord(s1, "", "");
 
-    free(s1);
+    pop(&scopeStack);
+
     freeRecord($4);
     freeRecord($6);
+    free(s1);
+    free(scope);
+    free(outer);
   }
-  ;
+
+else : ELSE { insertScope(&scopeStack, generateVariable(), "" ); } block
+  { $$ = $3; pop(&scopeStack); };
+
+elseifs : elseif
+  | elseifs elseif
+  {
+    char *code = formatStr("%s\n%s", $1->code, $2->code);
+    $$ = createRecord(code, "", "");
+    free(code);
+    freeRecord($1);
+    freeRecord($2);
+  };
+
+elseif : ELSE { insertScope(&scopeStack, generateVariable(), "" ); } IF '(' expr ')' block
+  {
+    if (!isBoolean($5))
+    {
+      char *error = formatStr("Expected boolean expression in if conditional. Actual=%s\n", $5->opt1);
+      yyerror(error);
+      free(error);
+      exit(0);
+    }
+
+    Scope *scope = top(&scopeStack, 0);
+    Scope *outer = top(&scopeStack, 1);
+    char *code = formatStr("%sif (!(%s)) goto end_%s;\n%s\ngoto end_%s;\nend_%s:;", $5->prefix, $5->code, scope->name, $7->code, outer->name, scope->name);
+
+    $$ = createRecord(code, "", "");
+
+    pop(&scopeStack);
+
+    free(code);
+    free(outer);
+    free(scope);
+    freeRecord($5);
+    freeRecord($7);
+  };
 
 fields : field ';'
   | fields field ';'
