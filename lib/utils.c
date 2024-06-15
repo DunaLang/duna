@@ -246,3 +246,113 @@ char *resultNumericType(char *type1, char *type2)
 
     return NULL;
 }
+
+/*
+    [Regras de Cast]
+    type_variants: boolean, enum, numeric, string, struct
+    src -> dest_type
+
+    [Boolean como origem]
+    ??? boolean -> numeric (false = 0, true = 1)
+    ??? boolean -> _ = INVALID
+
+    [Enum como origem]
+    ??? enum -> numeric = ENUM_VALUE
+    ??? enum -> _ = INVALID
+
+    [Número como origem]
+    ??? numeric -> boolean (0 = false, _ = true)
+    ??? numeric -> enum
+    ??? numeric -> _ = INVALID
+
+    [String como origem]
+    string -> numeric = OK
+    string -> boolean = true | false
+    ??? string -> _ = INVALID
+
+    [String como destino]
+    boolean -> string = "true" | "false"
+    enum -> string = "ENUM_NAME::VARIANT"
+    numeric -> string = NUMBER_STRING
+    ??? struct -> string = "STRUCT_NAME{field: value, ...}"
+    ??? union -> string = INVALID
+    */
+record *castR(record *castTo, record *castFrom)
+{
+    // cast to string
+    if (isString(castTo))
+    {
+        // cast to string && from bool
+        if (strcmp(castFrom->opt1, "bool") == 0)
+        {
+            char *code = generateVariable();
+            char *prefix = formatStr("char *%s = \"true\"; if (%s) goto label_%s; %s = \"false\"; label_%s:", code, castFrom->code, code, code, code);
+
+            return createRecord(code, castTo->code, prefix);
+            free(code);
+            free(prefix);
+        }
+        // cast to string && expr not bool
+        else
+        {
+            char *typeFormat;
+            // cast to string from numeric
+            if (isNumeric(castFrom))
+            {
+                typeFormat = formatPrintDecimalNumber(castFrom->opt1);
+            }
+
+            char *length = generateVariable();
+            char *casted_str = generateVariable();
+
+            char *prefix = formatStr(
+                "int %s = snprintf(NULL, 0, \"%s\", %s);\nchar %s[%s + 1];\nsnprintf(%s, %s + 1, \"%s\", %s);\n",
+                length, typeFormat, castFrom->code, casted_str, length, casted_str, length, typeFormat, castFrom->code);
+
+            return createRecord(casted_str, castTo->code, prefix);
+            free(length);
+            free(casted_str);
+            free(prefix);
+        }
+    }
+    // cast to numeric
+    else if (isNumeric(castTo))
+    {
+        if (isString(castFrom))
+        {
+            if (castTo->code[0] == 'f')
+            {
+                char *code = formatStr("atof(%s)", castFrom->code);
+                return createRecord(code, castTo->opt1, castFrom->prefix);
+                free(code);
+            }
+            else if (castTo->code[0] == 'u')
+            {
+                char *code = formatStr("atoull(%s)", castFrom->code);
+                return createRecord(code, castTo->opt1, castFrom->prefix);
+                free(code);
+            }
+            else
+            {
+                char *code = formatStr("atoll(%s)", castFrom->code);
+                return createRecord(code, castTo->opt1, castFrom->prefix);
+                free(code);
+            }
+        }
+        else
+        {
+            char *code = formatStr("(%s) %s", castTo->code, castFrom->code);
+            return createRecord(code, castTo->opt1, castFrom->prefix);
+            free(code);
+        }
+    }
+    // cast to not string and not numeric
+    else
+    {
+        /// TODO: Verificar o que dá pra fazer apenas com isso para simplicar a quantidade de IF-ELSE IF
+        char *code = formatStr("(%s) %s", castTo->code, castFrom->code);
+        return createRecord(code, castTo->opt1, castFrom->prefix);
+
+        free(code);
+    }
+}

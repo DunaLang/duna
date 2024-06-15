@@ -581,7 +581,7 @@ literal : CHAR_LITERAL
   ;
 
 expr: primary %prec UPRIMARY
-  | literal %prec ULITERAL
+  | literal {$$ = $1;} %prec ULITERAL 
   | expr OR expr
   | expr AND expr
   {
@@ -697,112 +697,22 @@ expr: primary %prec UPRIMARY
   }
   | CAST LESS_THAN type MORE_THAN '(' expr ')' %prec UTYPE
   {
-    /*
-    [Regras de Cast]
-    type_variants: boolean, enum, numeric, string, struct
-    src -> dest_type
-
-    [Boolean como origem]
-    ??? boolean -> numeric (false = 0, true = 1)
-    ??? boolean -> _ = INVALID
-
-    [Enum como origem]
-    ??? enum -> numeric = ENUM_VALUE
-    ??? enum -> _ = INVALID
-
-    [Número como origem]
-    ??? numeric -> boolean (0 = false, _ = true)
-    ??? numeric -> enum
-    ??? numeric -> _ = INVALID
-
-    [String como origem]
-    string -> numeric = OK
-    string -> boolean = true | false
-    ??? string -> _ = INVALID
-
-    [String como destino]
-    boolean -> string = "true" | "false"
-    enum -> string = "ENUM_NAME::VARIANT"
-    numeric -> string = NUMBER_STRING
-    ??? struct -> string = "STRUCT_NAME{field: value, ...}"
-    ??? union -> string = INVALID
-    */
-
-    if (isString($3))
-    {
-      if (strcmp($6->opt1, "bool") == 0)
-      {
-        char *code = generateVariable();
-        char *prefix = formatStr("char *%s = \"true\"; if (%s) goto label_%s; %s = \"false\"; label_%s:", code, $6->code, code, code, code);
-
-        $$ = createRecord(code, $3->code, prefix);
-        free(code);
-        free(prefix);
-      }
-      else
-      {
-        char *typeFormat;
-        if (isNumeric($6))
-        {
-          typeFormat = formatPrintDecimalNumber($6->opt1);
-        }
-
-        char *length = generateVariable();
-        char *casted_str = generateVariable();
-
-        char *prefix = formatStr(
-            "int %s = snprintf(NULL, 0, \"%s\", %s);\nchar %s[%s + 1];\nsnprintf(%s, %s + 1, \"%s\", %s);\n",
-            length, typeFormat, $6->code, casted_str, length, casted_str, length, typeFormat, $6->code);
-
-        $$ = createRecord(casted_str, $3->code, prefix);
-        free(length);
-        free(casted_str);
-        free(prefix);
-      }
-    }
-    else if (isNumeric($3))
-    {
-      if (isString($6))
-      {
-        if ($3->code[0] == 'f')
-        {
-          char *code = formatStr("atof(%s)", $6->code);
-          $$ = createRecord(code, $3->opt1, $6->prefix);
-          free(code);
-        }
-        else if ($3->code[0] == 'u')
-        {
-          char *code = formatStr("atoull(%s)", $6->code);
-          $$ = createRecord(code, $3->opt1, $6->prefix);
-          free(code);
-        }
-        else
-        {
-          char *code = formatStr("atoll(%s)", $6->code);
-          $$ = createRecord(code, $3->opt1, $6->prefix);
-          free(code);
-        }
-      }
-      else
-      {
-        char *code = formatStr("(%s) %s", $3->code, $6->code);
-        $$ = createRecord(code, $3->opt1, $6->prefix);
-        free(code);
-      }
-    }
-    else
-    {
-      /// TODO: Verificar o que dá pra fazer apenas com isso para simplicar a quantidade de IF-ELSE IF
-      char *code = formatStr("(%s) %s", $3->code, $6->code);
-      $$ = createRecord(code, $3->opt1, $6->prefix);
-
-      free(code);
-    }
+    $$ = castR($3, $6);
 
     freeRecord($3);
     freeRecord($6);
   }
   | CAST LESS_THAN type MORE_THAN  '(' expr ',' expr ')' %prec UTYPE
+  {
+    // Se o segundo argumento é null, o código c gerado é o mesmo do cast com 1 argumento
+    if(strcmp($8->opt1, "null") == 0){
+      $$ = castR($3, $6);
+    }
+
+    freeRecord($3);
+    freeRecord($6);
+    freeRecord($8);
+  }
   | AMPERSAND expr %prec UAMPERSAND
   | NOT expr %prec UNOT
   | HASHTAG expr %prec UHASHTAG
@@ -964,7 +874,10 @@ arrayIndex : arrayDef '[' expr ']'
 subprogramCall : IDENTIFIER '(' ')'
   | IDENTIFIER '(' arguments ')'
   ;
-arguments : expr | arguments ',' expr ;
+
+arguments : expr 
+  | arguments ',' expr 
+  ;
 
 arrayDef : '{' '}'
   | '{' commaSeparatedExpr '}'

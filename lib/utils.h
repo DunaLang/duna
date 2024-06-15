@@ -19,3 +19,4 @@ char *formatScanDecimalNumber(char *type);
 char *itoa(int i);
 char *formatStr(const char *fmt, ...);
 char *generateVariable();
+record *castR(record *castTo, record *castFrom);
