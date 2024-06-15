@@ -12,6 +12,10 @@ run: build
 	${OUTPUT_DIR}/duna ./problems/happy-path/problem1.duna
 	${CC} ${C_FLAGS} -o ./out/problem1 ./out/duna.c
 
+runN: build
+	${OUTPUT_DIR}/duna ./problems/happy-path/problem$(n).duna
+	${CC} ${C_FLAGS} -o ./out/problem$(n) ./out/duna.c
+
 test1: build
 	echo "----TESTING----"
 	${OUTPUT_DIR}/duna ./problems/happy-path/problem1.duna
