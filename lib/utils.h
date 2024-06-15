@@ -13,6 +13,9 @@ _Bool isString(const record *rec);
 
 char *resultNumericType(char *type1, char *type2);
 
+char *formatPrintDecimalNumber(char *type);
+char *formatScanDecimalNumber(char *type);
+
 char *itoa(int i);
 char *formatStr(const char *fmt, ...);
 char *generateVariable();

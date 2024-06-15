@@ -714,13 +714,9 @@ expr: primary %prec UPRIMARY
       else
       {
         char *typeFormat;
-        if (isInteger($6))
+        if (isNumeric($6))
         {
-          typeFormat = "%ld";
-        }
-        else if (isNumeric($6))
-        {
-          typeFormat = "%f";
+          typeFormat = formatPrintDecimalNumber($6->opt1);
         }
 
         char *length = generateVariable();

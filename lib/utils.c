@@ -1,5 +1,6 @@
 #include "utils.h"
 #include "record.h"
+#include <inttypes.h>
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -64,6 +65,82 @@ int sizeNumericType(char *type)
     }
 
     return numericSize;
+}
+
+char *formatPrintDecimalNumber(char *type)
+{
+    int size = sizeNumericType(type);
+
+    switch (type[0])
+    {
+    case 'f':
+        return "%f";
+    case 'i':
+        switch (size)
+        {
+        case 8:
+            return "%" PRId8;
+        case 16:
+            return "%" PRId16;
+        case 32:
+            return "%" PRId32;
+        case 64:
+            return "%" PRId64;
+        }
+    case 'u':
+        switch (size)
+        {
+        case 8:
+            return "%" PRIu8;
+        case 16:
+            return "%" PRIu16;
+        case 32:
+            return "%" PRIu32;
+        case 64:
+            return "%" PRIu64;
+        }
+    default:
+        printf("Unreachable.");
+        exit(-1);
+    }
+}
+
+char *formatScanDecimalNumber(char *type)
+{
+    int size = sizeNumericType(type);
+
+    switch (type[0])
+    {
+    case 'f':
+        return "%f";
+    case 'i':
+        switch (size)
+        {
+        case 8:
+            return "%" SCNd8;
+        case 16:
+            return "%" SCNd16;
+        case 32:
+            return "%" SCNd32;
+        case 64:
+            return "%" SCNd64;
+        }
+    case 'u':
+        switch (size)
+        {
+        case 8:
+            return "%" SCNu8;
+        case 16:
+            return "%" SCNu16;
+        case 32:
+            return "%" SCNu32;
+        case 64:
+            return "%" SCNu64;
+        }
+    default:
+        printf("Unreachable.");
+        exit(-1);
+    }
 }
 
 char *itoa(int i)
