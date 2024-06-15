@@ -742,13 +742,15 @@ expr: primary %prec UPRIMARY
       {
         if ($3->code[0] == 'f')
         {
-          printf("Not implemented.\n");
-          exit(-1);
+          char *code = formatStr("atof(%s)", $6->code);
+          $$ = createRecord(code, $3->opt1, $6->prefix);
+          free(code);
         }
         else if ($3->code[0] == 'u')
         {
-          printf("Not implemented.\n");
-          exit(-1);
+          char *code = formatStr("atoull(%s)", $6->code);
+          $$ = createRecord(code, $3->opt1, $6->prefix);
+          free(code);
         }
         else
         {
@@ -759,8 +761,9 @@ expr: primary %prec UPRIMARY
       }
       else
       {
-        printf("Not implemented.\n");
-        exit(-1);
+        char *code = formatStr("(%s) %s", $3->code, $6->code);
+        $$ = createRecord(code, $3->opt1, $6->prefix);
+        free(code);
       }
     }
     else
