@@ -686,6 +686,23 @@ literal : CHAR_LITERAL
 expr: primary %prec UPRIMARY
   | literal {$$ = $1;} %prec ULITERAL 
   | expr OR expr
+{
+    if (!(isBoolean($1) && isBoolean($3)))
+    {
+      char* errorMsg = "or, operands must be boolean\n";
+      yyerror(errorMsg);
+      exit(0);
+    }
+
+    char *code = formatStr("%s || %s", $1->code, $3->code);
+    char *prefix = formatStr("%s%s", $1->prefix, $3->prefix);
+    $$ = createRecord(code, "bool", prefix);
+
+    freeRecord($1);
+    freeRecord($3);
+    free(code);
+    free(prefix);
+  }
   | expr AND expr
   {
     if (!(isBoolean($1) && isBoolean($3)))
