@@ -140,6 +140,10 @@ typedef : TYPEDEF type IDENTIFIER ';'
 // Verificar unicidade do nome do subprograma
 proc : PROC IDENTIFIER '(' ')' block
   {
+    check_symbol_not_exists_already($2);
+
+    symbolInsert($2, "proc");
+
     char *code = formatStr("void %s() %s", $2, $5->code);
     $$ = createRecord(code, "", "");
 
