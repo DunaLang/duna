@@ -59,8 +59,9 @@ extern ScopeStack scopeStack;
 %left PERCENTAGE SLASH ASTERISK
 
 %type <rec> declarations declaration varDecl proc
-%type <rec> block type expr pointer statements statement literal primary while assignment
+%type <rec> block type expr pointer statements statement literal primary assignment compound_assignment
 %type <rec> ifStatement if else elseifs elseif
+%type <rec> while for
 
 %start program
 
@@ -210,13 +211,13 @@ statement : varDecl
     freeRecord($1);
     free(code);
   }
-  | assignment
   | compound_assignment ';'
-  |
-  { char *scope = generateVariable(); insertScope(&scopeStack, scope, "while"); }
-  while
-  { $$ = $2; pop(&scopeStack); }
-  | for
+  | { insertScope(&scopeStack, generateVariable(), "while"); }
+    while
+    { $$ = $2; pop(&scopeStack); }
+  | { insertScope(&scopeStack, generateVariable(), "for"); }
+    for
+    { $$ = $2; pop(&scopeStack); }
   | foreach
   | BREAK ';'
   {
@@ -230,7 +231,7 @@ statement : varDecl
       exit(0);
     }
 
-    char *code = formatStr("goto end_%s_%s;", scope->type, scope->name);
+    char *code = formatStr("goto end_%s;", scope->name);
 
     $$ = createRecord(code, "", "");
     free(code);
@@ -270,7 +271,7 @@ statement : varDecl
   | subprogramCall ';'
   ;
 
-assignment : IDENTIFIER ASSIGN expr ';'
+assignment : IDENTIFIER ASSIGN expr
   {
     char *type = symbolLookup($1);
     if (type == NULL)
@@ -303,12 +304,13 @@ assignment : IDENTIFIER ASSIGN expr ';'
     free($1);
     freeRecord($3);
   }
-  | arrayIndex ASSIGN expr ';' {/* Problema 3 precisa disso*/}
-  | derreferencing ASSIGN expr ';'
-  | fieldAccess ASSIGN expr ';'
+  | arrayIndex ASSIGN expr {/* Problema 3 precisa disso*/}
+  | derreferencing ASSIGN expr
+  | fieldAccess ASSIGN expr
   ;
 
-compound_assignment : add_assignment
+compound_assignment : assignment
+  | add_assignment
   | sub_assignment 
   | mul_assignment 
   | div_assignment
@@ -347,7 +349,7 @@ while : WHILE '(' expr ')' block
   Scope *scope = top(&scopeStack, 0);
 
   char *code = formatStr(
-    "%sbegin_while_%s:{\nif (!(%s)) goto end_while_%s;\n%s\ngoto begin_while_%s; \n} end_while_%s:;\n",
+    "%sbegin_%s:{\nif (!(%s)) goto end_%s;\n%s\ngoto begin_%s; \n} end_%s:;\n",
     $3->prefix, scope->name, $3->code, scope->name, $5->code, scope->name, scope->name
   );
 
@@ -358,15 +360,146 @@ while : WHILE '(' expr ')' block
   free(code);
 };
 
-for : FOR '(' forHeader ')' block;
-forHeader : ';' ';'
-  | statement expr ';' compound_assignment
-  | ';' expr ';' compound_assignment
-  | ';' ';' compound_assignment
-  | statement ';'
-  | statement expr ';'
-  | ';' expr ';'
-  ;
+for : FOR '(' ';' ';' ')' block
+  {
+    Scope *scope = top(&scopeStack, 0);
+    char *scopeName = scope->name;
+    char *code = formatStr(
+      "begin_%s:%s\ngoto begin_%s;\nend_%s:;",
+      scopeName, $6->code, scopeName, scopeName
+    );
+    $$ = createRecord(code, "", "");
+
+    freeRecord($6);
+    free(code);
+    free(scope);
+  }
+  | FOR '(' statement expr ';' compound_assignment ')' block
+  {
+    if (!isBoolean($4))
+    {
+      char *error = formatStr("Expected boolean expression. Actual type=%s.\n", $4->opt1);
+      yyerror(error);
+      free(error);
+      exit(0);
+    }
+
+    Scope *scope = top(&scopeStack, 0);
+    char *scopeName = scope->name;
+    char *code = formatStr(
+      "%s{\n%s\nbegin_%s:\nif (!(%s)) goto end_%s;\n%s\n%s\ngoto begin_%s;\n}\nend_%s:;",
+      $4->prefix, $3->code, scopeName, $4->code, scopeName, $8->code, $6->code, scopeName, scopeName
+    );
+    $$ = createRecord(code, "", "");
+
+    freeRecord($3);
+    freeRecord($4);
+    freeRecord($6);
+    freeRecord($8);
+    free(code);
+    free(scope);
+  }
+  | FOR '(' ';' expr ';' compound_assignment ')' block
+  {
+    if (!isBoolean($4))
+    {
+      char *error = formatStr("Expected boolean expression. Actual type=%s.\n", $4->opt1);
+      yyerror(error);
+      free(error);
+      exit(0);
+    }
+
+    Scope *scope = top(&scopeStack, 0);
+    char *scopeName = scope->name;
+    char *code = formatStr(
+      "%s{\nbegin_%s:\nif (!(%s)) goto end_%s;\n%s\n%s\ngoto begin_%s;\n}\nend_%s:;",
+      $4->prefix, scopeName, $4->code, scopeName, $8->code, $6->code, scopeName, scopeName
+    );
+    $$ = createRecord(code, "", "");
+
+    freeRecord($4);
+    freeRecord($6);
+    freeRecord($8);
+    free(code);
+    free(scope);
+  }
+  | FOR '(' ';' ';' compound_assignment ')' block
+  {
+    Scope *scope = top(&scopeStack, 0);
+    char *scopeName = scope->name;
+    char *code = formatStr(
+      "{\nbegin_%s:\n%s\n%s\ngoto begin_%s;\n}\nend_%s:;",
+      scopeName, $7->code, $5->code, scopeName, scopeName
+    );
+    $$ = createRecord(code, "", "");
+
+    freeRecord($5);
+    freeRecord($7);
+    free(code);
+    free(scope);
+  }
+  | FOR '(' statement ';' ')' block
+  {
+    Scope *scope = top(&scopeStack, 0);
+    char *scopeName = scope->name;
+    char *code = formatStr(
+      "{\n%s\nbegin_%s:\n%s\ngoto begin_%s;\n}\nend_%s:;",
+      $3->code, scopeName, $6->code, scopeName, scopeName
+    );
+    $$ = createRecord(code, "", "");
+
+    freeRecord($3);
+    freeRecord($6);
+    free(code);
+    free(scope);
+  }
+  | FOR '(' statement expr ';' ')' block
+  {
+    if (!isBoolean($4))
+    {
+      char *error = formatStr("Expected boolean expression. Actual type=%s.\n", $4->opt1);
+      yyerror(error);
+      free(error);
+      exit(0);
+    }
+
+    Scope *scope = top(&scopeStack, 0);
+    char *scopeName = scope->name;
+    char *code = formatStr(
+      "%s{\n%s\nbegin_%s:\nif (!(%s)) goto end_%s;\n%s\ngoto begin_%s;\n}\nend_%s:;",
+      $4->prefix, $3->code, scopeName, $4->code, scopeName, $7->code, scopeName, scopeName
+    );
+    $$ = createRecord(code, "", "");
+
+    freeRecord($3);
+    freeRecord($4);
+    freeRecord($7);
+    free(code);
+    free(scope);
+  }
+  | FOR '(' ';' expr ';' ')' block
+  {
+    if (!isBoolean($4))
+    {
+      char *error = formatStr("Expected boolean expression. Actual type=%s.\n", $4->opt1);
+      yyerror(error);
+      free(error);
+      exit(0);
+    }
+
+    Scope *scope = top(&scopeStack, 0);
+    char *scopeName = scope->name;
+    char *code = formatStr(
+      "%s{\nbegin_%s:\nif (!(%s)) goto end_%s;\n%s\ngoto begin_%s;\n}\nend_%s:;",
+      $4->prefix, scopeName, $4->code, scopeName, $7->code, scopeName, scopeName
+    );
+    $$ = createRecord(code, "", "");
+
+    freeRecord($4);
+    freeRecord($7);
+    free(code);
+    free(scope);
+  };
 
 foreach : FOREACH '(' type IDENTIFIER ':' IDENTIFIER ')' block
   | FOREACH '(' typequalifier type IDENTIFIER ':' IDENTIFIER ')' block
