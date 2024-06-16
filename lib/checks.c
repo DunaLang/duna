@@ -47,3 +47,47 @@ void check_expected_actual_type(char *expected, char *actual)
         exit(0);
     }
 }
+
+void check_operands_numeric(record *operand1, record *operand2, char *operat)
+{
+    char *errorMsg;
+    if (operat != NULL)
+    {
+        errorMsg = formatStr("Operation invalid: \"%s\", operands must be numeric\n", operat);
+    }
+    else
+    {
+        errorMsg = "Operation invalid: one of the operands is not numeric.";
+    }
+
+    if (!isNumeric(operand1) || !isNumeric(operand2))
+    {
+        yyerror(errorMsg);
+        free(errorMsg);
+        exit(0);
+    }
+
+    free(errorMsg);
+}
+
+void check_operands_boolean(record *operand1, record *operand2, char *operat)
+{
+    char *errorMsg;
+    if (operat != NULL)
+    {
+        errorMsg = formatStr("Operation invalid: \"%s\", operands must be boolean\n", operat);
+    }
+    else
+    {
+        errorMsg = "Operation invalid: one of the operands is not boolean.";
+    }
+
+    if (!isBoolean(operand1) || !isBoolean(operand2))
+    {
+        yyerror(errorMsg);
+        free(errorMsg);
+        exit(0);
+    }
+
+    free(errorMsg);
+}
