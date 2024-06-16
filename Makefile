@@ -6,7 +6,7 @@ build:
 	mkdir -p out/compiler
 	yacc -d src/duna.y -o ${OUTPUT_DIR}/y.tab.c
 	lex -o ${OUTPUT_DIR}/lex.yy.c src/duna.l
-	${CC} -o ${OUTPUT_DIR}/duna ${OUTPUT_DIR}/y.tab.c ${OUTPUT_DIR}/lex.yy.c lib/record.c lib/utils.c lib/symbol_table.c lib/scope_stack.c lib/symbol_utils.c -ll
+	${CC} -o ${OUTPUT_DIR}/duna ${OUTPUT_DIR}/y.tab.c ${OUTPUT_DIR}/lex.yy.c lib/record.c lib/utils.c lib/symbol_table.c lib/scope_stack.c lib/symbol_utils.c lib/checks.c -ll
 
 run: build
 	${OUTPUT_DIR}/duna ./problems/happy-path/problem1.duna
@@ -41,7 +41,6 @@ test1: build
 
 	${OUTPUT_DIR}/duna ./problems/should-fail/problem1/problem1-fail2.duna
 	${CC} ${C_FLAGS} -o ./out/fail ./out/duna.c
-	./out/fail
 
 	echo
 	echo "----SHOULD FAIL - VARIABLE X NOT DEFINED----"
@@ -49,8 +48,13 @@ test1: build
 
 	${OUTPUT_DIR}/duna ./problems/should-fail/problem1/problem1-fail3.duna
 	${CC} ${C_FLAGS} -o ./out/fail ./out/duna.c
-	./out/fail
 
+	echo
+	echo "----SHOULD FAIL - IDENTIFIER ALREADY DEFINED ----"
+	echo
+
+	${OUTPUT_DIR}/duna ./problems/should-fail/problem1/problem1-fail8.duna
+	${CC} ${C_FLAGS} -o ./out/fail ./out/duna.c
 
 clean:
 	rm -rf out
