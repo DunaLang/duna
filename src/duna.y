@@ -9,11 +9,10 @@
 #include "../../lib/symbol_utils.h"
 #include "../../lib/record.h"
 #include "../../lib/utils.h"
+#include "../../lib/checks.h"
 
 int yylex(void);
-int yyerror(char *s);
-extern int yylineno;
-extern char * yytext;
+// yylineno and yytext in checks.c
 extern FILE * yyin;
 extern FILE * yyout;
 
@@ -99,13 +98,7 @@ declaration : varDecl
 
 varDecl : type IDENTIFIER ';'
   {
-    if (symbolLookup($2) != NULL)
-    {
-      char *errorMsg = formatStr("Identifier \"%s\" is already defined.\n", $2);
-      yyerror(errorMsg);
-      free(errorMsg);
-      exit(0);
-    }
+    check_symbol_not_exists_already($2);
 
     char *code = formatStr("%s %s", $1->code, $2);
     $$ = createRecord(code, $1->opt1, "");
@@ -116,21 +109,9 @@ varDecl : type IDENTIFIER ';'
   }
   | type IDENTIFIER ASSIGN expr ';'
   {
-    if (strcmp($1->opt1, $4->opt1) != 0)
-    {
-      char *errorMsg = formatStr("Identifier type is not expected. Actual: \"%s\". Expected: \"%s\"\n", $4->opt1, $1->opt1);
-      yyerror(errorMsg);
-      free(errorMsg);
-      exit(0);
-    }
+    check_expected_actual_type($1->opt1, $4->opt1);
+    check_symbol_not_exists_already($2);
 
-    if (symbolLookup($2) != NULL)
-    {
-      char *errorMsg = formatStr("Identifier \"%s\" is already defined.\n", $2);
-      yyerror(errorMsg);
-      free(errorMsg);
-      exit(0);
-    }
     symbolInsert($2, $1->opt1);
 
     if (isString($4))
@@ -274,21 +255,9 @@ statement : varDecl
 assignment : IDENTIFIER ASSIGN expr
   {
     char *type = symbolLookup($1);
-    if (type == NULL)
-    {
-      char *errorMsg = formatStr("Identifier \"%s\" is not defined.\n", $1);
-      yyerror(errorMsg);
-      free(errorMsg);
-      exit(0);
-    }
-
-    if (strcmp(type, $3->opt1) != 0)
-    {
-      char *errorMsg = formatStr("Expression type is not expected. Actual: \"%s\". Expected: \"%s\"\n", $3->opt1, type);
-      yyerror(errorMsg);
-      free(errorMsg);
-      exit(0);
-    }
+    
+    check_symbol_exists($1);
+    check_expected_actual_type(type, $3->opt1);
 
     if (isString($3))
     {
@@ -674,12 +643,9 @@ pointer : type ASTERISK
 
 primary : IDENTIFIER {
     char* type = symbolLookup($1);
-    if (type == NULL || strlen(type) == 1) {
-      char *errorMsg = formatStr("variable %s is not defined.", $1);
-      yyerror(errorMsg);
-      free(errorMsg);
-      exit(0);
-    }
+
+    check_symbol_exists($1);
+    
     $$ = createRecord($1, type, "");
 
     free($1);
@@ -1048,10 +1014,6 @@ block : '{' '}' { $$ = createRecord("{}", "", ""); }
 
 %%
 
-int yyerror(char* msg) {
-  fprintf (stderr, "Line %d: %s at '%s'\n", yylineno, msg, yytext);
-	return 0;
-}
 
 int main(int argc, char **argv) {
     int code;
