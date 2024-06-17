@@ -259,7 +259,7 @@ statement : varDecl
 assignment : IDENTIFIER ASSIGN expr
   {
     char *type = symbolLookup($1);
-    
+
     check_symbol_exists($1);
     check_expected_actual_type(type, $3->opt1);
 
@@ -649,7 +649,7 @@ primary : IDENTIFIER {
     char* type = symbolLookup($1);
 
     check_symbol_exists($1);
-    
+
     $$ = createRecord($1, type, "");
 
     free($1);
@@ -688,12 +688,7 @@ expr: primary %prec UPRIMARY
   | expr OR expr
   | expr AND expr
   {
-    if (!(isBoolean($1) && isBoolean($3)))
-    {
-      char* errorMsg = "and, operands must be boolean\n";
-      yyerror(errorMsg);
-      exit(0);
-    }
+    check_operands_boolean($1,$3, "and")
 
     char *code = formatStr("%s && %s", $1->code, $3->code);
     char *prefix = formatStr("%s%s", $1->prefix, $3->prefix);
@@ -706,12 +701,7 @@ expr: primary %prec UPRIMARY
   }
   | expr LESS_THAN expr
   {
-    if (!(isNumeric($1) && isNumeric($3)))
-    {
-      char* errorMsg = "<, operands must be numeric\n";
-      yyerror(errorMsg);
-      exit(0);
-    }
+    check_operands_numeric($1, $3, "<");
 
     char *code = formatStr("%s < %s", $1->code, $3->code);
     char *prefix = formatStr("%s%s", $1->prefix, $3->prefix);
@@ -724,12 +714,7 @@ expr: primary %prec UPRIMARY
   }
   | expr MORE_THAN expr
   {
-    if (!(isNumeric($1) && isNumeric($3)))
-    {
-      char* errorMsg = ">, operands must be numeric\n";
-      yyerror(errorMsg);
-      exit(0);
-    }
+    check_operands_numeric($1,$3,">");
 
     char *code = formatStr("%s > %s", $1->code, $3->code);
     char *prefix = formatStr("%s%s", $1->prefix, $3->prefix);
@@ -742,12 +727,7 @@ expr: primary %prec UPRIMARY
   }
   | expr LESS_THAN_EQUALS expr
   {
-    if (!(isNumeric($1) && isNumeric($3)))
-    {
-      char* errorMsg = "<=, operands must be numeric\n";
-      yyerror(errorMsg);
-      exit(0);
-    }
+    check_operands_numeric($1,$3,"<=");
 
     char *code = formatStr("%s <= %s", $1->code, $3->code);
     char *prefix = formatStr("%s%s", $1->prefix, $3->prefix);
@@ -760,12 +740,7 @@ expr: primary %prec UPRIMARY
   }
   | expr MORE_THAN_EQUALS expr
   {
-    if (!(isNumeric($1) && isNumeric($3)))
-    {
-      char* errorMsg = ">=, operands must be numeric\n";
-      yyerror(errorMsg);
-      exit(0);
-    }
+    check_operands_numeric($1,$3,">=");
 
     char *code = formatStr("%s >= %s", $1->code, $3->code);
     char *prefix = formatStr("%s%s", $1->prefix, $3->prefix);
@@ -845,10 +820,7 @@ expr: primary %prec UPRIMARY
   */
   | expr PLUS expr
   {
-    if (!isNumeric($1) || !isNumeric($3)) {
-      yyerror("Operation invalid: one of the operands is not numeric.");
-      exit(0);
-    }
+    check_operands_numeric($1,$3,"+");
 
     char *resultType = resultNumericType($1->opt1, $3->opt1);
     if (resultType == NULL) {
@@ -867,10 +839,7 @@ expr: primary %prec UPRIMARY
   }
   | expr MINUS expr
   {
-    if (!isNumeric($1) || !isNumeric($3)) {
-      yyerror("Operation invalid: one of the operands is not numeric.");
-      exit(0);
-    }
+    check_operands_numeric($1,$3,">=");
 
     char *resultType = resultNumericType($1->opt1, $3->opt1);
     if (resultType == NULL) {
@@ -889,10 +858,7 @@ expr: primary %prec UPRIMARY
   }
   | expr ASTERISK expr
   {
-    if (!isNumeric($1) || !isNumeric($3)) {
-      yyerror("Operation invalid: one of the operands is not numeric.");
-      exit(0);
-    }
+    check_operands_numeric($1,$3,"*");
 
     char *resultType = resultNumericType($1->opt1, $3->opt1);
     if (resultType == NULL) {
@@ -911,10 +877,7 @@ expr: primary %prec UPRIMARY
   }
   | expr SLASH expr
   {
-    if (!isNumeric($1) || !isNumeric($3)) {
-      yyerror("Operation invalid: one of the operands is not numeric.");
-      exit(0);
-    }
+    check_operands_numeric($1,$3,"/");
 
     char *resultType = resultNumericType($1->opt1, $3->opt1);
     if (resultType == NULL) {
@@ -933,10 +896,7 @@ expr: primary %prec UPRIMARY
   }
   | expr PERCENTAGE expr
   {
-    if (!isNumeric($1) || !isNumeric($3)) {
-      yyerror("Operation invalid: one of the operands is not numeric.");
-      exit(0);
-    }
+    check_operands_numeric($1,$3,"%");
 
     char *resultType = resultNumericType($1->opt1, $3->opt1);
     if (resultType == NULL) {
