@@ -1,0 +1,23 @@
+proc main() {
+  [10]i32 arr;
+  [3]i32 arr2 = {1, 5, 10};
+  []i32 arr3 = {0, 1,};
+
+  i32 testing = arr2[2];
+  print "Arr[2] value: " ++ cast<string>(testing) ++ "\n";
+
+  arr2[2] = 20;
+  print "Arr[2] value: " ++ cast<string>(arr2[2]) ++ "\n";
+  
+  usize length = #arr2;
+  print "Length: " ++ cast<string>(length) ++ "\n";
+  
+  // Dando errado porque {} é do tipo "" e ele espera o tipo "i32" 
+  // [10]i32 x = {};
+
+  // Tem um erro nisso aqui
+  // print "Length: " ++ cast<string>(#arr2) ++ "\n";
+
+  // ----------------------------------------------------------
+  // Pendente: suportar as mesmas operações com arrays multidimensionais
+}

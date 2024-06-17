@@ -56,5 +56,10 @@ test1: build
 	${OUTPUT_DIR}/duna ./problems/should-fail/problem1/problem1-fail8.duna
 	${CC} ${C_FLAGS} -o ./out/fail ./out/duna.c
 
+array: build
+	${OUTPUT_DIR}/duna ./arrays.duna
+	${CC} ${C_FLAGS} -o ./out/arrays ./out/duna.c
+	./out/arrays
+
 clean:
 	rm -rf out

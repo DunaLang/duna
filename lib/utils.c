@@ -52,6 +52,17 @@ _Bool isString(const record *rec)
     return strcmp(rec->opt1, "string") == 0;
 }
 
+_Bool isArray(const record *rec)
+{
+    return rec->code[0] == '[';
+}
+
+    _Bool isSizeDefinedArray(const record *rec)
+{
+    return strlen(rec->code) > 2;
+}
+
+
 int sizeNumericType(char *type)
 {
     int numericSize = 0;
@@ -300,6 +311,9 @@ record *castR(record *castTo, record *castFrom)
             if (isNumeric(castFrom))
             {
                 typeFormat = formatPrintDecimalNumber(castFrom->opt1);
+            }
+            else if(strcmp(castFrom->opt1, "usize") == 0) {
+                typeFormat = "%lu";
             }
 
             char *length = generateVariable();

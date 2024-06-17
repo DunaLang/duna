@@ -61,6 +61,7 @@ extern ScopeStack scopeStack;
 %type <rec> block type expr pointer statements statement literal primary assignment compound_assignment
 %type <rec> ifStatement if else elseifs elseif
 %type <rec> while for
+%type <rec> arrayDef commaSeparatedExpr arrayIndex
 
 %start program
 
@@ -101,6 +102,15 @@ varDecl : type IDENTIFIER ';'
     check_symbol_not_exists_already($2);
 
     char *code = formatStr("%s %s", $1->code, $2);
+
+    if(isArray($1) && isSizeDefinedArray($1)) 
+    {
+      code = formatStr("%s %s%s", $1->prefix, $2, $1->code);  
+    }
+    else if(isArray($1)) {
+      yyerror("Invalid array definition: no size provided");
+      exit(1);
+    }
     $$ = createRecord(code, $1->opt1, "");
 
     freeRecord($1);
@@ -123,6 +133,9 @@ varDecl : type IDENTIFIER ';'
     else
     {
       char *code = formatStr("%s%s %s = %s", $4->prefix, $1->code, $2, $4->code);
+      if(isArray($1)) {
+        code = formatStr("%s%s %s%s = %s", $4->prefix, $1->prefix, $2, $1->code, $4->code);
+      }
       $$ = createRecord(code, "", "");
       free(code);
     }
@@ -196,7 +209,11 @@ statement : varDecl
     freeRecord($1);
     free(code);
   }
-  | compound_assignment ';'
+  | compound_assignment ';' {
+    char *code = formatStr("%s;", $1->code);
+    $$ = createRecord(code, "", $1->prefix);
+    free(code);
+  }
   | { insertScope(&scopeStack, generateVariable(), "while"); }
     while
     { $$ = $2; pop(&scopeStack); }
@@ -277,12 +294,21 @@ assignment : IDENTIFIER ASSIGN expr
     free($1);
     freeRecord($3);
   }
-  | arrayIndex ASSIGN expr {/* Problema 3 precisa disso*/}
+  | arrayIndex ASSIGN expr {
+    check_expected_actual_type($1->opt1, $3->opt1);
+    char *code = formatStr("%s = %s", $1->code, $3->code);
+    char *prefix = formatStr("%s%s", $1->prefix, $3->prefix);
+    $$ = createRecord(code, "", prefix);
+    free(code);
+    free(prefix);
+    free($1);
+    free($3);
+  }
   | derreferencing ASSIGN expr
   | fieldAccess ASSIGN expr
   ;
 
-compound_assignment : assignment
+compound_assignment : assignment {$$ = $1;}
   | add_assignment
   | sub_assignment 
   | mul_assignment 
@@ -621,8 +647,14 @@ type : USIZE { $$ = createRecord("size_t", "usize", ""); }
   | IDENTIFIER { $$ = createRecord($1, "", ""); free($1); }
   | '[' expr ']' type %prec ARRAY_TYPE
   {
+    if(!isInteger($2)) {
+      char *errorMsg = formatStr("Type error: expected %s to be numeric but instead got: %s", $2->code, $2->opt1);
+      yyerror(errorMsg);
+      exit(1);
+    }
+
     char *code = formatStr("[%s]", $2->code);
-    $$ = createRecord($4->code, code, "");
+    $$ = createRecord(code, $4->opt1, $4->code);
 
     freeRecord($2);
     freeRecord($4);
@@ -630,7 +662,7 @@ type : USIZE { $$ = createRecord("size_t", "usize", ""); }
   }
   | '[' ']' type %prec ARRAY_TYPE
   {
-    $$ = createRecord($3->code, "[]", "");
+    $$ = createRecord("[]", $3->opt1, $3->code);
     freeRecord($3);
   }
   | pointer { $$ = createRecord($1->code, "", ""); freeRecord($1); }
@@ -656,8 +688,11 @@ primary : IDENTIFIER {
   }
   | subprogramCall
   | NEW type %prec UNEW
-  | arrayIndex
-  | arrayDef
+  | arrayIndex {$$ = $1;}
+  | arrayDef {
+    $$ = createRecord($1->code, $1->opt1, $1->prefix);
+    free($1);
+  }
   | enumDef
   | compoundTypeDef
   | fieldAccess
@@ -683,7 +718,7 @@ literal : CHAR_LITERAL
   | T_NULL { $$ = createRecord($1, "null", ""); free($1); }
   ;
 
-expr: primary %prec UPRIMARY
+expr: primary {$$ = $1;} %prec UPRIMARY
   | literal {$$ = $1;} %prec ULITERAL 
   | expr OR expr
   {
@@ -705,7 +740,7 @@ expr: primary %prec UPRIMARY
   }
   | expr AND expr
   {
-    check_operands_boolean($1,$3, "and")
+    check_operands_boolean($1,$3, "and");
 
     char *code = formatStr("%s && %s", $1->code, $3->code);
     char *prefix = formatStr("%s%s", $1->prefix, $3->prefix);
@@ -878,7 +913,17 @@ expr: primary %prec UPRIMARY
   }
   | AMPERSAND expr %prec UAMPERSAND
   | NOT expr %prec UNOT
-  | HASHTAG expr %prec UHASHTAG
+  | HASHTAG expr %prec UHASHTAG {
+    check_symbol_exists($2->code);
+
+    char *code = generateVariable();
+    char *prefix = formatStr("size_t %s = sizeof(%s) / sizeof(%s[0]);\n", code, $2->code, $2->code);
+
+    $$ = createRecord(code, "usize", prefix);
+    free(code);
+    free(prefix);
+    free($2);
+  }
   | '(' expr ')' %prec UPARENTESISEXPR {
     char *code = formatStr("(%s)", $2->code);
     $$ = createRecord(code, $2->opt1, $2->prefix);
@@ -1014,8 +1059,21 @@ expr: primary %prec UPRIMARY
   | MINUS expr %prec UMINUS
   ;
 
-arrayIndex : arrayDef '[' expr ']'
-  | IDENTIFIER '[' expr ']'
+arrayIndex : arrayDef '[' expr ']' {/* Não quero fazer isso, Nathãn! grr*/}
+  | IDENTIFIER '[' expr ']' {
+    char* type = symbolLookup($1);
+    check_symbol_exists($1);
+    if(!isInteger($3)) {
+      char *errorMsg = formatStr("Type error: expected %s to be integer but instead got: %s", $3->code, $3->opt1);
+      yyerror(errorMsg);
+      exit(1);
+    }
+    
+    char *code = formatStr("%s[%s]", $1, $3->code);
+    $$ = createRecord(code, type, $3->prefix);
+    free($3);
+    free(code);
+  }
   | arrayIndex '[' expr ']'
   ;
 
@@ -1027,13 +1085,35 @@ arguments : expr
   | arguments ',' expr 
   ;
 
-arrayDef : '{' '}'
-  | '{' commaSeparatedExpr '}'
-  | '{' commaSeparatedExpr ',' '}'
+arrayDef : '{' '}' {
+  $$ = createRecord("{}", "", "");
+}
+  | '{' commaSeparatedExpr '}' {
+    char *code = formatStr("{%s}", $2->code);
+    $$ = createRecord(code, $2->opt1, $2->prefix);
+    free($2);
+    free(code);
+  }
+  | '{' commaSeparatedExpr ',' '}' {
+    char *code = formatStr("{%s}", $2->code);
+    $$ = createRecord(code, $2->opt1, $2->prefix);
+    free($2);
+    free(code);
+  }
   ;
 
-commaSeparatedExpr : expr
-  | commaSeparatedExpr ',' expr
+commaSeparatedExpr : expr {$$ = createRecord($1->code, $1->opt1, $1->prefix);}
+  | commaSeparatedExpr ',' expr {
+    check_expected_actual_type($1->opt1, $3->opt1);
+
+    char *code = formatStr("%s, %s", $1->code, $3->code);
+    char *prefix = formatStr("%s%s", $1->prefix, $3->prefix);
+    $$ = createRecord(code, $1->opt1, prefix);
+    free(code);
+    free(prefix);
+    freeRecord($1);
+    freeRecord($3);
+  }
   ;
 
 enumDef : IDENTIFIER DOUBLE_COLON IDENTIFIER ;
