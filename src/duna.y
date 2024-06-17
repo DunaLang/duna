@@ -686,6 +686,23 @@ literal : CHAR_LITERAL
 expr: primary %prec UPRIMARY
   | literal {$$ = $1;} %prec ULITERAL 
   | expr OR expr
+  {
+    if (!(isBoolean($1) && isBoolean($3)))
+    {
+      char* errorMsg = "or, operands must be boolean\n";
+      yyerror(errorMsg);
+      exit(0);
+    }
+
+    char *code = formatStr("%s || %s", $1->code, $3->code);
+    char *prefix = formatStr("%s%s", $1->prefix, $3->prefix);
+    $$ = createRecord(code, "bool", prefix);
+
+    freeRecord($1);
+    freeRecord($3);
+    free(code);
+    free(prefix);
+  }
   | expr AND expr
   {
     check_operands_boolean($1,$3, "and")
@@ -752,7 +769,75 @@ expr: primary %prec UPRIMARY
     free(prefix);
   }
   | expr EQUALITY expr
+  {
+    char *code;
+    char *prefix;
+
+    if (isBoolean($1) && isBoolean($3))
+    {
+      code = formatStr("%s == %s", $1->code, $3->code);
+      prefix = formatStr("%s%s", $1->prefix, $3->prefix);
+    }
+    else if (isNumeric($1) && isNumeric($3))
+    {
+      code = formatStr("%s == %s", $1->code, $3->code);
+      prefix = formatStr("%s%s", $1->prefix, $3->prefix);
+    }
+    else if (isString($1) && isString($3))
+    {
+      code = formatStr("strcmp(%s, %s) == 0", $1->code, $3->code);
+      prefix = formatStr("%s%s", $1->prefix, $3->prefix);
+    }
+    // missing struct, array, ...
+    else
+    {
+      char* errorMsg = "==, operands must be both boolean, numeric or string\n";
+      yyerror(errorMsg);
+      exit(0);
+    }
+
+    $$ = createRecord(code, "bool", prefix);
+
+    freeRecord($1);
+    freeRecord($3);
+    free(code);
+    free(prefix);
+  }
   | expr INEQUALITY expr
+  {
+    char *code;
+    char *prefix;
+
+    if (isBoolean($1) && isBoolean($3))
+    {
+      code = formatStr("%s != %s", $1->code, $3->code);
+      prefix = formatStr("%s%s", $1->prefix, $3->prefix);
+    }
+    else if (isNumeric($1) && isNumeric($3))
+    {
+      code = formatStr("%s != %s", $1->code, $3->code);
+      prefix = formatStr("%s%s", $1->prefix, $3->prefix);
+    }
+    else if (isString($1) && isString($3))
+    {
+      code = formatStr("strcmp(%s, %s) != 0", $1->code, $3->code);
+      prefix = formatStr("%s%s", $1->prefix, $3->prefix);
+    }
+    // missing struct, array, ...
+    else
+    {
+      char* errorMsg = "!=, operands must be both boolean, numeric or string\n";
+      yyerror(errorMsg);
+      exit(0);
+    }
+
+    $$ = createRecord(code, "bool", prefix);
+
+    freeRecord($1);
+    freeRecord($3);
+    free(code);
+    free(prefix);
+  }
   | expr CONCAT expr
   {
     if (!(isString($1) && isString($3)))
