@@ -25,12 +25,10 @@ char *symbolLookup(char *name)
         if (type != NULL)
         {
             free(key);
-            free(scope);
             return type;
         }
 
         free(key);
-        free(scope);
     }
 
     return NULL;

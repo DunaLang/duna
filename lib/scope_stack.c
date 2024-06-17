@@ -44,9 +44,7 @@ Scope *top(ScopeStack *scopeStack, int k)
         return NULL;
     }
 
-    Scope *scope = malloc(sizeof(Scope));
-    *scope = scopeStack->stack[scopeStack->size - 1 - k];
-    return scope;
+    return scopeStack->stack + (scopeStack->size - 1 - k);
 }
 
 void pop(ScopeStack *scopeStack)
@@ -69,10 +67,6 @@ Scope *nearestIteration(ScopeStack *scopeStack)
         {
             return scope;
         }
-        else
-        {
-            free(scope);
-        }
     }
 
     return NULL;
@@ -88,10 +82,6 @@ Scope *nearestProcedure(ScopeStack *scopeStack)
         {
             return scope;
         }
-        else
-        {
-            free(scope);
-        }
     }
 
     return NULL;
@@ -106,10 +96,6 @@ Scope *nearestFunction(ScopeStack *scopeStack)
         if (strcmp(funcType, scope->type) == 0)
         {
             return scope;
-        }
-        else
-        {
-            free(scope);
         }
     }
 

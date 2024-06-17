@@ -229,7 +229,6 @@ statement : varDecl
       char *errorMsg = formatStr("Break statement must be placed in a valid iteration statement (WHILE or FOR)\n");
       yyerror(errorMsg);
       free(errorMsg);
-      free(scope);
       exit(0);
     }
 
@@ -237,7 +236,6 @@ statement : varDecl
 
     $$ = createRecord(code, "", "");
     free(code);
-    free(scope);
   }
   | CONTINUE ';'
   | PRINT expr ';'
@@ -267,7 +265,6 @@ statement : varDecl
       pop(&scopeStack);
 
       free(code);
-      free(scope);
       freeRecord($2);
     }
   | subprogramCall ';'
@@ -371,7 +368,6 @@ for : FOR '(' ';' ';' ')' block
 
     freeRecord($6);
     free(code);
-    free(scope);
   }
   | FOR '(' statement expr ';' compound_assignment ')' block
   {
@@ -396,7 +392,6 @@ for : FOR '(' ';' ';' ')' block
     freeRecord($6);
     freeRecord($8);
     free(code);
-    free(scope);
   }
   | FOR '(' ';' expr ';' compound_assignment ')' block
   {
@@ -420,7 +415,6 @@ for : FOR '(' ';' ';' ')' block
     freeRecord($6);
     freeRecord($8);
     free(code);
-    free(scope);
   }
   | FOR '(' ';' ';' compound_assignment ')' block
   {
@@ -435,7 +429,6 @@ for : FOR '(' ';' ';' ')' block
     freeRecord($5);
     freeRecord($7);
     free(code);
-    free(scope);
   }
   | FOR '(' statement ';' ')' block
   {
@@ -450,7 +443,6 @@ for : FOR '(' ';' ';' ')' block
     freeRecord($3);
     freeRecord($6);
     free(code);
-    free(scope);
   }
   | FOR '(' statement expr ';' ')' block
   {
@@ -474,7 +466,6 @@ for : FOR '(' ';' ';' ')' block
     freeRecord($4);
     freeRecord($7);
     free(code);
-    free(scope);
   }
   | FOR '(' ';' expr ';' ')' block
   {
@@ -497,7 +488,6 @@ for : FOR '(' ';' ';' ')' block
     freeRecord($4);
     freeRecord($7);
     free(code);
-    free(scope);
   };
 
 foreach : FOREACH '(' type IDENTIFIER ':' IDENTIFIER ')' block
@@ -570,8 +560,6 @@ if : { insertScope(&scopeStack, generateVariable(), "" ); }
     freeRecord($4);
     freeRecord($6);
     free(s1);
-    free(scope);
-    free(outer);
   }
 
 else : ELSE { insertScope(&scopeStack, generateVariable(), "" ); } block
@@ -606,8 +594,6 @@ elseif : ELSE { insertScope(&scopeStack, generateVariable(), "" ); } IF '(' expr
     pop(&scopeStack);
 
     free(code);
-    free(outer);
-    free(scope);
     freeRecord($5);
     freeRecord($7);
   };
