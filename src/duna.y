@@ -644,7 +644,8 @@ type : USIZE { $$ = createRecord("size_t", "usize", ""); }
   | BOOL { $$ = createRecord("_Bool", "bool", ""); }
   | STRING { $$ = createRecord("string", "string", ""); }
   | CHAR { $$ = createRecord("char", "char", ""); }
-  | IDENTIFIER { $$ = createRecord($1, "", ""); free($1); }
+  | IDENTIFIER { 
+    $$ = createRecord($1, "", ""); free($1); yyerror("IDENTIFIER as type not supported"); }
   | '[' expr ']' type %prec ARRAY_TYPE
   {
     if(!isInteger($2)) {
