@@ -307,11 +307,9 @@ assignment : IDENTIFIER ASSIGN expr
     }
     check_expected_actual_type($1->opt1, exprType);
     
-    char *code = formatStr("%s = %s", $1->code, $3->code);
-    char *prefix = formatStr("%s%s", $1->prefix, $3->prefix);
-    $$ = createRecord(code, "", prefix);
+    char *code = formatStr("%s%s%s = %s", $1->prefix, $3->prefix, $1->code, $3->code);
+    $$ = createRecord(code, "", "");
     free(code);
-    free(prefix);
     free($1);
     free($3);
   }

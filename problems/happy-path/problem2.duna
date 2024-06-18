@@ -22,8 +22,8 @@ proc main() {
         }
     }
 
-    print("[0, 25]" ++ cast<string>(range25, null) ++ "\n");
-    print("[26, 50]" ++ cast<string>(range50, null) ++ "\n");
-    print("[51, 75]" ++ cast<string>(range75, null) ++ "\n");
-    print("[76, 100]" ++ cast<string>(range100, null) ++ "\n");
+    print("[0, 25] " ++ cast<string>(range25, null) ++ "\n");
+    print("[26, 50] " ++ cast<string>(range50, null) ++ "\n");
+    print("[51, 75] " ++ cast<string>(range75, null) ++ "\n");
+    print("[76, 100] " ++ cast<string>(range100, null) ++ "\n");
 }
