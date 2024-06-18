@@ -310,8 +310,8 @@ assignment : IDENTIFIER ASSIGN expr
     char *code = formatStr("%s%s%s = %s", $1->prefix, $3->prefix, $1->code, $3->code);
     $$ = createRecord(code, "", "");
     free(code);
-    free($1);
-    free($3);
+    freeRecord($1);
+    freeRecord($3);
   }
   | derreferencing ASSIGN expr
   | fieldAccess ASSIGN expr
@@ -695,7 +695,7 @@ primary : IDENTIFIER {
   | arrayIndex {$$ = $1;}
   | arrayDef {
     $$ = createRecord($1->code, $1->opt1, $1->prefix);
-    free($1);
+    freeRecord($1);
   }
   | enumDef
   | compoundTypeDef
@@ -930,7 +930,7 @@ expr: primary {$$ = $1;} %prec UPRIMARY
     $$ = createRecord(code, "usize", prefix);
     free(code);
     free(prefix);
-    free($2);
+    freeRecord($2);
   }
   | '(' expr ')' %prec UPARENTESISEXPR {
     char *code = formatStr("(%s)", $2->code);
@@ -1079,7 +1079,7 @@ arrayIndex : arrayDef '[' expr ']' {/* Não quero fazer isso, Nathãn! grr*/}
     
     char *code = formatStr("%s[%s]", $1, $3->code);
     $$ = createRecord(code, type, $3->prefix);
-    free($3);
+    freeRecord($3);
     free(code);
   }
   | arrayIndex '[' expr ']' {
@@ -1092,8 +1092,8 @@ arrayIndex : arrayDef '[' expr ']' {/* Não quero fazer isso, Nathãn! grr*/}
     char *code = formatStr("%s[%s]", $1->code, $3->code);
     char *prefix = formatStr("%s%s", $1->prefix, $3->prefix);
     $$ = createRecord(code, $1->opt1, prefix);
-    free($1);
-    free($3);
+    freeRecord($1);
+    freeRecord($3);
     free(code);
     free(prefix);
   }
@@ -1110,13 +1110,13 @@ arguments : expr
 arrayDef : '{' commaSeparatedExpr '}' {
     char *code = formatStr("{%s}", $2->code);
     $$ = createRecord(code, $2->opt1, $2->prefix);
-    free($2);
+    freeRecord($2);
     free(code);
   }
   | '{' commaSeparatedExpr ',' '}' {
     char *code = formatStr("{%s}", $2->code);
     $$ = createRecord(code, $2->opt1, $2->prefix);
-    free($2);
+    freeRecord($2);
     free(code);
   }
   ;
