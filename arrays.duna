@@ -3,6 +3,10 @@ proc main() {
   [3]i32 arr2 = {1, 5, 10};
   []i32 arr3 = {0, 1,};
 
+  i16 len = 5;
+  [len]i32 arr4;
+  print "Length (arr4): " ++ cast<string>(#arr4) ++ "\n";
+
   i32 testing = arr2[2];
   print "Arr[2] value: " ++ cast<string>(testing) ++ "\n";
 
@@ -11,13 +15,17 @@ proc main() {
   
   usize length = #arr2;
   print "Length: " ++ cast<string>(length) ++ "\n";
-  
-  // Dando errado porque {} é do tipo "" e ele espera o tipo "i32" 
-  // [10]i32 x = {};
+  print "Length: " ++ cast<string>(#arr2) ++ "\n";
 
-  // Tem um erro nisso aqui
-  // print "Length: " ++ cast<string>(#arr2) ++ "\n";
+  i8 rows = 5;
+  i8 cols = 3;
+  [rows][cols]i32 matrix;
+  print "Length (matrix): " ++ cast<string>(#matrix) ++ "\n";
 
-  // ----------------------------------------------------------
-  // Pendente: suportar as mesmas operações com arrays multidimensionais
+  for (i32 y = 0; y < rows; y = y + 1) {
+    for (i32 x = 0; x < cols; x = x + 1) {
+      matrix[y][x] = 25;
+    }
+  }
+  print "Matrix[2][0] value: " ++ cast<string>(matrix[2][0]) ++ "\n";
 }

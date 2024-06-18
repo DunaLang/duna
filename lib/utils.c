@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdarg.h>
+#include <limits.h>
 
 typedef struct
 {
@@ -57,11 +58,10 @@ _Bool isArray(const record *rec)
     return rec->code[0] == '[';
 }
 
-    _Bool isSizeDefinedArray(const record *rec)
+_Bool isSizeDefinedArray(const record *rec)
 {
     return strlen(rec->code) > 2;
 }
-
 
 int sizeNumericType(char *type)
 {
@@ -258,6 +258,30 @@ char *resultNumericType(char *type1, char *type2)
     return NULL;
 }
 
+char *typeByNumberBitRange(const char *number)
+{
+    int64_t n = atoi(number);
+    if (n >= INT8_MIN && n <= INT8_MAX)
+    {
+        return "i8";
+    }
+    else if (n >= INT16_MIN && n <= INT16_MAX)
+    {
+        return "i16";
+    }
+    else if (n >= INT32_MIN && n <= INT32_MAX)
+    {
+        return "i32";
+    }
+    else if (n >= INT64_MIN && n <= INT64_MAX)
+    {
+        return "i64";
+    }
+    else
+    {
+        return "Unreachable";
+    }
+}
 /*
     [Regras de Cast]
     type_variants: boolean, enum, numeric, string, struct
@@ -312,7 +336,8 @@ record *castR(record *castTo, record *castFrom)
             {
                 typeFormat = formatPrintDecimalNumber(castFrom->opt1);
             }
-            else if(strcmp(castFrom->opt1, "usize") == 0) {
+            else if (strcmp(castFrom->opt1, "usize") == 0)
+            {
                 typeFormat = "%lu";
             }
 
@@ -320,8 +345,8 @@ record *castR(record *castTo, record *castFrom)
             char *casted_str = generateVariable();
 
             char *prefix = formatStr(
-                "int %s = snprintf(NULL, 0, \"%s\", %s);\nchar %s[%s + 1];\nsnprintf(%s, %s + 1, \"%s\", %s);\n",
-                length, typeFormat, castFrom->code, casted_str, length, casted_str, length, typeFormat, castFrom->code);
+                "%s\nint %s = snprintf(NULL, 0, \"%s\", %s);\nchar %s[%s + 1];\nsnprintf(%s, %s + 1, \"%s\", %s);\n",
+                castFrom->prefix, length, typeFormat, castFrom->code, casted_str, length, casted_str, length, typeFormat, castFrom->code);
 
             return createRecord(casted_str, castTo->code, prefix);
             free(length);

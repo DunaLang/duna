@@ -111,6 +111,7 @@ varDecl : type IDENTIFIER ';'
       yyerror("Invalid array definition: no size provided");
       exit(1);
     }
+    symbolInsert($2, $1->opt1);
     $$ = createRecord(code, $1->opt1, "");
 
     freeRecord($1);
@@ -119,7 +120,11 @@ varDecl : type IDENTIFIER ';'
   }
   | type IDENTIFIER ASSIGN expr ';'
   {
-    check_expected_actual_type($1->opt1, $4->opt1);
+    char *exprType = $4->opt1;
+    if(isNumeric($4)) {
+      exprType = resultNumericType($1->opt1, $4->opt1);
+    }
+    check_expected_actual_type($1->opt1, exprType);
     check_symbol_not_exists_already($2);
 
     symbolInsert($2, $1->opt1);
@@ -275,7 +280,11 @@ assignment : IDENTIFIER ASSIGN expr
     char *type = symbolLookup($1);
 
     check_symbol_exists($1);
-    check_expected_actual_type(type, $3->opt1);
+    char *exprType = $3->opt1;
+    if(isNumeric($3)) {
+      exprType = resultNumericType(type, $3->opt1);
+    }
+    check_expected_actual_type(type, exprType);
 
     if (isString($3))
     {
@@ -292,7 +301,12 @@ assignment : IDENTIFIER ASSIGN expr
     freeRecord($3);
   }
   | arrayIndex ASSIGN expr {
-    check_expected_actual_type($1->opt1, $3->opt1);
+    char *exprType = $3->opt1;
+    if(isNumeric($3)) {
+      exprType = resultNumericType($1->opt1, $3->opt1);
+    }
+    check_expected_actual_type($1->opt1, exprType);
+    
     char *code = formatStr("%s = %s", $1->code, $3->code);
     char *prefix = formatStr("%s%s", $1->prefix, $3->prefix);
     $$ = createRecord(code, "", prefix);
@@ -638,9 +652,14 @@ type : USIZE { $$ = createRecord("size_t", "usize", ""); }
       yyerror(errorMsg);
       exit(1);
     }
-
     char *code = formatStr("[%s]", $2->code);
-    $$ = createRecord(code, $4->opt1, $4->code);
+    char *prefix = $4->code;
+    // If type has prefix, then it is a multidimensional array
+    if(strcmp($4->prefix, "") != 0) {
+      code = formatStr("[%s]%s", $2->code, $4->code);
+      prefix = $4->prefix;
+    }
+    $$ = createRecord(code, $4->opt1, prefix);
 
     freeRecord($2);
     freeRecord($4);
@@ -699,7 +718,11 @@ derreferencing : ASTERISK IDENTIFIER;
 literal : CHAR_LITERAL
   | STRING_LITERAL { $$ = createRecord($1, "string", ""); free($1); }
   | FLOAT_LITERAL { $$ = createRecord($1, "f32", ""); free($1); }
-  | INT_LITERAL { $$ = createRecord($1, "i32", ""); free($1); }
+  | INT_LITERAL { 
+    char *type = typeByNumberBitRange($1);
+    $$ = createRecord($1, type, ""); 
+    free($1);
+  }
   | BOOLEAN_LITERAL { $$ = createRecord($1, "bool", ""); free($1); }
   | T_NULL { $$ = createRecord($1, "null", ""); free($1); }
   ;
@@ -1060,7 +1083,21 @@ arrayIndex : arrayDef '[' expr ']' {/* Não quero fazer isso, Nathãn! grr*/}
     free($3);
     free(code);
   }
-  | arrayIndex '[' expr ']'
+  | arrayIndex '[' expr ']' {
+    if(!isInteger($3)) {
+      char *errorMsg = formatStr("Type error: expected %s to be integer but instead got: %s", $3->code, $3->opt1);
+      yyerror(errorMsg);
+      exit(1);
+    }
+
+    char *code = formatStr("%s[%s]", $1->code, $3->code);
+    char *prefix = formatStr("%s%s", $1->prefix, $3->prefix);
+    $$ = createRecord(code, $1->opt1, prefix);
+    free($1);
+    free($3);
+    free(code);
+    free(prefix);
+  }
   ;
 
 subprogramCall : IDENTIFIER '(' ')'
@@ -1071,10 +1108,7 @@ arguments : expr
   | arguments ',' expr 
   ;
 
-arrayDef : '{' '}' {
-  $$ = createRecord("{}", "", "");
-}
-  | '{' commaSeparatedExpr '}' {
+arrayDef : '{' commaSeparatedExpr '}' {
     char *code = formatStr("{%s}", $2->code);
     $$ = createRecord(code, $2->opt1, $2->prefix);
     free($2);

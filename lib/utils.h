@@ -21,4 +21,5 @@ char *formatScanDecimalNumber(char *type);
 char *itoa(int i);
 char *formatStr(const char *fmt, ...);
 char *generateVariable();
+char *typeByNumberBitRange(const char *number);
 record *castR(record *castTo, record *castFrom);
