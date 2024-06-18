@@ -39,6 +39,12 @@ void check_symbol_not_exists_already(char *id)
 
 void check_expected_actual_type(char *expected, char *actual)
 {
+    if (expected == NULL)
+    {
+    }
+    if (expected == NULL || actual == NULL)
+    {
+    }
     if (strcmp(expected, actual) != 0)
     {
         char *errorMsg = formatStr("RHS type is not expected. Actual: \"%s\". Expected: \"%s\"\n", actual, expected);
@@ -90,4 +96,25 @@ void check_operands_boolean(record *operand1, record *operand2, char *operat)
     }
 
     free(errorMsg);
+}
+
+void throws_cannot_coerce(char *toType, char *fromType)
+{
+    char *errorMsg = formatStr("Invalid: cannot coerce from %s to %s", fromType, toType);
+    yyerror(errorMsg);
+    free(errorMsg);
+    exit(0);
+}
+
+void check_coerce_to_expected_numeric(char *expected, char *actual)
+{
+    char *coersion = resultNumericType(expected, actual);
+    if (coersion == NULL)
+    {
+        throws_cannot_coerce(expected, actual);
+    }
+    if (strcmp(coersion, expected) != 0)
+    {
+        throws_cannot_coerce(expected, actual);
+    }
 }

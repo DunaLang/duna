@@ -56,6 +56,22 @@ test1: build
 	${OUTPUT_DIR}/duna ./problems/should-fail/problem1/problem1-fail8.duna
 	${CC} ${C_FLAGS} -o ./out/fail ./out/duna.c
 
+test3: build
+	echo "----TESTING----"
+	${OUTPUT_DIR}/duna ./problems/happy-path/problem3.duna
+	echo "----HAPPY PATH----"
+	${CC} ${C_FLAGS} -o ./out/problem3 ./out/duna.c
+	./out/problem3
+
+	echo
+
+	echo "------------------- SHOULD FAIL -------------------"
+	echo
+	echo "----SHOULD FAIL - string_literal in array definition----"
+	echo
+	${OUTPUT_DIR}/duna ./problems/should-fail/problem3/problem3-fail1.duna
+	${CC} ${C_FLAGS} -o ./out/fail ./out/duna.c
+
 array: build
 	${OUTPUT_DIR}/duna ./arrays.duna
 	${CC} ${C_FLAGS} -o ./out/arrays ./out/duna.c

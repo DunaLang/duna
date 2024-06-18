@@ -1,31 +1,10 @@
-proc main() {
-  [10]i32 arr;
-  [3]i32 arr2 = {1, 5, 10};
-  []i32 arr3 = {0, 1,};
+proc main(){
+    f32 x = 10.0;
+    f32 y = 10.0;
+    i32 c = 10;
+    i64 d = 11.0;
+    c = d;
 
-  i16 len = 5;
-  [len]i32 arr4;
-  print "Length (arr4): " ++ cast<string>(#arr4) ++ "\n";
-
-  i32 testing = arr2[2];
-  print "Arr[2] value: " ++ cast<string>(testing) ++ "\n";
-
-  arr2[2] = 20;
-  print "Arr[2] value: " ++ cast<string>(arr2[2]) ++ "\n";
-  
-  usize length = #arr2;
-  print "Length: " ++ cast<string>(length) ++ "\n";
-  print "Length: " ++ cast<string>(#arr2) ++ "\n";
-
-  i8 rows = 5;
-  i8 cols = 3;
-  [rows][cols]i32 matrix;
-  print "Length (matrix): " ++ cast<string>(#matrix) ++ "\n";
-
-  for (i32 y = 0; y < rows; y = y + 1) {
-    for (i32 x = 0; x < cols; x = x + 1) {
-      matrix[y][x] = 25;
-    }
-  }
-  print "Matrix[2][0] value: " ++ cast<string>(matrix[2][0]) ++ "\n";
+    f32 resultado = x*x - y + cast<f32>(d);
+    print cast<string>(resultado) ++ "\n";
 }

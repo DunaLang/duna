@@ -1,5 +1,6 @@
 #include "utils.h"
 #include "record.h"
+#include "checks.h"
 #include <inttypes.h>
 #include <string.h>
 #include <stdlib.h>

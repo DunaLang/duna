@@ -18,6 +18,8 @@ extern FILE * yyout;
 
 extern SymbolTable symbolTable;
 extern ScopeStack scopeStack;
+
+char* actualSubprogramName;
 %}
 
 %union {
@@ -120,11 +122,8 @@ varDecl : type IDENTIFIER ';'
   }
   | type IDENTIFIER ASSIGN expr ';'
   {
-    char *exprType = $4->opt1;
-    if(isNumeric($4)) {
-      exprType = resultNumericType($1->opt1, $4->opt1);
-    }
-    check_expected_actual_type($1->opt1, exprType);
+    check_coerce_to_expected_numeric($1->opt1, $4->opt1);
+
     check_symbol_not_exists_already($2);
 
     symbolInsert($2, $1->opt1);
@@ -155,7 +154,6 @@ varDecl : type IDENTIFIER ';'
 typedef : TYPEDEF type IDENTIFIER ';' 
   ;
 
-// Verificar unicidade do nome do subprograma
 proc : PROC IDENTIFIER '(' ')' block
   {
     check_symbol_not_exists_already($2);
@@ -168,6 +166,8 @@ proc : PROC IDENTIFIER '(' ')' block
     free($2);
     freeRecord($5);
     free(code);
+    free(actualSubprogramName);
+    actualSubprogramName = NULL;
   }
   | PROC IDENTIFIER '(' params ')' block
   ;
