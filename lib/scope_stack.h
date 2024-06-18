@@ -1,7 +1,5 @@
 #pragma once
 
-// #define size_t int
-
 typedef struct ScopeStack
 {
     struct Scope *stack;
@@ -9,10 +7,18 @@ typedef struct ScopeStack
     int capacity;
 } ScopeStack;
 
+struct DeallocationLinkedList
+{
+    char *variable;
+    struct DeallocationLinkedList *next;
+};
+
 typedef struct Scope
 {
     char *name;
     char *type;
+
+    struct DeallocationLinkedList *deallocationLinkedList;
 } Scope;
 
 ScopeStack createScopeStack();
@@ -24,3 +30,6 @@ void pop(ScopeStack *scopeStack);
 Scope *nearestIteration(ScopeStack *scopeStack);
 Scope *nearestProcedure(ScopeStack *scopeStack);
 Scope *nearestFunction(ScopeStack *scopeStack);
+
+char *deallocationCodeCurrentScope(ScopeStack *scopeStack);
+void addDeallocationToScope(ScopeStack *scopeStack, char *variable);

@@ -81,6 +81,7 @@ program : { insertScope(&scopeStack, "GLOBAL", ""); } declarations
 
     fprintf(yyout, "%s\n", $2->code);
     freeRecord($2);
+
     pop(&scopeStack);
   };
 
@@ -90,7 +91,7 @@ declarations : declaration
 
 declaration : varDecl
   | typedef
-  | { char *scope = generateVariable(); insertScope(&scopeStack, scope, "proc"); }
+  | { insertScope(&scopeStack, generateVariable(), "proc"); }
   proc
   { $$ = $2; pop(&scopeStack); }
   | func
@@ -105,11 +106,16 @@ varDecl : type IDENTIFIER ';'
 
     char *code = formatStr("%s %s", $1->code, $2);
 
-    if(isArray($1) && isSizeDefinedArray($1)) 
+    if (isString($1))
+    {
+      code = formatStr("char *%s = NULL", $2);
+    }
+    else if (isArray($1) && isSizeDefinedArray($1))
     {
       code = formatStr("%s %s%s", $1->prefix, $2, $1->code);  
     }
-    else if(isArray($1)) {
+    else if (isArray($1))
+    {
       yyerror("Invalid array definition: no size provided");
       exit(1);
     }
@@ -123,14 +129,14 @@ varDecl : type IDENTIFIER ';'
   | type IDENTIFIER ASSIGN expr ';'
   {
     check_coerce_to_expected_numeric($1->opt1, $4->opt1);
-
     check_symbol_not_exists_already($2);
 
     symbolInsert($2, $1->opt1);
 
     if (isString($4))
     {
-      char *code = formatStr("%schar %s[strlen(%s)];\nstrcpy(%s, %s)", $4->prefix, $2, $4->code, $2, $4->code);
+      char *code = formatStr("%schar *%s = strdup(%s)", $4->prefix, $2, $4->code);
+      addDeallocationToScope(&scopeStack, $2);
       $$ = createRecord(code, "", "");
       free(code);
     }
@@ -237,12 +243,31 @@ statement : varDecl
       exit(0);
     }
 
-    char *code = formatStr("goto end_%s;", scope->name);
+    char *deallocationCode = deallocationCodeCurrentScope(&scopeStack);
+    char *code = formatStr("%sgoto end_%s;", (deallocationCode == NULL) ? "" : deallocationCode, scope->name);
 
     $$ = createRecord(code, "", "");
     free(code);
+    free(deallocationCode);
   }
   | CONTINUE ';'
+  {
+    Scope *scope = nearestIteration(&scopeStack);
+    if (scope == NULL)
+    {
+      char *errorMsg = formatStr("Continue statement must be placed in a valid iteration statement (WHILE or FOR)\n");
+      yyerror(errorMsg);
+      free(errorMsg);
+      exit(0);
+    }
+
+    char *deallocationCode = deallocationCodeCurrentScope(&scopeStack);
+    char *code = formatStr("%sgoto pre_end_%s;", (deallocationCode == NULL) ? "" : deallocationCode, scope->name);
+
+    $$ = createRecord(code, "", "");
+    free(code);
+    free(deallocationCode);
+  }
   | PRINT expr ';'
   {
     if (!isString($2)) {
@@ -373,8 +398,8 @@ for : FOR '(' ';' ';' ')' block
     Scope *scope = top(&scopeStack, 0);
     char *scopeName = scope->name;
     char *code = formatStr(
-      "begin_%s:%s\ngoto begin_%s;\nend_%s:;",
-      scopeName, $6->code, scopeName, scopeName
+      "begin_%s:%s\npre_end_%s:;\ngoto begin_%s;\nend_%s:;",
+      scopeName, $6->code, scopeName, scopeName, scopeName
     );
     $$ = createRecord(code, "", "");
 
@@ -394,8 +419,8 @@ for : FOR '(' ';' ';' ')' block
     Scope *scope = top(&scopeStack, 0);
     char *scopeName = scope->name;
     char *code = formatStr(
-      "%s{\n%s\nbegin_%s:\nif (!(%s)) goto end_%s;\n%s\n%s\ngoto begin_%s;\n}\nend_%s:;",
-      $4->prefix, $3->code, scopeName, $4->code, scopeName, $8->code, $6->code, scopeName, scopeName
+      "%s{\n%s\nbegin_%s:\nif (!(%s)) goto end_%s;\n%s\npre_end_%s:;\n%s\ngoto begin_%s;\n}\nend_%s:;",
+      $4->prefix, $3->code, scopeName, $4->code, scopeName, $8->code, scopeName, $6->code, scopeName, scopeName
     );
     $$ = createRecord(code, "", "");
 
@@ -418,8 +443,8 @@ for : FOR '(' ';' ';' ')' block
     Scope *scope = top(&scopeStack, 0);
     char *scopeName = scope->name;
     char *code = formatStr(
-      "%s{\nbegin_%s:\nif (!(%s)) goto end_%s;\n%s\n%s\ngoto begin_%s;\n}\nend_%s:;",
-      $4->prefix, scopeName, $4->code, scopeName, $8->code, $6->code, scopeName, scopeName
+      "%s{\nbegin_%s:\nif (!(%s)) goto end_%s;\n%s\npre_end_%s:;\n%s\ngoto begin_%s;\n}\nend_%s:;",
+      $4->prefix, scopeName, $4->code, scopeName, $8->code, scopeName, $6->code, scopeName, scopeName
     );
     $$ = createRecord(code, "", "");
 
@@ -433,8 +458,8 @@ for : FOR '(' ';' ';' ')' block
     Scope *scope = top(&scopeStack, 0);
     char *scopeName = scope->name;
     char *code = formatStr(
-      "{\nbegin_%s:\n%s\n%s\ngoto begin_%s;\n}\nend_%s:;",
-      scopeName, $7->code, $5->code, scopeName, scopeName
+      "{\nbegin_%s:\n%s\npre_end_%s:;\n%s\ngoto begin_%s;\n}\nend_%s:;",
+      scopeName, $7->code, scopeName, $5->code, scopeName, scopeName
     );
     $$ = createRecord(code, "", "");
 
@@ -447,8 +472,8 @@ for : FOR '(' ';' ';' ')' block
     Scope *scope = top(&scopeStack, 0);
     char *scopeName = scope->name;
     char *code = formatStr(
-      "{\n%s\nbegin_%s:\n%s\ngoto begin_%s;\n}\nend_%s:;",
-      $3->code, scopeName, $6->code, scopeName, scopeName
+      "{\n%s\nbegin_%s:\n%s\npre_end_%s:;\ngoto begin_%s;\n}\nend_%s:;",
+      $3->code, scopeName, $6->code, scopeName, scopeName, scopeName
     );
     $$ = createRecord(code, "", "");
 
@@ -469,8 +494,8 @@ for : FOR '(' ';' ';' ')' block
     Scope *scope = top(&scopeStack, 0);
     char *scopeName = scope->name;
     char *code = formatStr(
-      "%s{\n%s\nbegin_%s:\nif (!(%s)) goto end_%s;\n%s\ngoto begin_%s;\n}\nend_%s:;",
-      $4->prefix, $3->code, scopeName, $4->code, scopeName, $7->code, scopeName, scopeName
+      "%s{\n%s\nbegin_%s:\nif (!(%s)) goto end_%s;\n%s\npre_end_%s:;\ngoto begin_%s;\n}\nend_%s:;",
+      $4->prefix, $3->code, scopeName, $4->code, scopeName, $7->code, scopeName, scopeName, scopeName
     );
     $$ = createRecord(code, "", "");
 
@@ -492,8 +517,8 @@ for : FOR '(' ';' ';' ')' block
     Scope *scope = top(&scopeStack, 0);
     char *scopeName = scope->name;
     char *code = formatStr(
-      "%s{\nbegin_%s:\nif (!(%s)) goto end_%s;\n%s\ngoto begin_%s;\n}\nend_%s:;",
-      $4->prefix, scopeName, $4->code, scopeName, $7->code, scopeName, scopeName
+      "%s{\nbegin_%s:\nif (!(%s)) goto end_%s;\n%s\npre_end_%s:;\ngoto begin_%s;\n}\nend_%s:;",
+      $4->prefix, scopeName, $4->code, scopeName, $7->code, scopeName, scopeName, scopeName
     );
     $$ = createRecord(code, "", "");
 
@@ -1153,11 +1178,14 @@ fieldAccess : IDENTIFIER '.' IDENTIFIER
 block : '{' '}' { $$ = createRecord("{}", "", ""); }
   | '{' statements '}'
   {
-    char *code = formatStr("{\n%s\n}", $2->code);
+    char *deallocationCode = deallocationCodeCurrentScope(&scopeStack);
+    char *code = formatStr("{\n%s\n%s}", $2->code, (deallocationCode == NULL) ? "" : deallocationCode);
+
     $$ = createRecord(code, "", "");
 
     freeRecord($2);
     free(code);
+    free(deallocationCode);
   };
 
 %%

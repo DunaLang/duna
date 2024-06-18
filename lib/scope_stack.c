@@ -33,6 +33,7 @@ void insertScope(ScopeStack *scopeStack, char *name, char *type)
     scopeStack->stack[scopeStack->size] = (struct Scope){
         .name = name,
         .type = type,
+        .deallocationLinkedList = NULL,
     };
     scopeStack->size += 1;
 }
@@ -45,6 +46,39 @@ Scope *top(ScopeStack *scopeStack, int k)
     }
 
     return scopeStack->stack + (scopeStack->size - 1 - k);
+}
+
+char *deallocationCode(Scope *scope)
+{
+    if (scope->deallocationLinkedList == NULL)
+    {
+        return NULL;
+    }
+
+    size_t strLength = 0; // '\0'
+    struct DeallocationLinkedList *head = scope->deallocationLinkedList;
+    while (head != NULL)
+    {
+        strLength += strlen(head->variable) + 8; // 8 = "free();\n"
+        head = head->next;
+    }
+
+    char *deallocationCode = malloc(sizeof(char) * strLength);
+    deallocationCode[0] = '\0';
+    head = scope->deallocationLinkedList;
+    while (head != NULL)
+    {
+        char *str = formatStr("free(%s);\n", head->variable);
+        strcat(deallocationCode, str);
+        free(str);
+        head = head->next;
+    }
+    return deallocationCode;
+}
+
+char *deallocationCodeCurrentScope(ScopeStack *scopeStack)
+{
+    return deallocationCode(top(scopeStack, 0));
 }
 
 void pop(ScopeStack *scopeStack)
@@ -100,4 +134,25 @@ Scope *nearestFunction(ScopeStack *scopeStack)
     }
 
     return NULL;
+}
+
+struct DeallocationLinkedList *newDeallocationNode(char *variable)
+{
+    struct DeallocationLinkedList *node = malloc(sizeof(struct DeallocationLinkedList));
+    node->variable = strdup(variable);
+    node->next = NULL;
+    return node;
+}
+
+void addDeallocationToScope(ScopeStack *scopeStack, char *variable)
+{
+    Scope *scope = top(scopeStack, 0);
+    if (scope == NULL)
+    {
+        return;
+    }
+
+    struct DeallocationLinkedList *previousHead = scope->deallocationLinkedList;
+    scope->deallocationLinkedList = newDeallocationNode(variable);
+    scope->deallocationLinkedList->next = previousHead;
 }
