@@ -19,7 +19,7 @@ ScopeStack createScopeStack()
 void resize(ScopeStack *scopeStack)
 {
     size_t newSize = scopeStack->capacity * 2;
-    scopeStack->stack = realloc(scopeStack, newSize);
+    scopeStack->stack = realloc(scopeStack->stack, newSize);
     scopeStack->capacity = newSize;
 }
 
@@ -38,7 +38,7 @@ void insertScope(ScopeStack *scopeStack, char *name, char *type)
     scopeStack->size += 1;
 }
 
-Scope *top(ScopeStack *scopeStack, int k)
+Scope *top(ScopeStack *scopeStack, size_t k)
 {
     if (k >= scopeStack->size)
     {

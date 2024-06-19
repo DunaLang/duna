@@ -1,10 +1,12 @@
 #pragma once
 
+#include "stdlib.h"
+
 typedef struct ScopeStack
 {
     struct Scope *stack;
-    int size;
-    int capacity;
+    size_t size;
+    size_t capacity;
 } ScopeStack;
 
 struct DeallocationLinkedList
@@ -24,7 +26,7 @@ typedef struct Scope
 ScopeStack createScopeStack();
 
 void insertScope(ScopeStack *scopeStack, char *name, char *type);
-Scope *top(ScopeStack *scopeStack, int k);
+Scope *top(ScopeStack *scopeStack, size_t k);
 void pop(ScopeStack *scopeStack);
 
 Scope *nearestIteration(ScopeStack *scopeStack);

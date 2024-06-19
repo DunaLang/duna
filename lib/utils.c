@@ -96,9 +96,8 @@ char *formatPrintDecimalNumber(char *type)
             return "%" PRId16;
         case 32:
             return "%" PRId32;
-        case 64:
-            return "%" PRId64;
         }
+        return "%" PRId64;
     case 'u':
         switch (size)
         {
@@ -108,9 +107,8 @@ char *formatPrintDecimalNumber(char *type)
             return "%" PRIu16;
         case 32:
             return "%" PRIu32;
-        case 64:
-            return "%" PRIu64;
         }
+        return "%" PRIu64;
     default:
         printf("Unreachable.");
         exit(-1);
@@ -134,9 +132,8 @@ char *formatScanDecimalNumber(char *type)
             return "%" SCNd16;
         case 32:
             return "%" SCNd32;
-        case 64:
-            return "%" SCNd64;
         }
+        return "%" SCNd64;
     case 'u':
         switch (size)
         {
@@ -146,9 +143,8 @@ char *formatScanDecimalNumber(char *type)
             return "%" SCNu16;
         case 32:
             return "%" SCNu32;
-        case 64:
-            return "%" SCNu64;
         }
+        return "%" SCNu64;
     default:
         printf("Unreachable.");
         exit(-1);
