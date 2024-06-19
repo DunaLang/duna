@@ -1,6 +1,6 @@
 #pragma once
 
-#define HASH_SIZE 30
+#include "hashmap_utils.h"
 
 typedef struct
 {
