@@ -6,7 +6,7 @@ build:
 	mkdir -p out/compiler
 	yacc -d src/duna.y -o ${OUTPUT_DIR}/y.tab.c
 	lex -o ${OUTPUT_DIR}/lex.yy.c src/duna.l
-	${CC} -o ${OUTPUT_DIR}/duna ${OUTPUT_DIR}/y.tab.c ${OUTPUT_DIR}/lex.yy.c lib/record.c lib/utils.c lib/symbol_table.c lib/scope_stack.c lib/symbol_utils.c lib/checks.c lib/hashmap_utils.c -ll
+	${CC} -o ${OUTPUT_DIR}/duna ${OUTPUT_DIR}/y.tab.c ${OUTPUT_DIR}/lex.yy.c lib/record.c lib/utils.c lib/table/symbol_table.c lib/scope_stack.c lib/symbol_utils.c lib/checks.c lib/table/hashmap_utils.c -ll
 
 run: build
 	${OUTPUT_DIR}/duna ./problems/happy-path/problem1.duna

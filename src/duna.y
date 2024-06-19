@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "../../lib/symbol_table.h"
+#include "../../lib/table/symbol_table.h"
 #include "../../lib/scope_stack.h"
 #include "../../lib/symbol_utils.h"
 #include "../../lib/record.h"

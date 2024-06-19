@@ -1,7 +1,7 @@
 #include <stdlib.h>
 #include "symbol_utils.h"
 #include "scope_stack.h"
-#include "symbol_table.h"
+#include "table/symbol_table.h"
 #include "utils.h"
 
 SymbolTable symbolTable;

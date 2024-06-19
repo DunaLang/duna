@@ -4,7 +4,7 @@
 
 #include "hashmap_utils.h"
 #include "symbol_table.h"
-#include "utils.h"
+#include "../utils.h"
 
 SymbolTable createSymbolTable(void)
 {
