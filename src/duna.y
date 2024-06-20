@@ -23,7 +23,6 @@ struct SubprogramTable subprogramTable;
 
 extern ScopeStack scopeStack;
 
-char* actualSubprogramName;
 %}
 
 %union {
@@ -68,7 +67,7 @@ char* actualSubprogramName;
 %type <rec> ifStatement if else elseifs elseif
 %type <rec> while for
 %type <rec> arrayDef commaSeparatedExpr arrayIndex
-%type <rec> proc params field subprogramCall arguments
+%type <rec> func proc params field subprogramCall arguments
 
 %start program
 
@@ -178,23 +177,17 @@ proc : PROC IDENTIFIER '(' ')' block
     check_subprogram_not_exists_already($2);
     insertSubprogramTable(&subprogramTable, $2, newSubprogram(NULL, NULL));
 
-    printf("-- PROC %s()\n", $2);
-
     char *code = formatStr("void %s() %s", $2, $5->code);
     $$ = createRecord(code, "", "");
 
     free($2);
     freeRecord($5);
     free(code);
-    free(actualSubprogramName);
-    actualSubprogramName = NULL;
   }
   | PROC IDENTIFIER '(' params ')' block
   {
     check_subprogram_not_exists_already($2);
     insertSubprogramTable(&subprogramTable, $2, newSubprogram($4->opt1, NULL));
-
-    printf("-- PROC %s(%s) [%s] L=%ld\n", $2, $4->opt1, $4->code, lookupSubprogramTable(&subprogramTable, $2)->parametersLength);
 
     char *code = formatStr("void %s(%s) %s", $2, $4->code, $6->code);
     $$ = createRecord(code, "", "");
@@ -203,13 +196,36 @@ proc : PROC IDENTIFIER '(' ')' block
     free($2);
     freeRecord($4);
     freeRecord($6);
-    free(actualSubprogramName);
-    actualSubprogramName = NULL;
   }
-  ;
 
+// TODO: verificar que tem return corretamente
 func : FUNC IDENTIFIER '(' ')' ':' type block
+  {
+    check_subprogram_not_exists_already($2);
+    insertSubprogramTable(&subprogramTable, $2, newSubprogram(NULL, $6->opt1));
+
+    char *code = formatStr("%s %s() %s", $6->code,$2, $7->code);
+    $$ = createRecord(code, "", "");
+
+    free($2);
+    freeRecord($6);
+    freeRecord($7);
+    free(code);
+  }
   | FUNC IDENTIFIER '(' params ')' ':' type block
+  {
+    check_subprogram_not_exists_already($2);
+    insertSubprogramTable(&subprogramTable, $2, newSubprogram($4->opt1, $7->opt1));
+
+    char *code = formatStr("%s %s(%s) %s", $7->code, $2, $4->code, $8->code);
+    $$ = createRecord(code, "", "");
+
+    free(code);
+    free($2);
+    freeRecord($4);
+    freeRecord($7);
+    freeRecord($8);
+  }
   ;
 
 params : field
