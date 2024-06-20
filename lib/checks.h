@@ -8,6 +8,9 @@ extern char *yytext;
 
 int yyerror(char *msg);
 
+void check_subprogram_exists(char *subprogram);
+void check_subprogram_not_exists_already(char *subprogram);
+
 void check_symbol_exists(char *id);
 void check_symbol_not_exists_already(char *id);
 // void check_expected_actual_type(record *expected, record *actual);

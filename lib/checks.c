@@ -2,16 +2,43 @@
 #include "record.h"
 #include "checks.h"
 #include "symbol_utils.h"
+#include "table/subprogram_table.h"
 #include <inttypes.h>
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdarg.h>
 
+extern struct SubprogramTable subprogramTable;
+
 int yyerror(char *msg)
 {
     fprintf(stderr, "Line %d: %s at '%s'\n", yylineno, msg, yytext);
     return 0;
+}
+
+void check_subprogram_exists(char *subprogram)
+{
+    struct SubprogramType *type = lookupSubprogramTable(&subprogramTable, subprogram);
+    if (type == NULL)
+    {
+        char *errorMsg = formatStr("Subprogram \"%s\" is not defined.\n", subprogram);
+        yyerror(errorMsg);
+        free(errorMsg);
+        exit(0);
+    }
+}
+
+void check_subprogram_not_exists_already(char *subprogram)
+{
+    struct SubprogramType *type = lookupSubprogramTable(&subprogramTable, subprogram);
+    if (type != NULL)
+    {
+        char *errorMsg = formatStr("Subprogram \"%s\" is already defined.\n", subprogram);
+        yyerror(errorMsg);
+        free(errorMsg);
+        exit(0);
+    }
 }
 
 void check_symbol_exists(char *id)

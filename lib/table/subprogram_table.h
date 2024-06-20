@@ -10,7 +10,7 @@ struct SubprogramTable
 
 struct SubprogramType
 {
-    char **parametersType;
+    char *parameters;
     size_t parametersLength;
 
     char *returnType;
@@ -27,3 +27,5 @@ struct SubprogramTableNode
 struct SubprogramTable createSubprogramTable(void);
 struct SubprogramType *lookupSubprogramTable(struct SubprogramTable *this, char *key);
 void insertSubprogramTable(struct SubprogramTable *this, char *key, struct SubprogramType type);
+
+struct SubprogramType newSubprogram(char *parameters, char *returnType);

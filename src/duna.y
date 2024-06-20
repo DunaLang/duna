@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "../../lib/table/subprogram_table.h"
 #include "../../lib/table/symbol_table.h"
 #include "../../lib/scope_stack.h"
 #include "../../lib/symbol_utils.h"
@@ -17,6 +18,9 @@ extern FILE * yyin;
 extern FILE * yyout;
 
 extern SymbolTable symbolTable;
+
+struct SubprogramTable subprogramTable;
+
 extern ScopeStack scopeStack;
 
 char* actualSubprogramName;
@@ -59,11 +63,12 @@ char* actualSubprogramName;
 %left MINUS PLUS
 %left PERCENTAGE SLASH ASTERISK
 
-%type <rec> declarations declaration varDecl proc
+%type <rec> declarations declaration varDecl
 %type <rec> block type expr pointer statements statement literal primary assignment compound_assignment
 %type <rec> ifStatement if else elseifs elseif
 %type <rec> while for
 %type <rec> arrayDef commaSeparatedExpr arrayIndex
+%type <rec> proc params field subprogramCall arguments
 
 %start program
 
@@ -86,7 +91,15 @@ program : { insertScope(&scopeStack, "GLOBAL", ""); } declarations
   };
 
 declarations : declaration
-  | declaration declarations
+  | declarations declaration
+  {
+    char *code = formatStr("%s\n%s", $1->code, $2->code);
+    $$ = createRecord(code, "", "");
+
+    free(code);
+    free($1);
+    free($2);
+  }
   ;
 
 declaration : varDecl
@@ -162,9 +175,10 @@ typedef : TYPEDEF type IDENTIFIER ';'
 
 proc : PROC IDENTIFIER '(' ')' block
   {
-    check_symbol_not_exists_already($2);
+    check_subprogram_not_exists_already($2);
+    insertSubprogramTable(&subprogramTable, $2, newSubprogram(NULL, NULL));
 
-    symbolInsert($2, "proc");
+    printf("-- PROC %s()\n", $2);
 
     char *code = formatStr("void %s() %s", $2, $5->code);
     $$ = createRecord(code, "", "");
@@ -176,11 +190,41 @@ proc : PROC IDENTIFIER '(' ')' block
     actualSubprogramName = NULL;
   }
   | PROC IDENTIFIER '(' params ')' block
+  {
+    check_subprogram_not_exists_already($2);
+    insertSubprogramTable(&subprogramTable, $2, newSubprogram($4->opt1, NULL));
+
+    printf("-- PROC %s(%s) [%s] L=%ld\n", $2, $4->opt1, $4->code, lookupSubprogramTable(&subprogramTable, $2)->parametersLength);
+
+    char *code = formatStr("void %s(%s) %s", $2, $4->code, $6->code);
+    $$ = createRecord(code, "", "");
+
+    free(code);
+    free($2);
+    freeRecord($4);
+    freeRecord($6);
+    free(actualSubprogramName);
+    actualSubprogramName = NULL;
+  }
   ;
 
 func : FUNC IDENTIFIER '(' ')' ':' type block
   | FUNC IDENTIFIER '(' params ')' ':' type block
   ;
+
+params : field
+  | params ',' field
+  {
+    char *code = formatStr("%s, %s", $1->code, $3->code);
+    char *opt = formatStr("%s, %s", $1->opt1, $3->opt1);
+
+    $$ = createRecord(code, opt, "");
+
+    free(opt);
+    free(code);
+    freeRecord($1);
+    free($3);
+  };
 
 enum : ENUM IDENTIFIER '{' enumValues '}'
   | ENUM IDENTIFIER '{' enumValues ',' '}'
@@ -195,6 +239,10 @@ enumValues : IDENTIFIER
 union : UNION IDENTIFIER '{' fields '}';
 
 struct : STRUCT IDENTIFIER '{' fields '}';
+
+fields : field ';'
+  | fields field ';'
+  ;
 
 statements : statement
   {
@@ -298,6 +346,13 @@ statement : varDecl
       freeRecord($2);
     }
   | subprogramCall ';'
+  {
+    char *code = formatStr("%s;", $1->code);
+    $$ = createRecord(code, "", "");
+
+    free(code);
+    freeRecord($1);
+  }
   ;
 
 assignment : IDENTIFIER ASSIGN expr
@@ -635,15 +690,25 @@ elseif : ELSE { insertScope(&scopeStack, generateVariable(), "" ); } IF '(' expr
     freeRecord($7);
   };
 
-fields : field ';'
-  | fields field ';'
-  ;
+field : type IDENTIFIER
+  {
+    check_symbol_not_exists_already($2);
+    if (strlen($1->prefix) > 1)
+    {
+      printf("Prefix=%s", $1->prefix);
+      printf("Operações com strings são inválidas em argumentos de subprogramas.");
+      exit(-1);
+    }
 
-params : field
-  | params ',' field
-  ;
+    symbolInsert($2, $1->opt1);
 
-field : type IDENTIFIER;
+    char *code = formatStr("%s %s", $1->code, $2);
+    $$ = createRecord(code, $1->opt1, "");
+
+    free(code);
+    freeRecord($1);
+    free($2);
+  };
 
 typequalifiers : typequalifier
   | typequalifiers typequalifier
@@ -665,7 +730,7 @@ type : USIZE { $$ = createRecord("size_t", "usize", ""); }
   | F32 { $$ = createRecord("float", "f32", ""); }
   | F64 { $$ = createRecord("double", "f64", ""); }
   | BOOL { $$ = createRecord("_Bool", "bool", ""); }
-  | STRING { $$ = createRecord("string", "string", ""); }
+  | STRING { $$ = createRecord("char*", "string", ""); }
   | CHAR { $$ = createRecord("char", "char", ""); }
   | IDENTIFIER { 
     $$ = createRecord($1, "", ""); free($1); yyerror("IDENTIFIER as type not supported"); }
@@ -1125,11 +1190,46 @@ arrayIndex : arrayDef '[' expr ']' {/* Não quero fazer isso, Nathãn! grr*/}
   ;
 
 subprogramCall : IDENTIFIER '(' ')'
+  {
+    check_subprogram_exists($1);
+    /// TODO: Check for procedure and function
+    // check args count match
+    // check args type with subprog params types
+
+    char *code = formatStr("%s()", $1);
+    $$ = createRecord(code, "", "");
+
+    free(code);
+    free($1);
+  }
   | IDENTIFIER '(' arguments ')'
+  {
+    check_subprogram_exists($1);
+    /// TODO: prefix
+    /// TODO: Check for procedure and function
+    // check args count match
+    // check args type with subprog params types
+
+    char *code = formatStr("%s(%s)", $1, $3->code);
+    $$ = createRecord(code, "", "");
+
+    free(code);
+    free($1);
+    freeRecord($3);
+  }
   ;
 
 arguments : expr 
-  | arguments ',' expr 
+  | arguments ',' expr
+  {
+    /// TODO: prefix
+    char *code = formatStr("%s, %s", $1->code, $3->code);
+    $$ = createRecord(code, "", "");
+
+    free(code);
+    freeRecord($1);
+    freeRecord($3);
+  }
   ;
 
 arrayDef : '{' commaSeparatedExpr '}' {
@@ -1207,6 +1307,7 @@ int main(int argc, char **argv) {
     }
 
     symbolTable = createSymbolTable();
+    subprogramTable = createSubprogramTable();
     scopeStack = createScopeStack();
 
     code = yyparse();

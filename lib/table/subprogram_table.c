@@ -1,4 +1,5 @@
 #include "subprogram_table.h"
+#include <stdio.h>
 #include <string.h>
 
 struct SubprogramTable createSubprogramTable(void)
@@ -56,4 +57,23 @@ void insertSubprogramTable(struct SubprogramTable *this, char *key, struct Subpr
     {
         previous->next = newSubprogramTableNode(key, type);
     }
+}
+
+struct SubprogramType newSubprogram(char *parameters, char *returnType)
+{
+    size_t parametersLength = 0;
+    if (parameters != NULL)
+    {
+        parametersLength += 1;
+        for (size_t i = 0; parameters[i]; i++)
+        {
+            parametersLength += parameters[i] == ',';
+        }
+    }
+
+    return (struct SubprogramType){
+        .parametersLength = parametersLength,
+        .parameters = (parameters == NULL) ? NULL : strdup(parameters),
+        .returnType = (returnType == NULL) ? NULL : strdup(returnType),
+    };
 }
