@@ -991,7 +991,11 @@ expr: primary {$$ = $1;} %prec UPRIMARY
   {
     if (!(isString($1) && isString($3)))
     {
-      printf("++, operands must be string\n");
+      char *errorMsg = formatStr(
+        "++, operands must be string. Actual: %s and %s\n",
+        $1->opt1, $3->opt1);
+      yyerror(errorMsg);
+      free(errorMsg);
       exit(0);
     }
 

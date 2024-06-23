@@ -345,7 +345,7 @@ record *castR(record *castTo, record *castFrom)
                 "%s\nint %s = snprintf(NULL, 0, \"%s\", %s);\nchar %s[%s + 1];\nsnprintf(%s, %s + 1, \"%s\", %s);\n",
                 castFrom->prefix, length, typeFormat, castFrom->code, casted_str, length, casted_str, length, typeFormat, castFrom->code);
 
-            return createRecord(casted_str, castTo->code, prefix);
+            return createRecord(casted_str, castTo->opt1, prefix);
             free(length);
             free(casted_str);
             free(prefix);
