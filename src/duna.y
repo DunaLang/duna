@@ -421,6 +421,15 @@ assignment : IDENTIFIER ASSIGN expr
     freeRecord($3);
   }
   | derreferencing ASSIGN expr
+  {
+    char *code = formatStr("%s%s = %s", $3->prefix, $1->code, $3->code);
+    $$ = createRecord(code, "", "");
+    check_expected_actual_type($1->opt1, $3->opt1);
+
+    free(code);
+    freeRecord($1);
+    freeRecord($3);
+  }
   | fieldAccess ASSIGN expr
   ;
 
