@@ -63,7 +63,7 @@ extern ScopeStack scopeStack;
 %left PERCENTAGE SLASH ASTERISK
 
 %type <rec> declarations declaration varDecl
-%type <rec> block type expr pointer statements statement literal primary assignment compound_assignment
+%type <rec> block type expr pointer statements statement literal primary assignment compound_assignment derreferencing
 %type <rec> ifStatement if else elseifs elseif
 %type <rec> while for
 %type <rec> arrayDef commaSeparatedExpr arrayIndex
@@ -869,7 +869,20 @@ primary : IDENTIFIER {
   }
   ;
 
-derreferencing : ASTERISK IDENTIFIER;
+derreferencing : ASTERISK IDENTIFIER
+  {
+    check_symbol_exists($2);
+    char* type = symbolLookup($2);
+    check_type_is_pointer(type);
+
+    char *code = formatStr("*%s", $2);
+    char *opt = formatStr("%.*s", strlen(type)-1, type);
+    $$ = createRecord(code, opt, "");
+
+    free(opt);
+    free(code);
+    free($2);
+  };
 
 literal : CHAR_LITERAL
   | STRING_LITERAL { $$ = createRecord($1, "string", ""); free($1); }

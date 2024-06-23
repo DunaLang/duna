@@ -23,3 +23,4 @@ void check_expected_actual_type(char *expected, char *actual);
 void check_operands_numeric(record *operand1, record *operand2, char *operat);
 void check_operands_boolean(record *operand1, record *operand2, char *operat);
 void check_coerce_to_expected_numeric(char *expected, char *actual);
+void check_type_is_pointer(char *type);

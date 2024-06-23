@@ -248,3 +248,12 @@ void check_coerce_to_expected_numeric(char *expected, char *actual)
         throws_cannot_coerce(expected, actual);
     }
 }
+
+void check_type_is_pointer(char *type)
+{
+    if (type[strlen(type) - 1] != '*')
+    {
+        yyerror("Expected pointer type");
+        exit(0);
+    }
+}
