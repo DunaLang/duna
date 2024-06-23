@@ -34,11 +34,11 @@ _Bool isBoolean(const record *rec)
 
 _Bool isNumeric(const record *rec)
 {
-    printf("Record code: %s\n", rec->code);
-    printf("Record type: %s\n", rec->opt1);
+    // printf("Record code: %s\n", rec->code);
+    // printf("Record type: %s\n", rec->opt1);
     _Bool isFloat = strcmp(rec->opt1, "f32") == 0 || strcmp(rec->opt1, "f64") == 0;
 
-    printf("Record result (isNumeric): %s\n-----\n", (isFloat || isInteger(rec) == 1 ? "true" : "false"));
+    // printf("Record result (isNumeric): %s\n-----\n", (isFloat || isInteger(rec) == 1 ? "true" : "false"));
     return isFloat || isInteger(rec);
 }
 

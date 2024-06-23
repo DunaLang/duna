@@ -67,7 +67,7 @@ extern ScopeStack scopeStack;
 %type <rec> ifStatement if else elseifs elseif
 %type <rec> while for
 %type <rec> arrayDef commaSeparatedExpr arrayIndex
-%type <rec> func proc params field subprogramCall arguments
+%type <rec> func proc params field subprogramCall arguments return
 
 %start program
 
@@ -106,7 +106,7 @@ declaration : varDecl
   | { insertScope(&scopeStack, generateVariable(), "proc"); }
   proc
   { $$ = $2; pop(&scopeStack); }
-  | func
+  | func { $$ = $1; pop(&scopeStack); }
   | enum
   | union
   | struct
@@ -198,33 +198,42 @@ proc : PROC IDENTIFIER '(' ')' block
     freeRecord($6);
   }
 
-// TODO: verificar que tem return corretamente
-func : FUNC IDENTIFIER '(' ')' ':' type block
+func : FUNC IDENTIFIER '(' ')' ':' type
   {
     check_subprogram_not_exists_already($2);
+    insertScope(&scopeStack, $2, "func");
     insertSubprogramTable(&subprogramTable, $2, newSubprogram(NULL, $6->opt1));
+  }
+  block
+  {
+    check_valid_return($8);
 
-    char *code = formatStr("%s %s() %s", $6->code,$2, $7->code);
+    char *code = formatStr("%s %s() %s", $6->code, $2, $8->code);
     $$ = createRecord(code, "", "");
 
     free($2);
     freeRecord($6);
-    freeRecord($7);
+    freeRecord($8);
     free(code);
   }
-  | FUNC IDENTIFIER '(' params ')' ':' type block
+  | FUNC IDENTIFIER '(' params ')' ':' type
   {
     check_subprogram_not_exists_already($2);
-    insertSubprogramTable(&subprogramTable, $2, newSubprogram($4->opt1, $7->opt1));
+    insertScope(&scopeStack, $2, "func");
+    insertSubprogramTable(&subprogramTable, $2, newSubprogram(NULL, $7->opt1));
+  }
+  block
+  {
+    check_valid_return($7);
 
-    char *code = formatStr("%s %s(%s) %s", $7->code, $2, $4->code, $8->code);
+    char *code = formatStr("%s %s(%s) %s", $7->code, $2, $4->code, $9->code);
     $$ = createRecord(code, "", "");
 
     free(code);
     free($2);
     freeRecord($4);
     freeRecord($7);
-    freeRecord($8);
+    freeRecord($9);
   }
   ;
 
@@ -260,15 +269,12 @@ fields : field ';'
   | fields field ';'
   ;
 
-statements : statement
-  {
-    $$ = createRecord($1->code, "", "");
-    freeRecord($1);
-  }
+statements : statement { $$ = $1; }
   | statements statement
   {
     char *code = formatStr("%s\n%s", $1->code, $2->code);
-    $$ = createRecord(code, "", "");
+    char *opt = (strstr($1->opt1, "return") != NULL || strstr($2->opt1, "return") != NULL) ? "return" : "";
+    $$ = createRecord(code, opt, "");
 
     freeRecord($1);
     freeRecord($2);
@@ -355,7 +361,7 @@ statement : varDecl
     {
       Scope *scope = top(&scopeStack, 0);
       char *code = formatStr("%s\nend_%s:;", $2->code, scope->name);
-      $$ = createRecord(code, "", "");
+      $$ = createRecord(code, $2->opt1, "");
       pop(&scopeStack);
 
       free(code);
@@ -457,7 +463,7 @@ while : WHILE '(' expr ')' block
     $3->prefix, scope->name, $3->code, scope->name, $5->code, scope->name, scope->name
   );
 
-  $$ = createRecord(code, "", "");
+  $$ = createRecord(code, $5->opt1, "");
 
   freeRecord($3);
   freeRecord($5);
@@ -472,7 +478,7 @@ for : FOR '(' ';' ';' ')' block
       "begin_%s:%s\npre_end_%s:;\ngoto begin_%s;\nend_%s:;",
       scopeName, $6->code, scopeName, scopeName, scopeName
     );
-    $$ = createRecord(code, "", "");
+    $$ = createRecord(code, $6->opt1, "");
 
     freeRecord($6);
     free(code);
@@ -493,7 +499,7 @@ for : FOR '(' ';' ';' ')' block
       "%s{\n%s\nbegin_%s:\nif (!(%s)) goto end_%s;\n%s\npre_end_%s:;\n%s\ngoto begin_%s;\n}\nend_%s:;",
       $4->prefix, $3->code, scopeName, $4->code, scopeName, $8->code, scopeName, $6->code, scopeName, scopeName
     );
-    $$ = createRecord(code, "", "");
+    $$ = createRecord(code, $6->opt1, "");
 
     freeRecord($3);
     freeRecord($4);
@@ -517,7 +523,7 @@ for : FOR '(' ';' ';' ')' block
       "%s{\nbegin_%s:\nif (!(%s)) goto end_%s;\n%s\npre_end_%s:;\n%s\ngoto begin_%s;\n}\nend_%s:;",
       $4->prefix, scopeName, $4->code, scopeName, $8->code, scopeName, $6->code, scopeName, scopeName
     );
-    $$ = createRecord(code, "", "");
+    $$ = createRecord(code, $8->opt1, "");
 
     freeRecord($4);
     freeRecord($6);
@@ -532,7 +538,7 @@ for : FOR '(' ';' ';' ')' block
       "{\nbegin_%s:\n%s\npre_end_%s:;\n%s\ngoto begin_%s;\n}\nend_%s:;",
       scopeName, $7->code, scopeName, $5->code, scopeName, scopeName
     );
-    $$ = createRecord(code, "", "");
+    $$ = createRecord(code, $7->opt1, "");
 
     freeRecord($5);
     freeRecord($7);
@@ -546,7 +552,7 @@ for : FOR '(' ';' ';' ')' block
       "{\n%s\nbegin_%s:\n%s\npre_end_%s:;\ngoto begin_%s;\n}\nend_%s:;",
       $3->code, scopeName, $6->code, scopeName, scopeName, scopeName
     );
-    $$ = createRecord(code, "", "");
+    $$ = createRecord(code, $6->opt1, "");
 
     freeRecord($3);
     freeRecord($6);
@@ -568,7 +574,7 @@ for : FOR '(' ';' ';' ')' block
       "%s{\n%s\nbegin_%s:\nif (!(%s)) goto end_%s;\n%s\npre_end_%s:;\ngoto begin_%s;\n}\nend_%s:;",
       $4->prefix, $3->code, scopeName, $4->code, scopeName, $7->code, scopeName, scopeName, scopeName
     );
-    $$ = createRecord(code, "", "");
+    $$ = createRecord(code, $7->opt1, "");
 
     freeRecord($3);
     freeRecord($4);
@@ -591,7 +597,7 @@ for : FOR '(' ';' ';' ')' block
       "%s{\nbegin_%s:\nif (!(%s)) goto end_%s;\n%s\npre_end_%s:;\ngoto begin_%s;\n}\nend_%s:;",
       $4->prefix, scopeName, $4->code, scopeName, $7->code, scopeName, scopeName, scopeName
     );
-    $$ = createRecord(code, "", "");
+    $$ = createRecord(code, $7->opt1, "");
 
     freeRecord($4);
     freeRecord($7);
@@ -615,14 +621,38 @@ multipleMatchLeft : literal
   ;
 
 return : RETURN ';'
+  {
+    check_current_scope_is_procedure();
+    $$ = createRecord("return;", "return", "");
+  }
   | RETURN expr ';'
+  {
+    check_current_scope_is_function();
+
+    Scope *scope = nearestFunction(&scopeStack);
+    struct SubprogramType *type = lookupSubprogramTable(&subprogramTable, scope->name);
+    char *resultType = type->returnType;
+
+    char *exprType = $2->opt1;
+    if (!(isNumeric($2) && isNumeric(createRecord("", resultType, "")) && resultNumericType(resultType, $2->opt1))) {
+      check_expected_actual_type(resultType, exprType);
+    }
+
+    char *code = formatStr("%sreturn %s;", $2->prefix, $2->code);
+    $$ = createRecord("return;", "return", "");
+
+    free(code);
+    freeRecord($2);
+  }
   ;
 
 ifStatement : if
   | if else
   {
     char *code = formatStr("%s\n%s", $1->code, $2->code);
-    $$ = createRecord(code, "", "");
+    char *opt = (strstr($1->opt1, "return") != NULL && strstr($2->opt1, "return") != NULL) ? "return" : "";
+    $$ = createRecord(code, opt, "");
+
     free(code);
     freeRecord($1);
     freeRecord($2);
@@ -630,7 +660,9 @@ ifStatement : if
   | if elseifs
   {
     char *code = formatStr("%s\n%s", $1->code, $2->code);
-    $$ = createRecord(code, "", "");
+    char *opt = (strstr($1->opt1, "return") != NULL && strstr($2->opt1, "return") != NULL) ? "return" : "";
+    $$ = createRecord(code, opt, "");
+
     free(code);
     freeRecord($1);
     freeRecord($2);
@@ -638,7 +670,9 @@ ifStatement : if
   | if elseifs else
   {
     char *code = formatStr("%s\n%s%s", $1->code, $2->code, $3->code);
-    $$ = createRecord(code, "", "");
+    char *opt = (strstr($1->opt1, "return") != NULL && strstr($2->opt1, "return") != NULL && strstr($3->opt1, "return") != NULL) ? "return" : "";
+    $$ = createRecord(code, opt, "");
+
     free(code);
     freeRecord($1);
     freeRecord($2);
@@ -661,7 +695,7 @@ if : { insertScope(&scopeStack, generateVariable(), "" ); }
     Scope *outer = top(&scopeStack, 1);
     char* s1 = formatStr("%sif (!(%s)) goto end_%s;\n%s\ngoto end_%s;\nend_%s:;", $4->prefix, $4->code, scope->name, $6->code, outer->name, scope->name);
 
-    $$ = createRecord(s1, "", "");
+    $$ = createRecord(s1, $6->opt1, "");
 
     pop(&scopeStack);
 
@@ -677,7 +711,9 @@ elseifs : elseif
   | elseifs elseif
   {
     char *code = formatStr("%s\n%s", $1->code, $2->code);
-    $$ = createRecord(code, "", "");
+    char *opt = (strstr($1->opt1, "return") != NULL && strstr($2->opt1, "return") != NULL) ? "return" : "";
+    $$ = createRecord(code, opt, "");
+
     free(code);
     freeRecord($1);
     freeRecord($2);
@@ -697,7 +733,7 @@ elseif : ELSE { insertScope(&scopeStack, generateVariable(), "" ); } IF '(' expr
     Scope *outer = top(&scopeStack, 1);
     char *code = formatStr("%sif (!(%s)) goto end_%s;\n%s\ngoto end_%s;\nend_%s:;", $5->prefix, $5->code, scope->name, $7->code, outer->name, scope->name);
 
-    $$ = createRecord(code, "", "");
+    $$ = createRecord(code, $7->opt1, "");
 
     pop(&scopeStack);
 
@@ -711,7 +747,7 @@ field : type IDENTIFIER
     check_symbol_not_exists_already($2);
     if (strlen($1->prefix) > 1)
     {
-      printf("Prefix=%s", $1->prefix);
+      // printf("Prefix=%s", $1->prefix);
       printf("Operações com strings são inválidas em argumentos de subprogramas.");
       exit(-1);
     }
@@ -1311,7 +1347,7 @@ block : '{' '}' { $$ = createRecord("{}", "", ""); }
     char *deallocationCode = deallocationCodeCurrentScope(&scopeStack);
     char *code = formatStr("{\n%s\n%s}", $2->code, (deallocationCode == NULL) ? "" : deallocationCode);
 
-    $$ = createRecord(code, "", "");
+    $$ = createRecord(code, $2->opt1, "");
 
     freeRecord($2);
     free(code);

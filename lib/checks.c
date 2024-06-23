@@ -1,6 +1,7 @@
 #include "utils.h"
 #include "record.h"
 #include "checks.h"
+#include "scope_stack.h"
 #include "symbol_utils.h"
 #include "table/subprogram_table.h"
 #include <inttypes.h>
@@ -10,6 +11,7 @@
 #include <stdio.h>
 #include <stdarg.h>
 
+extern struct ScopeStack scopeStack;
 extern struct SubprogramTable subprogramTable;
 
 int yyerror(char *msg)
@@ -110,6 +112,35 @@ void check_subprogram_params_type_match(char *subprogram, char *arguments)
             current_arg = end_arg + 1;
             current_param = end_param + 1;
         }
+    }
+}
+
+void check_valid_return(struct record *r)
+{
+    if (r->opt1 == NULL || strstr(r->opt1, "return") == NULL)
+    {
+        yyerror("Function does not have valid return statements.\n");
+        exit(0);
+    }
+}
+
+void check_current_scope_is_procedure()
+{
+    struct Scope *scope = nearestProcedure(&scopeStack);
+    if (!scope || strcmp(scope->type, "proc") != 0)
+    {
+        yyerror("Current subprogram is not a procedure.\n");
+        exit(0);
+    }
+}
+
+void check_current_scope_is_function()
+{
+    struct Scope *scope = nearestFunction(&scopeStack);
+    if (!scope || strcmp(scope->type, "func") != 0)
+    {
+        yyerror("Current subprogram is not a function.\n");
+        exit(0);
     }
 }
 

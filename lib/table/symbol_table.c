@@ -20,14 +20,14 @@ SymbolTable createSymbolTable(void)
 char *lookup(SymbolTable *table, char *key)
 {
     size_t index = hash(key);
-    printf("Key=%s; Hash=%ld\n", key, index);
+    // printf("Key=%s; Hash=%ld\n", key, index);
     SymbolTableNode *node = table->nodes[index];
     while (node != NULL)
     {
-        printf("Node: %s, %s\n", node->key, node->value);
+        // printf("Node: %s, %s\n", node->key, node->value);
         if (strcmp(key, node->key) == 0)
         {
-            printf("Identifier '%s' found. Type: %s\n", node->key, node->value);
+            // printf("Identifier '%s' found. Type: %s\n", node->key, node->value);
             return node->value;
         }
         node = node->next;
@@ -38,7 +38,7 @@ char *lookup(SymbolTable *table, char *key)
 
 void insert(SymbolTable *table, char *key, char *type)
 {
-    printf("Creating new node: %s\n", key);
+    // printf("Creating new node: %s\n", key);
     size_t index = hash(key);
     // printf("Hash: %ld\n", index);
     SymbolTableNode *node = table->nodes[index];
@@ -63,5 +63,5 @@ void insert(SymbolTable *table, char *key, char *type)
     {
         previous->next = newNode;
     }
-    printf("New node: %s, %s\n", newNode->key, newNode->value);
+    // printf("New node: %s, %s\n", newNode->key, newNode->value);
 }

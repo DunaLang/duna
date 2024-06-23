@@ -11,6 +11,10 @@ int yyerror(char *msg);
 void check_subprogram_exists(char *subprogram);
 void check_subprogram_not_exists_already(char *subprogram);
 void check_subprogram_params_type_match(char *subprogram, char *arguments);
+void check_valid_return(struct record *r);
+
+void check_current_scope_is_procedure();
+void check_current_scope_is_function();
 
 void check_symbol_exists(char *id);
 void check_symbol_not_exists_already(char *id);
