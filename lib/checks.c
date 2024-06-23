@@ -4,6 +4,7 @@
 #include "scope_stack.h"
 #include "symbol_utils.h"
 #include "table/subprogram_table.h"
+#include "table/struct_table.h"
 #include <inttypes.h>
 #include <stdbool.h>
 #include <string.h>
@@ -13,6 +14,7 @@
 
 extern struct ScopeStack scopeStack;
 extern struct SubprogramTable subprogramTable;
+extern struct StructTable structTable;
 
 int yyerror(char *msg)
 {
@@ -140,6 +142,30 @@ void check_current_scope_is_function()
     if (!scope || strcmp(scope->type, "func") != 0)
     {
         yyerror("Current subprogram is not a function.\n");
+        exit(0);
+    }
+}
+
+void check_struct_exists(char *structName)
+{
+    struct StructTableNode *node = lookupStructTable(&structTable, structName);
+    if (node == NULL)
+    {
+        char *errorMsg = formatStr("Struct \"%s\" is not defined.\n", structName);
+        yyerror(errorMsg);
+        free(errorMsg);
+        exit(1);
+    }
+}
+
+void check_struct_not_exists_already(char *structName)
+{
+    struct StructTableNode *node = lookupStructTable(&structTable, structName);
+    if (node != NULL)
+    {
+        char *errorMsg = formatStr("Struct \"%s\" is already defined.\n", structName);
+        yyerror(errorMsg);
+        free(errorMsg);
         exit(0);
     }
 }

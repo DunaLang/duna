@@ -16,6 +16,9 @@ void check_valid_return(struct record *r);
 void check_current_scope_is_procedure();
 void check_current_scope_is_function();
 
+void check_struct_exists(char *structName);
+void check_struct_not_exists_already(char *structName);
+
 void check_symbol_exists(char *id);
 void check_symbol_not_exists_already(char *id);
 // void check_expected_actual_type(record *expected, record *actual);

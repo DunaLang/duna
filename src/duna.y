@@ -6,6 +6,7 @@
 
 #include "../../lib/table/subprogram_table.h"
 #include "../../lib/table/symbol_table.h"
+#include "../../lib/table/struct_table.h"
 #include "../../lib/scope_stack.h"
 #include "../../lib/symbol_utils.h"
 #include "../../lib/record.h"
@@ -22,6 +23,8 @@ extern SymbolTable symbolTable;
 struct SubprogramTable subprogramTable;
 
 extern ScopeStack scopeStack;
+
+struct StructTable structTable;
 
 %}
 
@@ -67,7 +70,8 @@ extern ScopeStack scopeStack;
 %type <rec> ifStatement if else elseifs elseif
 %type <rec> while for
 %type <rec> arrayDef commaSeparatedExpr arrayIndex
-%type <rec> func proc params field subprogramCall arguments return
+%type <rec> func proc params param subprogramCall arguments return
+%type <rec> struct fields field compoundTypeFields compoundTypeDef fieldAccess
 
 %start program
 
@@ -111,13 +115,12 @@ declaration : varDecl
   | func { $$ = $1; pop(&scopeStack); }
   | enum
   | union
-  | struct
+  | struct {$$ = $1;}
   ;
 
 varDecl : type IDENTIFIER ';'
   {
     check_symbol_not_exists_already($2);
-
     char *code = formatStr("%s %s", $1->code, $2);
 
     if (isString($1))
@@ -235,7 +238,7 @@ func : FUNC IDENTIFIER '(' ')' ':' type
   }
   block
   {
-    check_valid_return($7);
+    check_valid_return($9);
 
     char *code = formatStr("%s %s(%s) %s", $7->code, $2, $4->code, $9->code);
     $$ = createRecord(code, "", "");
@@ -248,8 +251,8 @@ func : FUNC IDENTIFIER '(' ')' ':' type
   }
   ;
 
-params : field
-  | params ',' field
+params : param
+  | params ',' param
   {
     char *code = formatStr("%s, %s", $1->code, $3->code);
     char *opt = formatStr("%s,%s", $1->opt1, $3->opt1);
@@ -274,10 +277,34 @@ enumValues : IDENTIFIER
 
 union : UNION IDENTIFIER '{' fields '}';
 
-struct : STRUCT IDENTIFIER '{' fields '}';
+struct : STRUCT IDENTIFIER '{' fields '}' {
+  check_struct_not_exists_already($2);
+  int *fieldsLength = malloc(sizeof(int*));
+  *fieldsLength = 0;
+  struct StructField *fields = extractFields($4->prefix, $4->opt1, fieldsLength);
+  insertStructTable(&structTable, $2, fields, *fieldsLength);
+  char *code = formatStr("struct %s {\n%s\n};", $2, $4->code);
+  $$ = createRecord(code, "", "");
+  freeRecord($4);
+}
+;
 
-fields : field ';'
-  | fields field ';'
+fields : field ';' {
+    char *code = formatStr("%s;", $1->code);
+    $$ = createRecord(code, $1->opt1, $1->prefix); 
+    free($1);
+  }
+  | fields field ';' {
+    char *code = formatStr("%s\n%s;", $1->code, $2->code);
+    char *opt = formatStr("%s;%s", $1->opt1, $2->opt1);
+    char *prefix = formatStr("%s;%s", $1->prefix, $2->prefix);
+    $$ = createRecord(code, opt, prefix); 
+    freeRecord($1);
+    freeRecord($2);
+    free(code);
+    free(opt);
+    free(prefix);
+  }
   ;
 
 statements : statement { $$ = $1; }
@@ -436,7 +463,14 @@ assignment : IDENTIFIER ASSIGN expr
     freeRecord($1);
     freeRecord($3);
   }
-  | fieldAccess ASSIGN expr
+  | fieldAccess ASSIGN expr {
+    check_expected_actual_type($1->opt1, $3->opt1);
+    char *code = formatStr("%s%s = %s", $3->prefix, $1->code, $3->code);
+    $$ = createRecord(code, "", "");
+    free(code);
+    freeRecord($1);
+    freeRecord($3);
+  }
   ;
 
 compound_assignment : assignment {$$ = $1;}
@@ -762,7 +796,7 @@ elseif : ELSE { insertScope(&scopeStack, generateVariable(), "" ); } IF '(' expr
     freeRecord($7);
   };
 
-field : type IDENTIFIER
+param : type IDENTIFIER
   {
     check_symbol_not_exists_already($2);
     if (strlen($1->prefix) > 1)
@@ -775,12 +809,26 @@ field : type IDENTIFIER
     symbolInsert($2, $1->opt1);
 
     char *code = formatStr("%s %s", $1->code, $2);
-    $$ = createRecord(code, $1->opt1, "");
+    $$ = createRecord(code, $1->opt1, $2);
 
     free(code);
     freeRecord($1);
     free($2);
   };
+field: type IDENTIFIER {
+    if (strlen($1->prefix) > 1)
+    {
+      printf("Operações com strings são inválidas em structs.");
+      exit(-1);
+    }
+
+    char *code = formatStr("%s %s", $1->code, $2);
+    $$ = createRecord(code, $1->opt1, $2);
+
+    free(code);
+    freeRecord($1);
+    free($2);
+};
 
 typequalifiers : typequalifier
   | typequalifiers typequalifier
@@ -804,8 +852,13 @@ type : USIZE { $$ = createRecord("size_t", "usize", ""); }
   | BOOL { $$ = createRecord("_Bool", "bool", ""); }
   | STRING { $$ = createRecord("char*", "string", ""); }
   | CHAR { $$ = createRecord("char", "char", ""); }
-  | IDENTIFIER { 
-    $$ = createRecord($1, "", ""); free($1); yyerror("IDENTIFIER as type not supported"); }
+  | IDENTIFIER {
+      check_struct_exists($1); 
+      char *code = formatStr("struct %s", $1);
+      $$ = createRecord(code, $1, ""); 
+      free($1); 
+      free(code); 
+    }
   | '[' expr ']' type %prec ARRAY_TYPE
   {
     if ($2->prefix && strlen($2->prefix) > 1)
@@ -878,8 +931,8 @@ primary : IDENTIFIER {
     freeRecord($1);
   }
   | enumDef
-  | compoundTypeDef
-  | fieldAccess
+  | compoundTypeDef {$$ = $1; }
+  | fieldAccess { $$ = $1; }
   | derreferencing
   | READ '(' ')'
   {
@@ -1274,8 +1327,7 @@ expr: primary {$$ = $1;} %prec UPRIMARY
   | MINUS expr %prec UMINUS
   ;
 
-arrayIndex : arrayDef '[' expr ']' {/* Não quero fazer isso, Nathãn! grr*/}
-  | IDENTIFIER '[' expr ']' {
+arrayIndex : IDENTIFIER '[' expr ']' {
     char* type = symbolLookup($1);
     check_symbol_exists($1);
     if(!isInteger($3)) {
@@ -1382,16 +1434,91 @@ commaSeparatedExpr : expr {$$ = createRecord($1->code, $1->opt1, $1->prefix);}
 enumDef : IDENTIFIER DOUBLE_COLON IDENTIFIER ;
 
 compoundTypeDef : IDENTIFIER '{' '}'
-  | IDENTIFIER '{' compoundTypeFields '}'
+  {
+    char *code = formatStr("(struct %s) {}", $1);
+    $$ = createRecord(code, $1, "");
+    free(code);
+  }
+  | IDENTIFIER '{' { insertScope(&scopeStack, $1, "struct"); } compoundTypeFields { pop(&scopeStack); } '}' {
+    char *code = formatStr("(struct %s) { %s }", $1, $4->code);
+    $$ = createRecord(code, $1, "");
+    free(code);
+    freeRecord($4);
+  }
   ;
 
-compoundTypeFields : type ':' expr
-  | type ':' expr ','
-  | type ':' expr ',' compoundTypeFields
+compoundTypeFields : IDENTIFIER ':' expr
+  {
+    Scope *scope = top(&scopeStack, 0);
+    if(strcmp(scope->type, "struct") != 0) {
+      yyerror("Bad scope");
+      exit(1);
+    }
+
+    struct StructField *field = lookupStructField(&structTable, scope->name, $1);
+    check_expected_actual_type(field->type, $3->opt1);
+    char *code = formatStr(".%s = %s", $1, $3->code);
+    $$ = createRecord(code, "", "");
+    free(code);
+    freeRecord($3);
+  }
+  | IDENTIFIER ':' expr ',' {
+    Scope *scope = top(&scopeStack, 0);
+    if(strcmp(scope->type, "struct") != 0) {
+      yyerror("Bad scope");
+      exit(1);
+    }
+    struct StructField *field = lookupStructField(&structTable, scope->name, $1);
+    check_expected_actual_type(field->type, $3->opt1);
+    char *code = formatStr(".%s = %s", $1, $3->code);
+    $$ = createRecord(code, "", "");
+    free(code);
+    freeRecord($3);
+  }
+  | IDENTIFIER ':' expr ',' compoundTypeFields {
+    Scope *scope = top(&scopeStack, 0);
+    if(strcmp(scope->type, "struct") != 0) {
+      yyerror("Bad scope");
+      exit(1);
+    }
+    struct StructField *field = lookupStructField(&structTable, scope->name, $1);
+    check_expected_actual_type(field->type, $3->opt1);
+    char *code = formatStr(".%s = %s,\n%s", $1, $3->code, $5->code);
+    $$ = createRecord(code, "", "");
+    free(code);
+    freeRecord($3);
+    freeRecord($5);
+  }
   ;
 
 fieldAccess : IDENTIFIER '.' IDENTIFIER
+  {
+    check_symbol_exists($1);
+    char* structType = symbolLookup($1);
+
+    check_struct_exists(structType);
+
+    struct StructField *field = lookupStructField(&structTable, structType, $3);
+    if (!field)
+    {
+      char *errorMsg = formatStr("Field \"%s\" of struct \"%s\" is not defined.\n", $3, structType);
+      yyerror(errorMsg);
+      free(errorMsg);
+      exit(1);
+    }
+
+    char *code = formatStr("%s.%s", $1, $3);
+    $$ = createRecord(code, field->type, "");
+
+    free(code);
+    free($1);
+    free($3);
+  }
   | fieldAccess '.' IDENTIFIER
+  {
+    // Lookup struct $1 (checar parte do struct que importa)
+    // Lookup struct field $3
+  }
   ;
 
 block : '{' '}' { $$ = createRecord("{}", "", ""); }
@@ -1428,6 +1555,7 @@ int main(int argc, char **argv) {
     symbolTable = createSymbolTable();
     subprogramTable = createSubprogramTable();
     scopeStack = createScopeStack();
+    structTable = createStructTable();
 
     code = yyparse();
 
