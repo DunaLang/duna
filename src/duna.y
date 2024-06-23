@@ -232,7 +232,7 @@ params : field
   | params ',' field
   {
     char *code = formatStr("%s, %s", $1->code, $3->code);
-    char *opt = formatStr("%s, %s", $1->opt1, $3->opt1);
+    char *opt = formatStr("%s,%s", $1->opt1, $3->opt1);
 
     $$ = createRecord(code, opt, "");
 
@@ -1208,9 +1208,8 @@ arrayIndex : arrayDef '[' expr ']' {/* Não quero fazer isso, Nathãn! grr*/}
 subprogramCall : IDENTIFIER '(' ')'
   {
     check_subprogram_exists($1);
+    check_subprogram_params_type_match($1, NULL);
     /// TODO: Check for procedure and function
-    // check args count match
-    // check args type with subprog params types
 
     char *code = formatStr("%s()", $1);
     $$ = createRecord(code, "", "");
@@ -1221,10 +1220,9 @@ subprogramCall : IDENTIFIER '(' ')'
   | IDENTIFIER '(' arguments ')'
   {
     check_subprogram_exists($1);
+    check_subprogram_params_type_match($1, $3->opt1);
     /// TODO: prefix
     /// TODO: Check for procedure and function
-    // check args count match
-    // check args type with subprog params types
 
     char *code = formatStr("%s(%s)", $1, $3->code);
     $$ = createRecord(code, "", "");
@@ -1240,8 +1238,10 @@ arguments : expr
   {
     /// TODO: prefix
     char *code = formatStr("%s, %s", $1->code, $3->code);
-    $$ = createRecord(code, "", "");
+    char *opt1 = formatStr("%s,%s", $1->opt1, $3->opt1);
+    $$ = createRecord(code, opt1, "");
 
+    free(opt1);
     free(code);
     freeRecord($1);
     freeRecord($3);

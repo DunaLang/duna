@@ -4,6 +4,7 @@
 #include "symbol_utils.h"
 #include "table/subprogram_table.h"
 #include <inttypes.h>
+#include <stdbool.h>
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -38,6 +39,77 @@ void check_subprogram_not_exists_already(char *subprogram)
         yyerror(errorMsg);
         free(errorMsg);
         exit(0);
+    }
+}
+
+void check_subprogram_params_type_match(char *subprogram, char *arguments)
+{
+    // É implícito que o subprograma exista, mas apenas para garantir
+    check_subprogram_exists(subprogram);
+
+    struct SubprogramType *type = lookupSubprogramTable(&subprogramTable, subprogram);
+
+    size_t expected_argc = type->parametersLength;
+    size_t actual_argc = (arguments == NULL) ? 0 : countCharacter(arguments, ',') + 1;
+
+    if (expected_argc != actual_argc)
+    {
+        char *errorMsg = formatStr("Function call parameters mismatch. Expected: %d. Actual: %d.\n", expected_argc, actual_argc);
+        yyerror(errorMsg);
+        free(errorMsg);
+        exit(0);
+    }
+
+    if (actual_argc == 0)
+    {
+        return;
+    }
+
+    char *current_arg = arguments;
+    char *current_param = type->parameters;
+    while (true)
+    {
+        char *end_arg = strchr(current_arg, ',');
+        char *end_param = strchr(current_param, ',');
+
+        if (!current_arg)
+        {
+            break;
+        }
+
+        if (end_arg == NULL || end_param == NULL)
+        {
+            if (strcmp(current_arg, current_param) != 0)
+            {
+                char *errorMsg = formatStr(
+                    "Function call argument type mismatch. Expected: %s. Actual: %s.\n",
+                    current_param,
+                    current_arg);
+                yyerror(errorMsg);
+                free(errorMsg);
+                exit(0);
+            }
+            return;
+        }
+        else
+        {
+            int arg_diff = end_arg - current_arg;
+            int param_diff = end_param - current_param;
+
+            if (arg_diff != param_diff || strncmp(current_arg, current_param, arg_diff) != 0)
+            {
+                char *errorMsg = formatStr(
+                    "Function call argument type mismatch. Expected: %.*s. Actual: %.*s.\n",
+                    param_diff, current_param,
+                    arg_diff, current_arg);
+                yyerror(errorMsg);
+                free(errorMsg);
+                exit(0);
+            }
+
+            current_arg = end_arg + 1;
+            current_param = end_param + 1;
+        }
     }
 }
 

@@ -1,4 +1,5 @@
 #include "subprogram_table.h"
+#include "../utils.h"
 #include <stdio.h>
 #include <string.h>
 
@@ -64,11 +65,7 @@ struct SubprogramType newSubprogram(char *parameters, char *returnType)
     size_t parametersLength = 0;
     if (parameters != NULL)
     {
-        parametersLength += 1;
-        for (size_t i = 0; parameters[i]; i++)
-        {
-            parametersLength += parameters[i] == ',';
-        }
+        parametersLength = countCharacter(parameters, ',') + 1;
     }
 
     return (struct SubprogramType){

@@ -392,3 +392,13 @@ record *castR(record *castTo, record *castFrom)
         free(code);
     }
 }
+
+int countCharacter(char *str, char c)
+{
+    int total = 0;
+    for (size_t i = 0; str[i]; i++)
+    {
+        total += str[i] == c;
+    }
+    return total;
+}
