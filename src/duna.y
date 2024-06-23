@@ -808,7 +808,15 @@ type : USIZE { $$ = createRecord("size_t", "usize", ""); }
     $$ = createRecord($1, "", ""); free($1); yyerror("IDENTIFIER as type not supported"); }
   | '[' expr ']' type %prec ARRAY_TYPE
   {
-    if(!isInteger($2)) {
+    if ($2->prefix && strlen($2->prefix) > 1)
+    {
+      char *errorMsg = formatStr("String operation in types is not permitted.");
+      yyerror(errorMsg);
+      exit(1);
+    }
+
+    if (!isInteger($2))
+    {
       char *errorMsg = formatStr("Type error: expected %s to be numeric but instead got: %s", $2->code, $2->opt1);
       yyerror(errorMsg);
       exit(1);
