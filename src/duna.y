@@ -145,6 +145,11 @@ varDecl : type IDENTIFIER ';'
 
     symbolInsert($2, $1->opt1);
 
+    if (!isNumeric($4))
+    {
+      check_expected_actual_type($1->opt1, $4->opt1);
+    }
+
     if (isString($4))
     {
       char *code = formatStr("%schar *%s = strdup(%s)", $4->prefix, $2, $4->code);
@@ -811,15 +816,17 @@ type : USIZE { $$ = createRecord("size_t", "usize", ""); }
     $$ = createRecord("[]", $3->opt1, $3->code);
     freeRecord($3);
   }
-  | pointer { $$ = createRecord($1->code, "", ""); freeRecord($1); }
+  | pointer
   ;
 
 pointer : type ASTERISK
   {
     char *code = formatStr("%s*", $1->code);
-    $$ = createRecord(code, "", "");
+    char *opt = formatStr("%s*", $1->opt1);
+    $$ = createRecord(code, opt, "");
 
     freeRecord($1);
+    free(opt);
     free(code);
   };
 
@@ -1074,6 +1081,16 @@ expr: primary {$$ = $1;} %prec UPRIMARY
     freeRecord($8);
   }
   | AMPERSAND expr %prec UAMPERSAND
+  {
+    char *code = formatStr("&%s", $2->code);
+    char *opt = formatStr("%s*", $2->opt1);
+
+    $$ = createRecord(code, opt, $2->prefix);
+
+    free(opt);
+    free(code);
+    freeRecord($2);
+  }
   | NOT expr %prec UNOT
   | HASHTAG expr %prec UHASHTAG {
     check_symbol_exists($2->code);
