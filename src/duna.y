@@ -86,6 +86,8 @@ program : { insertScope(&scopeStack, "GLOBAL", ""); } declarations
     fprintf(yyout, "%s\n", $2->code);
     freeRecord($2);
 
+    check_main_procedure();
+
     pop(&scopeStack);
   };
 

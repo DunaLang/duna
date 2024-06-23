@@ -257,3 +257,13 @@ void check_type_is_pointer(char *type)
         exit(0);
     }
 }
+
+void check_main_procedure()
+{
+    struct SubprogramType *type = lookupSubprogramTable(&subprogramTable, "main");
+    if (!type || type->returnType || type->parametersLength > 0)
+    {
+        yyerror("procedure \"main\" with no args not found.\n");
+        exit(0);
+    }
+}
