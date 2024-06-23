@@ -364,7 +364,7 @@ record *castR(record *castTo, record *castFrom)
             }
             else if (castTo->code[0] == 'u')
             {
-                char *code = formatStr("atoull(%s)", castFrom->code);
+                char *code = formatStr("atoll(%s)", castFrom->code);
                 return createRecord(code, castTo->opt1, castFrom->prefix);
                 free(code);
             }

@@ -1,21 +1,21 @@
-proc mdc(u32 n, u32 m, u32* @r) {
+proc mdc(u32 n, u32 m, u32* r) {
     if (n % m == 0) {
-        *@r = m;
+        *r = m;
         return;
     }
 
     if (m % n == 0) {
-        *@r = n;
+        *r = n;
         return;
     }
 
     if (m > n) {
-        mdc(n, m % n, @r);
+        mdc(n, m % n, r);
         return;
     }
 
     if (n > m) {
-        mdc(m, n % m, @r);
+        mdc(m, n % m, r);
         return;
     }
 }
