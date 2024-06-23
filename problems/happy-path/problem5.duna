@@ -1,16 +1,20 @@
 proc mdc(u32 n, u32 m, u32* @r) {
     if (n % m == 0) {
-        *@r = n;
-        return;
-    } else if (m > n) {
-        mdc(n, m % n, @r);
+        *@r = m;
         return;
     }
 
     if (m % n == 0) {
-        *@r = m;
+        *@r = n;
         return;
-    } else if (n > m) {
+    }
+
+    if (m > n) {
+        mdc(n, m % n, @r);
+        return;
+    }
+
+    if (n > m) {
         mdc(m, n % m, @r);
         return;
     }
@@ -19,9 +23,8 @@ proc mdc(u32 n, u32 m, u32* @r) {
 proc main() {
     u32 n = cast<u32>(read());
     u32 m = cast<u32>(read());
-    u32* @r;
+    u32 resultado;
+    mdc(n, m, &resultado);
 
-    mdc(n, m, @r);
-
-    print("MDC: " ++ cast<string>(*@r) ++ "\n");
+    print("MDC: " ++ cast<string>(resultado) ++ "\n");
 }

@@ -177,30 +177,34 @@ varDecl : type IDENTIFIER ';'
 typedef : TYPEDEF type IDENTIFIER ';' 
   ;
 
-proc : PROC IDENTIFIER '(' ')' block
+proc : PROC IDENTIFIER '(' ')'
   {
     check_subprogram_not_exists_already($2);
     insertSubprogramTable(&subprogramTable, $2, newSubprogram(NULL, NULL));
-
-    char *code = formatStr("void %s() %s", $2, $5->code);
+  }
+  block
+  {
+    char *code = formatStr("void %s() %s", $2, $6->code);
     $$ = createRecord(code, "", "");
 
     free($2);
-    freeRecord($5);
+    freeRecord($6);
     free(code);
   }
-  | PROC IDENTIFIER '(' params ')' block
+  | PROC IDENTIFIER '(' params ')'
   {
     check_subprogram_not_exists_already($2);
     insertSubprogramTable(&subprogramTable, $2, newSubprogram($4->opt1, NULL));
-
-    char *code = formatStr("void %s(%s) %s", $2, $4->code, $6->code);
+  }
+  block
+  {
+    char *code = formatStr("void %s(%s) %s", $2, $4->code, $7->code);
     $$ = createRecord(code, "", "");
 
     free(code);
     free($2);
     freeRecord($4);
-    freeRecord($6);
+    freeRecord($7);
   }
 
 func : FUNC IDENTIFIER '(' ')' ':' type
