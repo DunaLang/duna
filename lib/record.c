@@ -28,9 +28,23 @@ record *createRecord(char *c1, char *c2, char *c3)
     exit(0);
   }
 
-  r->code = strdup(c1);
-  r->opt1 = strdup(c2);
-  r->prefix = strdup(c3);
+  if (c1 == NULL) {
+    r->code = NULL;
+  } else {
+    r->code = strdup(c1);
+  }
+
+  if (c2 == NULL) {
+    r->opt1 = NULL;
+  } else {
+    r->opt1 = strdup(c2);
+  }
+
+  if (c3 == NULL) {
+    r->prefix = NULL;
+  } else {
+    r->prefix = strdup(c3);
+  }
 
   return r;
 }

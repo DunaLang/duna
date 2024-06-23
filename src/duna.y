@@ -797,6 +797,14 @@ primary : IDENTIFIER {
     free($1);
   }
   | subprogramCall
+  {
+    if ($1->opt1 == NULL) {
+      yyerror("Cannot call procedure as expression.\n");
+      exit(0);
+    }
+
+    $$ = $1;
+  }
   | NEW type %prec UNEW
   | arrayIndex {$$ = $1;}
   | arrayDef {
@@ -1213,10 +1221,11 @@ subprogramCall : IDENTIFIER '(' ')'
   {
     check_subprogram_exists($1);
     check_subprogram_params_type_match($1, NULL);
-    /// TODO: Check for procedure and function
+
+    struct SubprogramType *type = lookupSubprogramTable(&subprogramTable, $1);
 
     char *code = formatStr("%s()", $1);
-    $$ = createRecord(code, "", "");
+    $$ = createRecord(code, type->returnType, "");
 
     free(code);
     free($1);
@@ -1225,11 +1234,11 @@ subprogramCall : IDENTIFIER '(' ')'
   {
     check_subprogram_exists($1);
     check_subprogram_params_type_match($1, $3->opt1);
-    /// TODO: prefix
-    /// TODO: Check for procedure and function
+
+    struct SubprogramType *type = lookupSubprogramTable(&subprogramTable, $1);
 
     char *code = formatStr("%s(%s)", $1, $3->code);
-    $$ = createRecord(code, "", "");
+    $$ = createRecord(code, type->returnType, $3->prefix);
 
     free(code);
     free($1);
@@ -1240,11 +1249,12 @@ subprogramCall : IDENTIFIER '(' ')'
 arguments : expr 
   | arguments ',' expr
   {
-    /// TODO: prefix
     char *code = formatStr("%s, %s", $1->code, $3->code);
     char *opt1 = formatStr("%s,%s", $1->opt1, $3->opt1);
-    $$ = createRecord(code, opt1, "");
+    char *prefix = formatStr("%s%s", $1->prefix, $3->prefix);
+    $$ = createRecord(code, opt1, prefix);
 
+    free(prefix);
     free(opt1);
     free(code);
     freeRecord($1);
