@@ -11,6 +11,7 @@ _Bool isNumeric(const record *rec);
 _Bool isInteger(const record *rec);
 _Bool isString(const record *rec);
 _Bool isArray(const record *rec);
+_Bool isPointer(const record *rec);
 _Bool isSizeDefinedArray(const record *rec);
 
 char *resultNumericType(char *type1, char *type2);

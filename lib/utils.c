@@ -59,6 +59,11 @@ _Bool isArray(const record *rec)
     return rec->code[0] == '[';
 }
 
+_Bool isPointer(const record *rec)
+{
+    return strcmp(rec->opt1, "null") == 0 || rec->opt1[strlen(rec->opt1) - 1] == '*';
+}
+
 _Bool isSizeDefinedArray(const record *rec)
 {
     return strlen(rec->code) > 2;

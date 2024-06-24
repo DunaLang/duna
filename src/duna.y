@@ -288,16 +288,25 @@ enumValues : IDENTIFIER
 
 union : UNION IDENTIFIER '{' fields '}';
 
-struct : STRUCT IDENTIFIER '{' fields '}' {
-  check_struct_not_exists_already($2);
-  int *fieldsLength = malloc(sizeof(int*));
-  *fieldsLength = 0;
-  struct StructField *fields = extractFields($4->prefix, $4->opt1, fieldsLength);
-  insertStructTable(&structTable, $2, fields, *fieldsLength);
-  char *code = formatStr("struct %s {\n%s\n};", $2, $4->code);
-  $$ = createRecord(code, "", "");
-  freeRecord($4);
-}
+struct : STRUCT IDENTIFIER
+  {
+    check_struct_not_exists_already($2);
+    insertScope(&scopeStack, $2, "structDef");
+  }
+  '{' fields '}'
+  {
+    int *fieldsLength = malloc(sizeof(int*));
+    *fieldsLength = 0;
+
+    struct StructField *fields = extractFields($5->prefix, $5->opt1, fieldsLength);
+    insertStructTable(&structTable, $2, fields, *fieldsLength);
+
+    char *code = formatStr("struct %s {\n%s\n};", $2, $5->code);
+    $$ = createRecord(code, "", "");
+
+    pop(&scopeStack);
+    freeRecord($5);
+  }
 ;
 
 fields : field ';' {
@@ -847,6 +856,14 @@ field: type IDENTIFIER {
       exit(-1);
     }
 
+    // Checa se o tipo é o struct atual
+    Scope *scope = top(&scopeStack, 0);
+    if (scope && strcmp(scope->type, "structDef") == 0 && strcmp(scope->name, $1->opt1) == 0)
+    {
+      yyerror("Recursive struct definition is not permitted. Try using pointers.");
+      exit(-1);
+    }
+
     char *code = formatStr("%s %s", $1->code, $2);
     $$ = createRecord(code, $1->opt1, $2);
 
@@ -1103,10 +1120,21 @@ expr: primary {$$ = $1;} %prec UPRIMARY
       code = formatStr("strcmp(%s, %s) == 0", $1->code, $3->code);
       prefix = formatStr("%s%s", $1->prefix, $3->prefix);
     }
-    // missing struct, array, ...
+    else if (isPointer($1) && isPointer($3))
+    {
+      if (strcmp($1->opt1, "null") != 0 && strcmp($3->opt1, "null") != 0 && strcmp($1->opt1, $3->opt1) != 0)
+      {
+        char *errorMsg = formatStr("Pointers comparison must be of the same type. Got \"%s\" and \"%s\".", $1->opt1, $3->opt1);
+        yyerror(errorMsg);
+        free(errorMsg);
+        exit(-1);
+      }
+      code = formatStr("%s == %s", $1->code, $3->code);
+      prefix = formatStr("%s%s", $1->prefix, $3->prefix);
+    }
     else
     {
-      char* errorMsg = "==, operands must be both boolean, numeric or string\n";
+      char* errorMsg = "==, operands must be both boolean, numeric, string or pointers of the same type.";
       yyerror(errorMsg);
       exit(0);
     }
@@ -1138,10 +1166,21 @@ expr: primary {$$ = $1;} %prec UPRIMARY
       code = formatStr("strcmp(%s, %s) != 0", $1->code, $3->code);
       prefix = formatStr("%s%s", $1->prefix, $3->prefix);
     }
-    // missing struct, array, ...
+    else if (isPointer($1) && isPointer($3))
+    {
+      if (strcmp($1->opt1, "null") != 0 && strcmp($3->opt1, "null") != 0 && strcmp($1->opt1, $3->opt1) != 0)
+      {
+        char *errorMsg = formatStr("Pointers comparison must be of the same type. Got \"%s\" and \"%s\".", $1->opt1, $3->opt1);
+        yyerror(errorMsg);
+        free(errorMsg);
+        exit(-1);
+      }
+      code = formatStr("%s != %s", $1->code, $3->code);
+      prefix = formatStr("%s%s", $1->prefix, $3->prefix);
+    }
     else
     {
-      char* errorMsg = "!=, operands must be both boolean, numeric or string\n";
+      char* errorMsg = "!=, operands must be both boolean, numeric, string or pointers of the same type.";
       yyerror(errorMsg);
       exit(0);
     }
@@ -1533,7 +1572,7 @@ fieldAccess : IDENTIFIER '.' IDENTIFIER
     check_symbol_exists($1);
     char* structType = symbolLookup($1);
 
-    check_struct_exists(structType);
+    check_can_access_field(structType);
 
     struct StructField *field = lookupStructField(&structTable, structType, $3);
     if (!field)

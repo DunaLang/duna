@@ -138,6 +138,13 @@ void check_current_scope_is_function()
 
 void check_struct_exists(char *structName)
 {
+    // Checa se atualmente está criando o struct
+    Scope *scope = top(&scopeStack, 0);
+    if (scope && strcmp(scope->type, "structDef") == 0 && strcmp(scope->name, structName) == 0)
+    {
+        return;
+    }
+
     struct StructTableNode *node = lookupStructTable(&structTable, structName);
     if (node == NULL)
     {
@@ -145,6 +152,18 @@ void check_struct_exists(char *structName)
         yyerror(errorMsg);
         free(errorMsg);
         exit(1);
+    }
+}
+
+void check_can_access_field(char *type)
+{
+    struct StructTableNode *node = lookupStructTable(&structTable, type);
+    if (node == NULL)
+    {
+        char *errorMsg = formatStr("Cannot access field of type \"%s\". Try derreferencing it or using another type.", type);
+        yyerror(errorMsg);
+        free(errorMsg);
+        exit(-1);
     }
 }
 
