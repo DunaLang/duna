@@ -33,6 +33,12 @@ struct SubprogramType *lookupSubprogramTable(struct SubprogramTable *this, char 
 struct SubprogramTableNode *newSubprogramTableNode(char *key, struct SubprogramType type)
 {
     struct SubprogramTableNode *node = malloc(sizeof(struct SubprogramTableNode));
+    if (!node)
+    {
+        printf("Allocation error.");
+        exit(-1);
+    }
+
     node->key = strdup(key);
     node->value = type;
     node->next = NULL;

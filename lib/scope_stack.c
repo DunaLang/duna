@@ -50,7 +50,7 @@ Scope *top(ScopeStack *scopeStack, size_t k)
 
 char *deallocationCode(Scope *scope)
 {
-    if (scope->deallocationLinkedList == NULL)
+    if (!scope || scope->deallocationLinkedList == NULL)
     {
         return NULL;
     }
@@ -64,6 +64,12 @@ char *deallocationCode(Scope *scope)
     }
 
     char *deallocationCode = malloc(sizeof(char) * strLength);
+    if (!deallocationCode)
+    {
+        printf("Allocation error.");
+        exit(-1);
+    }
+
     deallocationCode[0] = '\0';
     head = scope->deallocationLinkedList;
     while (head != NULL)
@@ -139,6 +145,12 @@ Scope *nearestFunction(ScopeStack *scopeStack)
 struct DeallocationLinkedList *newDeallocationNode(char *variable)
 {
     struct DeallocationLinkedList *node = malloc(sizeof(struct DeallocationLinkedList));
+    if (!node)
+    {
+        printf("Allocation error.");
+        exit(-1);
+    }
+
     node->variable = strdup(variable);
     node->next = NULL;
     return node;

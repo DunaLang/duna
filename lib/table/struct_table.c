@@ -80,6 +80,12 @@ void insertStructField(struct StructTableNode *this, struct StructField *field)
 struct StructTableNode *newStructTableNode(char *key, struct StructField *fields, int length)
 {
     struct StructTableNode *node = malloc(sizeof(struct StructTableNode));
+    if (!node)
+    {
+        printf("Allocation error.");
+        exit(-1);
+    }
+
     node->key = strdup(key);
     for (size_t i = 0; i < HASH_SIZE; i++)
     {

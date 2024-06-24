@@ -51,6 +51,12 @@ void insert(SymbolTable *table, char *key, char *type)
     }
 
     SymbolTableNode *newNode = malloc(sizeof(SymbolTableNode));
+    if (!newNode)
+    {
+        printf("Allocation error.");
+        exit(-1);
+    }
+
     newNode->key = strdup(key);
     newNode->value = strdup(type);
     newNode->next = NULL;
