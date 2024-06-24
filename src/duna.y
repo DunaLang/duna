@@ -139,7 +139,11 @@ varDecl : type IDENTIFIER ';'
   }
   | type IDENTIFIER ASSIGN expr ';'
   {
-    check_coerce_to_expected_numeric($1->opt1, $4->opt1);
+    if (isNumeric(createRecord("", $1->opt1, "")))
+    {
+      check_coerce_to_expected_numeric($1->opt1, $4->opt1);
+    }
+
     check_symbol_not_exists_already($2);
 
     symbolInsert($2, $1->opt1);
@@ -971,7 +975,7 @@ literal : CHAR_LITERAL
     free($1);
   }
   | BOOLEAN_LITERAL { $$ = createRecord($1, "bool", ""); free($1); }
-  | T_NULL { $$ = createRecord($1, "null", ""); free($1); }
+  | T_NULL { $$ = createRecord("NULL", "null", ""); free($1); }
   ;
 
 expr: primary {$$ = $1;} %prec UPRIMARY

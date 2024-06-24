@@ -212,6 +212,11 @@ void check_expected_actual_type(char *expected, char *actual)
     }
     if (strcmp(expected, actual) != 0)
     {
+        if (isPointer(createRecord("", expected, "")) && strcmp(actual, "null") == 0)
+        {
+            return;
+        }
+
         char *errorMsg = formatStr("RHS type is not expected. Actual: \"%s\". Expected: \"%s\"\n", actual, expected);
         yyerror(errorMsg);
         free(errorMsg);
