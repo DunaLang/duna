@@ -412,6 +412,20 @@ statement : varDecl
     free(code);
   }
   | DELETE expr ';'
+  {
+    if (!isPointer($2))
+    {
+      char *errorMsg = formatStr("Expected pointer expression. Got \"%s\".", $2->opt1);
+      yyerror(errorMsg);
+      free(errorMsg);
+      exit(-1);
+    }
+
+    char *code = formatStr("%sfree(%s);", $2->prefix, $2->code);
+    $$ = createRecord(code, "", "");
+
+    free(code);
+  }
   | match
   | return
   | { insertScope(&scopeStack, generateVariable(), "" ); }
@@ -968,6 +982,15 @@ primary : IDENTIFIER {
     $$ = $1;
   }
   | NEW type %prec UNEW
+  {
+    char *code = formatStr("malloc(sizeof(%s))", $2->code);
+    char *opt = formatStr("%s*", $2->opt1);
+
+    $$ = createRecord(code, opt, "");
+
+    free(opt);
+    free(code);
+  }
   | arrayIndex {$$ = $1;}
   | arrayDef {
     $$ = createRecord($1->code, $1->opt1, $1->prefix);

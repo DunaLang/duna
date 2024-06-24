@@ -342,6 +342,13 @@ record *castR(record *castTo, record *castFrom)
             {
                 typeFormat = "%lu";
             }
+            else
+            {
+                char *errorMsg = formatStr("Can only cast to string from number and bool, got %s.", castFrom->opt1);
+                yyerror(errorMsg);
+                free(errorMsg);
+                exit(-1);
+            }
 
             char *length = generateVariable();
             char *casted_str = generateVariable();
@@ -380,21 +387,26 @@ record *castR(record *castTo, record *castFrom)
                 free(code);
             }
         }
-        else
+        else if (isNumeric(castFrom))
         {
             char *code = formatStr("(%s) %s", castTo->code, castFrom->code);
             return createRecord(code, castTo->opt1, castFrom->prefix);
             free(code);
         }
+        else
+        {
+            char *errorMsg = formatStr("Can only cast to number from number and string, got %s.", castFrom->opt1);
+            yyerror(errorMsg);
+            free(errorMsg);
+            exit(-1);
+        }
     }
-    // cast to not string and not numeric
     else
     {
-        /// TODO: Verificar o que dá pra fazer apenas com isso para simplicar a quantidade de IF-ELSE IF
-        char *code = formatStr("(%s) %s", castTo->code, castFrom->code);
-        return createRecord(code, castTo->opt1, castFrom->prefix);
-
-        free(code);
+        char *errorMsg = formatStr("Can only cast to string and number, got %s.", castTo->opt1);
+        yyerror(errorMsg);
+        free(errorMsg);
+        exit(-1);
     }
 }
 
