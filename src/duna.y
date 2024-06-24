@@ -428,11 +428,12 @@ statement : varDecl
 
 assignment : IDENTIFIER ASSIGN expr
   {
+    check_symbol_exists($1);
     char *type = symbolLookup($1);
 
-    check_symbol_exists($1);
     char *exprType = $3->opt1;
-    if(isNumeric($3)) {
+    if (isNumeric($3))
+    {
       exprType = resultNumericType(type, $3->opt1);
     }
     check_expected_actual_type(type, exprType);
@@ -466,17 +467,30 @@ assignment : IDENTIFIER ASSIGN expr
   }
   | derreferencing ASSIGN expr
   {
+    char *exprType = $3->opt1;
+    if (isNumeric($3))
+    {
+      exprType = resultNumericType($1->opt1, $3->opt1);
+    }
+    check_expected_actual_type($1->opt1, exprType);
+
     char *code = formatStr("%s%s = %s", $3->prefix, $1->code, $3->code);
     $$ = createRecord(code, "", "");
-    check_expected_actual_type($1->opt1, $3->opt1);
 
     free(code);
     freeRecord($1);
     freeRecord($3);
   }
   | fieldAccess ASSIGN expr {
-    check_expected_actual_type($1->opt1, $3->opt1);
+    char *exprType = $3->opt1;
+    if (isNumeric($3))
+    {
+      exprType = resultNumericType($1->opt1, $3->opt1);
+    }
+    check_expected_actual_type($1->opt1, exprType);
+
     char *code = formatStr("%s%s = %s", $3->prefix, $1->code, $3->code);
+
     $$ = createRecord(code, "", "");
     free(code);
     freeRecord($1);

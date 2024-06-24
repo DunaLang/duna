@@ -318,7 +318,7 @@ record *castR(record *castTo, record *castFrom)
         if (strcmp(castFrom->opt1, "bool") == 0)
         {
             char *code = generateVariable();
-            char *prefix = formatStr("char *%s = \"true\"; if (%s) goto label_%s; %s = \"false\"; label_%s:", code, castFrom->code, code, code, code);
+            char *prefix = formatStr("char *%s = \"true\"; if (%s) goto label_%s; %s = \"false\"; label_%s:;", code, castFrom->code, code, code, code);
 
             return createRecord(code, castTo->opt1, prefix);
             free(code);

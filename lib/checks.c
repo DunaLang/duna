@@ -58,7 +58,7 @@ void check_subprogram_params_type_match(char *subprogram, char *arguments)
 
     if (expected_argc != actual_argc)
     {
-        char *errorMsg = formatStr("Function call parameters mismatch. Expected: %d. Actual: %d.\n", expected_argc, actual_argc);
+        char *errorMsg = formatStr("Subprogram call parameters mismatch. Expected: %d. Actual: %d.\n", expected_argc, actual_argc);
         yyerror(errorMsg);
         free(errorMsg);
         exit(0);
@@ -69,50 +69,40 @@ void check_subprogram_params_type_match(char *subprogram, char *arguments)
         return;
     }
 
-    char *current_arg = arguments;
-    char *current_param = type->parameters;
+    char *begin_argument = arguments;
+    char *begin_param = type->parameters;
     while (true)
     {
-        char *end_arg = strchr(current_arg, ',');
-        char *end_param = strchr(current_param, ',');
+        char *end_arg = strchr(begin_argument, ',');
+        char *end_param = strchr(begin_param, ',');
 
-        if (!current_arg)
+        if (!end_arg)
         {
-            break;
-        }
-
-        if (end_arg == NULL || end_param == NULL)
-        {
-            if (strcmp(current_arg, current_param) != 0)
+            char *exprType = begin_argument;
+            if (isNumeric(createRecord("", begin_argument, "")))
             {
-                char *errorMsg = formatStr(
-                    "Function call argument type mismatch. Expected: %s. Actual: %s.\n",
-                    current_param,
-                    current_arg);
-                yyerror(errorMsg);
-                free(errorMsg);
-                exit(0);
+                exprType = resultNumericType(begin_param, begin_argument);
             }
+            check_expected_actual_type(begin_param, exprType);
             return;
         }
         else
         {
-            int arg_diff = end_arg - current_arg;
-            int param_diff = end_param - current_param;
+            int arg_diff = end_arg - begin_argument;
+            char *current_arg = formatStr("%.*s", arg_diff, begin_argument);
 
-            if (arg_diff != param_diff || strncmp(current_arg, current_param, arg_diff) != 0)
+            int param_diff = end_param - begin_param;
+            char *current_param = formatStr("%.*s", param_diff, begin_param);
+
+            char *exprType = current_arg;
+            if (isNumeric(createRecord("", current_arg, "")))
             {
-                char *errorMsg = formatStr(
-                    "Function call argument type mismatch. Expected: %.*s. Actual: %.*s.\n",
-                    param_diff, current_param,
-                    arg_diff, current_arg);
-                yyerror(errorMsg);
-                free(errorMsg);
-                exit(0);
+                exprType = resultNumericType(current_param, current_arg);
             }
+            check_expected_actual_type(current_param, exprType);
 
-            current_arg = end_arg + 1;
-            current_param = end_param + 1;
+            begin_argument = end_arg + 1;
+            begin_param = end_param + 1;
         }
     }
 }
