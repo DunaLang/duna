@@ -45,8 +45,7 @@ struct StructTable structTable;
 %token STRUCT CONST STATIC
 %token USIZE U8 U16 U32 U64 I8 I16 I32 I64 F32 F64 BOOL STRING CHAR
 %token NOT AND OR NEW DELETE PRINT READ CAST
-%token ADD_ASSIGN SUB_ASSIGN MULT_ASSIGN DIV_ASSIGN
-%token EQUALITY INEQUALITY ASSIGN LESS_THAN_EQUALS MORE_THAN_EQUALS LESS_THAN MORE_THAN PLUS MINUS ASTERISK SLASH DOUBLE_COLON EQUALS_ARROW AMPERSAND HASHTAG PERCENTAGE CONCAT
+%token EQUALITY INEQUALITY ASSIGN LESS_THAN_EQUALS MORE_THAN_EQUALS LESS_THAN MORE_THAN PLUS MINUS ASTERISK SLASH AMPERSAND HASHTAG PERCENTAGE CONCAT
 %token <sValue> IDENTIFIER
 
 %nonassoc ULITERAL UPRIMARY
@@ -501,33 +500,7 @@ assignment : IDENTIFIER ASSIGN expr
   }
   ;
 
-compound_assignment : assignment {$$ = $1;}
-  | add_assignment
-  | sub_assignment 
-  | mul_assignment 
-  | div_assignment
-  ;
-
-add_assignment : IDENTIFIER ADD_ASSIGN expr
-  | arrayIndex ADD_ASSIGN expr
-  | derreferencing ADD_ASSIGN expr
-  | fieldAccess ADD_ASSIGN expr
-  ;
-sub_assignment : IDENTIFIER SUB_ASSIGN expr
-  | arrayIndex SUB_ASSIGN expr
-  | derreferencing SUB_ASSIGN expr
-  | fieldAccess SUB_ASSIGN expr
-  ;
-mul_assignment : IDENTIFIER MULT_ASSIGN expr
-  | arrayIndex MULT_ASSIGN expr
-  | derreferencing MULT_ASSIGN expr
-  | fieldAccess MULT_ASSIGN expr
-  ;
-div_assignment : IDENTIFIER DIV_ASSIGN expr
-  | arrayIndex DIV_ASSIGN expr
-  | derreferencing DIV_ASSIGN expr
-  | fieldAccess DIV_ASSIGN expr
-  ;
+compound_assignment : assignment {$$ = $1;} ;
 
 while : WHILE '(' expr ')' block
 {

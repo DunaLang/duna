@@ -23,10 +23,6 @@ commentary     (\/\*([^*]|[\r\n]|(\*+([^*\/]|[\r\n])))*\*+\/)|(\/\/.*)
 "++" { return CONCAT; }
 "==" { return EQUALITY; }
 "!=" { return INEQUALITY; }
-"+=" { return ADD_ASSIGN; }
-"-=" { return SUB_ASSIGN; }
-"*=" { return MULT_ASSIGN; }
-"/=" { return DIV_ASSIGN; }
 "="  { return ASSIGN; }
 "<=" { return LESS_THAN_EQUALS; }
 ">=" { return MORE_THAN_EQUALS; }
@@ -36,8 +32,6 @@ commentary     (\/\*([^*]|[\r\n]|(\*+([^*\/]|[\r\n])))*\*+\/)|(\/\/.*)
 "-"  { return MINUS; }
 "*"  { return ASTERISK; }
 "/"  { return SLASH; }
-"::" { return DOUBLE_COLON; }
-"=>" { return EQUALS_ARROW; }
 "&"  { return AMPERSAND; }
 "#"  { return HASHTAG; }
 "%"  { return PERCENTAGE; }

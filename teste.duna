@@ -11,9 +11,9 @@ func partition([]i32* @arr, usize inicio, usize fim): usize {
   i32 pivot = @arr[fim];
   usize i = inicio - 1;
 
-  for (usize j = inicio; j < fim -1; j += 1) {
+  for (usize j = inicio; j < fim -1; j = j + 1) {
     if (@arr[j] < pivot) {
-      i += 1;
+      i = i + 1;
       i32 temp = @arr[i];
       @arr[i] = @arr[j];
       @arr[j] = temp;

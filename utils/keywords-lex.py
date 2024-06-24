@@ -1,10 +1,6 @@
 for symbol, name in [
     ("==", "equality"),
     ("!=", "inequality"),
-    ("+=", "add_assign"),
-    ("-=", "sub_assign"),
-    ("*=", "mult_assign"),
-    ("/=", "div_assign"),
     ("=", "assign"),
     ("<=", "less_than_equals"),
     (">=", "more_than_equals"),
@@ -14,8 +10,6 @@ for symbol, name in [
     ("-", "minus"),
     ("*", "asterisk"),
     ("/", "slash"),
-    ("::", "double_colon"),
-    ("=>", "equals_arrow"),
     ("&", "ampersand"),
     ("#", "hashtag"),
     ('%', "percentage")

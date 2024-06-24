@@ -108,11 +108,6 @@ proc main() {
 
   i32 compound = 0;
 
-  compound += 2;
-  compound *= 2;
-  compound -= 2;
-  compound /= 2;
-
   testeSintatico();
   i8 valor1 = retorna1();
 
@@ -129,20 +124,20 @@ proc main() {
   for(;;) {
     break;
   }
-  for(;;valor2 += 1) {
+  for(;;valor2 = valor + 1) {
     continue;
   }
-  for(;valor2 < 10; valor2 += 1) {
+  for(;valor2 < 10; valor2 = valor2 + 1) {
     testeSintatico();
   }
-  for(i8 i = 0;i < 10; i += 1) {
+  for(i8 i = 0;i < 10; i = i + 1) {
     testeSintatico();
   }
   for(i8 j = 0; j < 20;) {
-    j += 1;
+    j = j + 1;
   }
   for(;valor2 < 10;) {
-    valor2 += 1;
+    valor2 = valor2 + 1;
   }
 
   delete @ptr;
