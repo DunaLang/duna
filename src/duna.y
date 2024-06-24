@@ -43,7 +43,7 @@ struct StructTable structTable;
 %token <sValue> T_NULL
 %token IF ELSE WHILE FOR FOREACH FUNC PROC RETURN BREAK CONTINUE
 %token MATCH ENUM UNION STRUCT CONST STATIC
-%token USIZE U8 U16 U32 U64 I8 I16 I32 I64 F32 F64 BOOL STRING CHAR TYPEDEF
+%token USIZE U8 U16 U32 U64 I8 I16 I32 I64 F32 F64 BOOL STRING CHAR
 %token NOT AND OR NEW DELETE PRINT READ CAST
 %token ADD_ASSIGN SUB_ASSIGN MULT_ASSIGN DIV_ASSIGN
 %token EQUALITY INEQUALITY ASSIGN LESS_THAN_EQUALS MORE_THAN_EQUALS LESS_THAN MORE_THAN PLUS MINUS ASTERISK SLASH DOUBLE_COLON EQUALS_ARROW AMPERSAND HASHTAG PERCENTAGE CONCAT
@@ -108,7 +108,6 @@ declarations : declaration
   ;
 
 declaration : varDecl
-  | typedef
   | proc { $$ = $1; pop(&scopeStack); }
   | func { $$ = $1; pop(&scopeStack); }
   | enum
@@ -176,9 +175,6 @@ varDecl : type IDENTIFIER ';'
   }
   | typequalifiers type IDENTIFIER ';' { $$ = createRecord("", "", ""); }
   | typequalifiers type IDENTIFIER ASSIGN expr ';'{ $$ = createRecord("", "", ""); }
-
-typedef : TYPEDEF type IDENTIFIER ';' 
-  ;
 
 proc : PROC IDENTIFIER '('
   {

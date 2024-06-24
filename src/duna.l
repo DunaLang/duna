@@ -92,7 +92,6 @@ commentary     (\/\*([^*]|[\r\n]|(\*+([^*\/]|[\r\n])))*\*+\/)|(\/\/.*)
 "print"    { return PRINT; }
 "read"     { return READ; }
 "cast"     { return CAST; }
-"typedef"  { return TYPEDEF; }
 "null"     { yylval.sValue = strdup(yytext); return T_NULL; }
 
 {booleanLiteral} { yylval.sValue = strdup(yytext); return BOOLEAN_LITERAL; }

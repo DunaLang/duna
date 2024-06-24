@@ -10,8 +10,6 @@ f32 f = 0;
 static u16 g;
 const char h = 'h';
 
-typedef i16 myint;
-
 // Struct v1
 struct Pessoa {
   string nome;
@@ -90,7 +88,6 @@ proc main() {
   // Multiqualifier declaração v4
   const static bool isOpen = false;
 
-  // Testando typedef
   int maioridade = 18;
 
   // If v1
