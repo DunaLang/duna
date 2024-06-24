@@ -109,9 +109,7 @@ declarations : declaration
 
 declaration : varDecl
   | typedef
-  | { insertScope(&scopeStack, generateVariable(), "proc"); }
-  proc
-  { $$ = $2; pop(&scopeStack); }
+  | proc { $$ = $1; pop(&scopeStack); }
   | func { $$ = $1; pop(&scopeStack); }
   | enum
   | union
@@ -182,11 +180,13 @@ varDecl : type IDENTIFIER ';'
 typedef : TYPEDEF type IDENTIFIER ';' 
   ;
 
-proc : PROC IDENTIFIER '(' ')'
+proc : PROC IDENTIFIER '('
   {
     check_subprogram_not_exists_already($2);
+    insertScope(&scopeStack, $2, "proc");
     insertSubprogramTable(&subprogramTable, $2, newSubprogram(NULL, NULL));
   }
+  ')'
   block
   {
     char *code = formatStr("void %s() %s", $2, $6->code);
@@ -196,58 +196,69 @@ proc : PROC IDENTIFIER '(' ')'
     freeRecord($6);
     free(code);
   }
-  | PROC IDENTIFIER '(' params ')'
+  | PROC IDENTIFIER '('
   {
     check_subprogram_not_exists_already($2);
-    insertSubprogramTable(&subprogramTable, $2, newSubprogram($4->opt1, NULL));
+    insertScope(&scopeStack, $2, "proc");
+  }
+  params ')'
+  {
+    insertSubprogramTable(&subprogramTable, $2, newSubprogram($5->opt1, NULL));
   }
   block
   {
-    char *code = formatStr("void %s(%s) %s", $2, $4->code, $7->code);
+    char *code = formatStr("void %s(%s) %s", $2, $5->code, $8->code);
     $$ = createRecord(code, "", "");
 
     free(code);
     free($2);
-    freeRecord($4);
-    freeRecord($7);
-  }
-
-func : FUNC IDENTIFIER '(' ')' ':' type
-  {
-    check_subprogram_not_exists_already($2);
-    insertScope(&scopeStack, $2, "func");
-    insertSubprogramTable(&subprogramTable, $2, newSubprogram(NULL, $6->opt1));
-  }
-  block
-  {
-    check_valid_return($8);
-
-    char *code = formatStr("%s %s() %s", $6->code, $2, $8->code);
-    $$ = createRecord(code, "", "");
-
-    free($2);
-    freeRecord($6);
+    freeRecord($5);
     freeRecord($8);
-    free(code);
   }
-  | FUNC IDENTIFIER '(' params ')' ':' type
+
+func : FUNC IDENTIFIER '('
   {
     check_subprogram_not_exists_already($2);
     insertScope(&scopeStack, $2, "func");
+  }
+  ')' ':' type
+  {
     insertSubprogramTable(&subprogramTable, $2, newSubprogram(NULL, $7->opt1));
   }
   block
   {
     check_valid_return($9);
 
-    char *code = formatStr("%s %s(%s) %s", $7->code, $2, $4->code, $9->code);
+    char *code = formatStr("%s %s() %s", $7->code, $2, $9->code);
+    $$ = createRecord(code, "", "");
+
+    free($2);
+    freeRecord($7);
+    freeRecord($9);
+    free(code);
+  }
+  | FUNC IDENTIFIER '('
+  {
+    check_subprogram_not_exists_already($2);
+    insertScope(&scopeStack, $2, "func");
+  }
+  params ')' ':' type
+  {
+    insertSubprogramTable(&subprogramTable, $2, newSubprogram($5->opt1, $8->opt1));
+  }
+  block
+  {
+    check_valid_return($10);
+
+    char *code = formatStr("%s %s(%s) %s", $8->code, $2, $5->code, $10->code);
+
     $$ = createRecord(code, "", "");
 
     free(code);
     free($2);
-    freeRecord($4);
-    freeRecord($7);
-    freeRecord($9);
+    freeRecord($5);
+    freeRecord($8);
+    freeRecord($10);
   }
   ;
 
@@ -693,7 +704,7 @@ return : RETURN ';'
     }
 
     char *code = formatStr("%sreturn %s;", $2->prefix, $2->code);
-    $$ = createRecord("return;", "return", "");
+    $$ = createRecord(code, "return", "");
 
     free(code);
     freeRecord($2);
@@ -856,6 +867,7 @@ type : USIZE { $$ = createRecord("size_t", "usize", ""); }
       check_struct_exists($1); 
       char *code = formatStr("struct %s", $1);
       $$ = createRecord(code, $1, ""); 
+
       free($1); 
       free(code); 
     }
@@ -1325,7 +1337,18 @@ expr: primary {$$ = $1;} %prec UPRIMARY
     free(code);
   }
   | MINUS expr %prec UMINUS
-  ;
+  {
+    if (!isNumeric($2)) {
+      yyerror("Operation invalid: operand is not numeric.");
+      exit(0);
+    }
+
+    char *code = formatStr(" - %s", $2->code);
+    $$ = createRecord(code, $2->opt1, $2->prefix);
+
+    freeRecord($2);
+    free(code);
+  };
 
 arrayIndex : IDENTIFIER '[' expr ']' {
     char* type = symbolLookup($1);
@@ -1516,6 +1539,8 @@ fieldAccess : IDENTIFIER '.' IDENTIFIER
   }
   | fieldAccess '.' IDENTIFIER
   {
+    printf("TODO fieldAccess!");
+    exit(-1);
     // Lookup struct $1 (checar parte do struct que importa)
     // Lookup struct field $3
   }

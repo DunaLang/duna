@@ -320,7 +320,7 @@ record *castR(record *castTo, record *castFrom)
             char *code = generateVariable();
             char *prefix = formatStr("char *%s = \"true\"; if (%s) goto label_%s; %s = \"false\"; label_%s:", code, castFrom->code, code, code, code);
 
-            return createRecord(code, castTo->code, prefix);
+            return createRecord(code, castTo->opt1, prefix);
             free(code);
             free(prefix);
         }
@@ -342,7 +342,7 @@ record *castR(record *castTo, record *castFrom)
             char *casted_str = generateVariable();
 
             char *prefix = formatStr(
-                "%s\nint %s = snprintf(NULL, 0, \"%s\", %s);\nchar %s[%s + 1];\nsnprintf(%s, %s + 1, \"%s\", %s);\n",
+                "%sint %s = snprintf(NULL, 0, \"%s\", %s);\nchar %s[%s + 1];\nsnprintf(%s, %s + 1, \"%s\", %s);\n",
                 castFrom->prefix, length, typeFormat, castFrom->code, casted_str, length, casted_str, length, typeFormat, castFrom->code);
 
             return createRecord(casted_str, castTo->opt1, prefix);
