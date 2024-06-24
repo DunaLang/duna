@@ -42,7 +42,7 @@ struct StructTable structTable;
 %token <sValue> BOOLEAN_LITERAL
 %token <sValue> T_NULL
 %token IF ELSE WHILE FOR FUNC PROC RETURN BREAK CONTINUE
-%token MATCH STRUCT CONST STATIC
+%token STRUCT CONST STATIC
 %token USIZE U8 U16 U32 U64 I8 I16 I32 I64 F32 F64 BOOL STRING CHAR
 %token NOT AND OR NEW DELETE PRINT READ CAST
 %token ADD_ASSIGN SUB_ASSIGN MULT_ASSIGN DIV_ASSIGN
@@ -407,7 +407,6 @@ statement : varDecl
 
     free(code);
   }
-  | match
   | return
   | { insertScope(&scopeStack, generateVariable(), "" ); }
     ifStatement
@@ -686,18 +685,6 @@ for : FOR '(' ';' ';' ')' block
     freeRecord($7);
     free(code);
   };
-
-match : MATCH '(' expr ')' '{' matchCases '}'
-  | MATCH '(' expr ')' '{' matchCases ',' '}'
-  ;
-matchCases : matchCase
-  | matchCases ',' matchCase
-  ;
-matchCase : matchLeft EQUALS_ARROW block ;
-matchLeft : multipleMatchLeft | '_' ;
-multipleMatchLeft : literal
-  | multipleMatchLeft '|' literal
-  ;
 
 return : RETURN ';'
   {

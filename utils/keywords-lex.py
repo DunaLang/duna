@@ -50,7 +50,6 @@ for identifier in [
     "return",
     "break",
     "continue",
-    "match",
     "struct",
     "const",
     "static",

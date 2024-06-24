@@ -145,18 +145,6 @@ proc main() {
     valor2 += 1;
   }
 
-  match(valor2) {
-    1 | 2 => {  testeSintatico(); },
-    5 => { },
-    _ => { *@ptr = valor2; }
-  }
-
-  match(valor2) {
-    1 | 2 => {  testeSintatico(); },
-    5 => { },
-    _ => { *@ptr = valor2; },
-  }
-
   delete @ptr;
 
   // Expressões
