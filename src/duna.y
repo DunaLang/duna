@@ -978,7 +978,7 @@ derreferencing : ASTERISK IDENTIFIER
     free($3);
   };
 
-literal : CHAR_LITERAL
+literal : CHAR_LITERAL { char *code = formatStr("'%c'", $1); $$ = createRecord(code, "char", ""); free(code); }
   | STRING_LITERAL { $$ = createRecord($1, "string", ""); free($1); }
   | FLOAT_LITERAL { $$ = createRecord($1, "f32", ""); free($1); }
   | INT_LITERAL { 
@@ -1221,6 +1221,21 @@ expr: primary {$$ = $1;} %prec UPRIMARY
     freeRecord($2);
   }
   | NOT expr %prec UNOT
+  {
+    if (!isBoolean($2))
+    {
+      char *errorMsg = formatStr("Expected boolean. Got %s.", $2->opt1);
+      yyerror(errorMsg);
+      free(errorMsg);
+      exit(-1);
+    }
+
+    char *code = formatStr("!(%s)", $2->code);
+    $$ = createRecord(code, "bool", $2->prefix);
+
+    free(code);
+    freeRecord($2);
+  }
   | HASHTAG expr %prec UHASHTAG {
     check_symbol_exists($2->code);
 
