@@ -495,7 +495,7 @@ assignment : IDENTIFIER ASSIGN expr
     }
     check_expected_actual_type($1->opt1, exprType);
 
-    char *code = formatStr("%s%s = %s", $3->prefix, $1->code, $3->code);
+    char *code = formatStr("%s%s%s = %s", $1->prefix, $3->prefix, $1->code, $3->code);
 
     $$ = createRecord(code, "", "");
     free(code);
@@ -964,6 +964,18 @@ derreferencing : ASTERISK IDENTIFIER
     free(opt);
     free(code);
     free($2);
+  }
+  | ASTERISK '(' expr ')'
+  {
+    check_type_is_pointer($3->opt1);
+
+    char *code = formatStr("*(%s)", $3->code);
+    char *opt = formatStr("%.*s", strlen($3->opt1)-1, $3->opt1);
+    $$ = createRecord(code, opt, "");
+
+    free(opt);
+    free(code);
+    free($3);
   };
 
 literal : CHAR_LITERAL
@@ -1528,8 +1540,29 @@ compoundTypeFields : IDENTIFIER ':' expr
   }
   ;
 
-fieldAccess : IDENTIFIER '.' IDENTIFIER
+fieldAccess :  '(' expr ')' '.' IDENTIFIER
   {
+    char* structType = $2->opt1;
+
+    check_can_access_field(structType);
+
+    struct StructField *field = lookupStructField(&structTable, structType, $5);
+    if (!field)
+    {
+      char *errorMsg = formatStr("Field \"%s\" of struct \"%s\" is not defined.\n", $5, structType);
+      yyerror(errorMsg);
+      free(errorMsg);
+      exit(1);
+    }
+
+    char *code = formatStr("(%s).%s", $2->code, $5);
+    $$ = createRecord(code, field->type, $2->prefix);
+
+    free(code);
+    freeRecord($2);
+    free($5);
+  }
+  | IDENTIFIER '.' IDENTIFIER {
     check_symbol_exists($1);
     char* structType = symbolLookup($1);
 
@@ -1553,10 +1586,23 @@ fieldAccess : IDENTIFIER '.' IDENTIFIER
   }
   | fieldAccess '.' IDENTIFIER
   {
-    printf("TODO fieldAccess!");
-    exit(-1);
-    // Lookup struct $1 (checar parte do struct que importa)
-    // Lookup struct field $3
+    char* structType = $1->opt1;
+    check_can_access_field(structType);
+
+    struct StructField *field = lookupStructField(&structTable, structType, $3);
+    if (!field)
+    {
+      char *errorMsg = formatStr("Field \"%s\" of struct \"%s\" is not defined.\n", $3, structType);
+      yyerror(errorMsg);
+      free(errorMsg);
+      exit(1);
+    }
+
+    char *code = formatStr("%s.%s", $1->code, $3);
+    $$ = createRecord(code, field->type, $1->prefix);
+    free(code);
+    freeRecord($1);
+    free($3);
   }
   ;
 
