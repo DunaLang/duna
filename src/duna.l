@@ -65,7 +65,6 @@ commentary     (\/\*([^*]|[\r\n]|(\*+([^*\/]|[\r\n])))*\*+\/)|(\/\/.*)
 "break"    { return BREAK; }
 "continue" { return CONTINUE; }
 "match"    { return MATCH; }
-"enum"     { return ENUM; }
 "union"    { return UNION; }
 "struct"   { return STRUCT; }
 "const"    { return CONST; }

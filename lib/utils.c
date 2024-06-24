@@ -284,36 +284,7 @@ char *typeByNumberBitRange(const char *number)
         return "Unreachable";
     }
 }
-/*
-    [Regras de Cast]
-    type_variants: boolean, enum, numeric, string, struct
-    src -> dest_type
 
-    [Boolean como origem]
-    ??? boolean -> numeric (false = 0, true = 1)
-    ??? boolean -> _ = INVALID
-
-    [Enum como origem]
-    ??? enum -> numeric = ENUM_VALUE
-    ??? enum -> _ = INVALID
-
-    [Número como origem]
-    ??? numeric -> boolean (0 = false, _ = true)
-    ??? numeric -> enum
-    ??? numeric -> _ = INVALID
-
-    [String como origem]
-    string -> numeric = OK
-    string -> boolean = true | false
-    ??? string -> _ = INVALID
-
-    [String como destino]
-    boolean -> string = "true" | "false"
-    enum -> string = "ENUM_NAME::VARIANT"
-    numeric -> string = NUMBER_STRING
-    ??? struct -> string = "STRUCT_NAME{field: value, ...}"
-    ??? union -> string = INVALID
-    */
 record *castR(record *castTo, record *castFrom)
 {
     // cast to string

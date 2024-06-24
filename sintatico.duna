@@ -24,19 +24,6 @@ union yylval {
   char cValue;
 }
 
-// Enum
-enum Cor {
-  VERMELHO,
-  VERDE,
-  AZUL
-}
-
-enum Cor2 {
-  VERMELHO = 0,
-  VERDE = 1,
-  AZUL,
-}
-
 // Proc v1
 proc testeSintatico () {}
 
@@ -191,7 +178,6 @@ proc main() {
   bool* @expr2 = new bool;
   i8 expr3 = arr2[2];
   []u8 expr4 = {1, 2, 3, 9,};
-  Cor expr5 = Cor::AZUL;
   Pessoa expr6 = Pessoa {
     nome: "Fulano",
     idade: 21,

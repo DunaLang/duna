@@ -42,7 +42,7 @@ struct StructTable structTable;
 %token <sValue> BOOLEAN_LITERAL
 %token <sValue> T_NULL
 %token IF ELSE WHILE FOR FOREACH FUNC PROC RETURN BREAK CONTINUE
-%token MATCH ENUM UNION STRUCT CONST STATIC
+%token MATCH UNION STRUCT CONST STATIC
 %token USIZE U8 U16 U32 U64 I8 I16 I32 I64 F32 F64 BOOL STRING CHAR
 %token NOT AND OR NEW DELETE PRINT READ CAST
 %token ADD_ASSIGN SUB_ASSIGN MULT_ASSIGN DIV_ASSIGN
@@ -110,7 +110,6 @@ declarations : declaration
 declaration : varDecl
   | proc { $$ = $1; pop(&scopeStack); }
   | func { $$ = $1; pop(&scopeStack); }
-  | enum
   | union
   | struct {$$ = $1;}
   ;
@@ -271,16 +270,6 @@ params : param
     freeRecord($1);
     free($3);
   };
-
-enum : ENUM IDENTIFIER '{' enumValues '}'
-  | ENUM IDENTIFIER '{' enumValues ',' '}'
-  ;
-
-enumValues : IDENTIFIER
-  | enumValues ',' IDENTIFIER
-  | IDENTIFIER ASSIGN INT_LITERAL
-  | enumValues ',' IDENTIFIER ASSIGN INT_LITERAL
-  ;
 
 union : UNION IDENTIFIER '{' fields '}';
 
@@ -992,7 +981,6 @@ primary : IDENTIFIER {
     $$ = createRecord($1->code, $1->opt1, $1->prefix);
     freeRecord($1);
   }
-  | enumDef
   | compoundTypeDef {$$ = $1; }
   | fieldAccess { $$ = $1; }
   | derreferencing
@@ -1525,8 +1513,6 @@ commaSeparatedExpr : expr {$$ = createRecord($1->code, $1->opt1, $1->prefix);}
     freeRecord($3);
   }
   ;
-
-enumDef : IDENTIFIER DOUBLE_COLON IDENTIFIER ;
 
 compoundTypeDef : IDENTIFIER '{' '}'
   {
