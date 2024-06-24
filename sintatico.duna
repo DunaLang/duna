@@ -106,12 +106,6 @@ proc main() {
   // While
   while(true) {}
 
-  // Foreach v1
-  foreach(i16 element2 : arr) {}
-
-  // Foreach v2
-  foreach(const i16 element : arr) {}
-
   i32 compound = 0;
 
   compound += 2;

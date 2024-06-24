@@ -58,7 +58,6 @@ commentary     (\/\*([^*]|[\r\n]|(\*+([^*\/]|[\r\n])))*\*+\/)|(\/\/.*)
 "else"     { return ELSE; }
 "while"    { return WHILE; }
 "for"      { return FOR; }
-"foreach"  { return FOREACH; }
 "func"     { return FUNC; }
 "proc"     { return PROC; }
 "return"   { return RETURN; }

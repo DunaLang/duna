@@ -41,7 +41,7 @@ struct StructTable structTable;
 %token <cValue> CHAR_LITERAL
 %token <sValue> BOOLEAN_LITERAL
 %token <sValue> T_NULL
-%token IF ELSE WHILE FOR FOREACH FUNC PROC RETURN BREAK CONTINUE
+%token IF ELSE WHILE FOR FUNC PROC RETURN BREAK CONTINUE
 %token MATCH STRUCT CONST STATIC
 %token USIZE U8 U16 U32 U64 I8 I16 I32 I64 F32 F64 BOOL STRING CHAR
 %token NOT AND OR NEW DELETE PRINT READ CAST
@@ -341,7 +341,6 @@ statement : varDecl
   | { insertScope(&scopeStack, generateVariable(), "for"); }
     for
     { $$ = $2; pop(&scopeStack); }
-  | foreach
   | BREAK ';'
   {
     Scope *scope = nearestIteration(&scopeStack);
@@ -687,10 +686,6 @@ for : FOR '(' ';' ';' ')' block
     freeRecord($7);
     free(code);
   };
-
-foreach : FOREACH '(' type IDENTIFIER ':' IDENTIFIER ')' block
-  | FOREACH '(' typequalifier type IDENTIFIER ':' IDENTIFIER ')' block
-  ;
 
 match : MATCH '(' expr ')' '{' matchCases '}'
   | MATCH '(' expr ')' '{' matchCases ',' '}'

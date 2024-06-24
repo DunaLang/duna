@@ -45,7 +45,6 @@ for identifier in [
     "else",
     "while",
     "for",
-    "foreach",
     "func",
     "proc",
     "return",
