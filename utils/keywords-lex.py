@@ -52,7 +52,6 @@ for identifier in [
     "break",
     "continue",
     "match",
-    "union",
     "struct",
     "const",
     "static",

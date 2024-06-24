@@ -16,14 +16,6 @@ struct Pessoa {
   u16 idade;
 }
 
-// Union
-union yylval {
-  i32 iValue;    
-  f32 fValue;
-  string sValue;
-  char cValue;
-}
-
 // Proc v1
 proc testeSintatico () {}
 

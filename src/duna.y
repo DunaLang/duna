@@ -42,7 +42,7 @@ struct StructTable structTable;
 %token <sValue> BOOLEAN_LITERAL
 %token <sValue> T_NULL
 %token IF ELSE WHILE FOR FOREACH FUNC PROC RETURN BREAK CONTINUE
-%token MATCH UNION STRUCT CONST STATIC
+%token MATCH STRUCT CONST STATIC
 %token USIZE U8 U16 U32 U64 I8 I16 I32 I64 F32 F64 BOOL STRING CHAR
 %token NOT AND OR NEW DELETE PRINT READ CAST
 %token ADD_ASSIGN SUB_ASSIGN MULT_ASSIGN DIV_ASSIGN
@@ -110,7 +110,6 @@ declarations : declaration
 declaration : varDecl
   | proc { $$ = $1; pop(&scopeStack); }
   | func { $$ = $1; pop(&scopeStack); }
-  | union
   | struct {$$ = $1;}
   ;
 
@@ -270,8 +269,6 @@ params : param
     freeRecord($1);
     free($3);
   };
-
-union : UNION IDENTIFIER '{' fields '}';
 
 struct : STRUCT IDENTIFIER
   {
