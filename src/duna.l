@@ -44,9 +44,7 @@ commentary     (\/\*([^*]|[\r\n]|(\*+([^*\/]|[\r\n])))*\*+\/)|(\/\/.*)
 "."  { return yytext[0]; }
 ","  { return yytext[0]; }
 ";"  { return yytext[0]; }
-"_"  { return yytext[0]; }
 ":"  { return yytext[0]; }
-"|"  { return yytext[0]; }
 
 "if"       { return IF; }
 "else"     { return ELSE; }
