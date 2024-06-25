@@ -72,7 +72,15 @@ _Bool isPointer(const record *rec)
 
 _Bool isSizeDefinedArray(const record *rec)
 {
-    return strlen(rec->code) > 2;
+    bool isValid = false;
+    char *delimiter = strchr(rec->code, '@');
+    if(delimiter != NULL) {
+        char token[delimiter - rec->code +1];
+        strncpy(token, rec->code, delimiter - rec->code);
+        token[delimiter - rec->code + 1] = '\0';
+       isValid = strlen(token) > 2;
+    }
+    return isValid;
 }
 
 int sizeNumericType(char *type)
@@ -370,4 +378,23 @@ int countCharacter(char *str, char c)
         total += str[i] == c;
     }
     return total;
+}
+
+char *returnCFormattedArray(char *variable, char *other) {
+    const char *test = other;
+    char *delimiter = strchr(test, '@');
+    if (delimiter != NULL) {
+        // Extracting arrSize to another variable
+        size_t arrSizeLength = delimiter - other;
+        char arrSize[arrSizeLength + 1];
+        strncpy(arrSize, other, arrSizeLength);
+        arrSize[arrSizeLength] = '\0';
+
+        size_t typeLength = strlen(delimiter + 1);
+        char type[typeLength + 1];
+        strncpy(type, delimiter + 1, typeLength);
+        type[typeLength] = '\0';
+        return formatStr("%s %s%s", type, variable, arrSize);
+    }
+    return NULL;
 }

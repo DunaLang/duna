@@ -16,6 +16,7 @@ _Bool isPointer(const record *rec);
 _Bool isSizeDefinedArray(const record *rec);
 
 char *resultNumericType(char *type1, char *type2);
+char *returnCFormattedArray(char *variable, char *other);
 
 char *formatPrintDecimalNumber(char *type);
 char *formatScanDecimalNumber(char *type);

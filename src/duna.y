@@ -123,7 +123,7 @@ varDecl : type IDENTIFIER ';'
     }
     else if (isArray($1) && isSizeDefinedArray($1))
     {
-      code = formatStr("%s %s%s", $1->prefix, $2, $1->code);  
+      code = returnCFormattedArray($2, $1->code);
     }
     else if (isArray($1))
     {
@@ -164,7 +164,9 @@ varDecl : type IDENTIFIER ';'
     {
       char *code = formatStr("%s%s %s = %s", $4->prefix, $1->code, $2, $4->code);
       if(isArray($1)) {
-        code = formatStr("%s%s %s%s = %s", $4->prefix, $1->prefix, $2, $1->code, $4->code);
+        char *generatedCode = returnCFormattedArray($2, $1->code);
+        code = formatStr("%s%s = %s", $4->prefix, generatedCode, $4->code);
+        free(generatedCode);
       }
       $$ = createRecord(code, "", "");
       free(code);
@@ -280,11 +282,9 @@ struct : STRUCT IDENTIFIER
   }
   '{' fields '}'
   {
-    int *fieldsLength = malloc(sizeof(int*));
-    *fieldsLength = 0;
-
-    struct StructField *fields = extractFields($5->prefix, $5->opt1, fieldsLength);
-    insertStructTable(&structTable, $2, fields, *fieldsLength);
+    int fieldsLength = 0;
+    struct StructField *fields = extractFields($5->prefix, $5->opt1, &fieldsLength);
+    insertStructTable(&structTable, $2, fields, fieldsLength);
 
     char *code = formatStr("struct %s {\n%s\n};", $2, $5->code);
     $$ = createRecord(code, "", "");
@@ -872,14 +872,12 @@ type : USIZE { $$ = createRecord("size_t", "usize", ""); }
       yyerror(errorMsg);
       exit(1);
     }
-    char *code = formatStr("[%s]", $2->code);
-    char *prefix = $4->code;
-    // If type has prefix, then it is a multidimensional array
-    if(strcmp($4->prefix, "") != 0) {
+    char *code = formatStr("[%s]@%s", $2->code, $4->code);
+    // If it has more than one @, then it is a multidimensional array
+    if(countCharacter(code, '@') > 1) {
       code = formatStr("[%s]%s", $2->code, $4->code);
-      prefix = $4->prefix;
     }
-    $$ = createRecord(code, $4->opt1, prefix);
+    $$ = createRecord(code, $4->opt1, "");
 
     freeRecord($2);
     freeRecord($4);
@@ -887,8 +885,10 @@ type : USIZE { $$ = createRecord("size_t", "usize", ""); }
   }
   | '[' ']' type %prec ARRAY_TYPE
   {
-    $$ = createRecord("[]", $3->opt1, $3->code);
+    char *code = formatStr("[]@%s", $3->code);
+    $$ = createRecord(code, $3->opt1, "");
     freeRecord($3);
+    free(code);
   }
   | pointer
   ;
