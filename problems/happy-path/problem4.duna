@@ -14,7 +14,7 @@ proc print_rational_t(rational_t r) {
     string num = cast<string>(r.numerador);
     string den = cast<string>(r.denominador);
 
-    print(num ++ "/" ++ den ++ " (numerador=" ++ num ++ ";denominador=" ++ den ++ ")");
+    print(num ++ "/" ++ den ++ " (numerador=" ++ num ++ ";denominador=" ++ den ++ ")\n");
 }
 
 func equals(rational_t a, rational_t b): bool {
