@@ -44,6 +44,14 @@ void check_subprogram_not_exists_already(char *subprogram)
         free(errorMsg);
         exit(0);
     }
+
+    if (symbolLookup(subprogram) != NULL)
+    {
+        char *errorMsg = formatStr("Identifier \"%s\" is already defined.\n", subprogram);
+        yyerror(errorMsg);
+        free(errorMsg);
+        exit(0);    
+    }
 }
 
 void check_subprogram_params_type_match(char *subprogram, char *arguments)
@@ -196,6 +204,14 @@ void check_symbol_not_exists_already(char *id)
     if (symbolLookup(id) != NULL)
     {
         char *errorMsg = formatStr("Identifier \"%s\" is already defined.\n", id);
+        yyerror(errorMsg);
+        free(errorMsg);
+        exit(0);
+    }
+    struct SubprogramType *type = lookupSubprogramTable(&subprogramTable, id);
+    if (type != NULL)
+    {
+        char *errorMsg = formatStr("Subprogram \"%s\" is already defined.\n", id);
         yyerror(errorMsg);
         free(errorMsg);
         exit(0);

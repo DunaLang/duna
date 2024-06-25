@@ -176,9 +176,6 @@ varDecl : type IDENTIFIER ';'
     free($2);
     freeRecord($4);
   }
-  | typequalifiers type IDENTIFIER ';' { $$ = createRecord("", "", ""); }
-  | typequalifiers type IDENTIFIER ASSIGN expr ';'{ $$ = createRecord("", "", ""); }
-
 proc : PROC IDENTIFIER '('
   {
     check_subprogram_not_exists_already($2);
@@ -446,7 +443,9 @@ assignment : IDENTIFIER ASSIGN expr
 
     if (isString($3))
     {
-      // strcpy
+      char *code = formatStr("%s%s = strdup(%s)", $3->prefix, $1, $3->code);
+      $$ = createRecord(code, "", "");
+      free(code);
     }
     else
     {
@@ -827,15 +826,6 @@ field: type IDENTIFIER {
     freeRecord($1);
     free($2);
 };
-
-typequalifiers : typequalifier
-  | typequalifiers typequalifier
-  ;
-
-typequalifier : CONST
-  | STATIC
-  ;
-
 type : USIZE { $$ = createRecord("size_t", "usize", ""); }
   | U8  { $$ = createRecord("uint8_t", "u8", ""); }
   | U16 { $$ = createRecord("uint16_t", "u16", ""); }
@@ -1453,10 +1443,20 @@ subprogramCall : IDENTIFIER '(' ')'
   }
   ;
 
-arguments : expr 
+arguments : expr {
+  char *code =$1->code;
+  if(isString($1)) {
+    code = strdup($1->code);
+  }
+  $$ = createRecord(code, $1->opt1, $1->prefix);
+  free(code);
+}
   | arguments ',' expr
   {
     char *code = formatStr("%s, %s", $1->code, $3->code);
+    if(isString($1)) {
+      code = formatStr("%s, %s", $1->code, strdup($3->code));
+    }
     char *opt1 = formatStr("%s,%s", $1->opt1, $3->opt1);
     char *prefix = formatStr("%s%s", $1->prefix, $3->prefix);
     $$ = createRecord(code, opt1, prefix);
