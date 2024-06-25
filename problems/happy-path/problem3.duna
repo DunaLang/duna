@@ -1,4 +1,5 @@
 proc main() {
+    // Lê m1
     i32 largura_m1 = cast<i32>(read(), null);
     i32 altura_m1 = cast<i32>(read(), null);
 
@@ -10,7 +11,7 @@ proc main() {
         }
     }
 
-
+    // Lê m2
     i32 largura_m2 = cast<i32>(read(), null);
     i32 altura_m2 = cast<i32>(read(), null);
 
@@ -21,7 +22,6 @@ proc main() {
             m2[y][x] = cast<f32>(read());
         }
     }
-
 
     if (largura_m1 != largura_m2 or altura_m1 != altura_m2) {
         print("Não é possível calcular a soma das matrizes\n");
@@ -38,9 +38,9 @@ proc main() {
         print("Soma:\n");
         for (i32 y = 0; y < altura_m2; y = y + 1) {
             for (i32 x = 0; x < largura_m2; x = x + 1) {
-                print(cast<string>(m[y][x]) ++ " ");
-                print("\n");
+                print cast<string>(m[y][x]) ++ " ";
             }
+            print("\n");
         }
     }
 
@@ -62,9 +62,9 @@ proc main() {
         print("Produto:\n");
         for (i32 y = 0; y < altura_m1; y = y + 1) {
             for (i32 x = 0; x < largura_m2; x = x + 1) {
-                print(cast<string>(m[y][x]) ++ " ");
-                print("\n");
+                print cast<string>(m[y][x]) ++ " ";
             }
+            print "\n";
         }
     }
 }
