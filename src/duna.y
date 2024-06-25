@@ -424,7 +424,7 @@ statement : varDecl
     }
   | subprogramCall ';'
   {
-    char *code = formatStr("%s;", $1->code);
+    char *code = formatStr("%s%s;", $1->prefix, $1->code);
     $$ = createRecord(code, "", "");
 
     free(code);
@@ -789,13 +789,16 @@ param : type IDENTIFIER
     if (strlen($1->prefix) > 1)
     {
       // printf("Prefix=%s", $1->prefix);
-      printf("Operações com strings são inválidas em argumentos de subprogramas.");
-      exit(-1);
+      yyerror("Operation invalid: string operations are not allowed in subprogram arguments.");
+      exit(1);
     }
-
-    symbolInsert($2, $1->opt1);
-
     char *code = formatStr("%s %s", $1->code, $2);
+
+    if (isArray($1))
+    {
+      code = returnCFormattedArray($2, $1->code);
+    }
+    symbolInsert($2, $1->opt1);
     $$ = createRecord(code, $1->opt1, $2);
 
     free(code);
@@ -805,8 +808,8 @@ param : type IDENTIFIER
 field: type IDENTIFIER {
     if (strlen($1->prefix) > 1)
     {
-      printf("Operações com strings são inválidas em structs.");
-      exit(-1);
+      yyerror("Operation invalid: string operations are not allowed in structs.");
+      exit(1);
     }
 
     // Checa se o tipo é o struct atual

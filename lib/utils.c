@@ -40,7 +40,7 @@ _Bool isNumeric(const record *rec)
     _Bool isFloat = strcmp(rec->opt1, "f32") == 0 || strcmp(rec->opt1, "f64") == 0;
 
     // printf("Record result (isNumeric): %s\n-----\n", (isFloat || isInteger(rec) == 1 ? "true" : "false"));
-    return isFloat || isInteger(rec);
+    return isFloat || isInteger(rec) || strcmp(rec->opt1, "usize") == 0;
 }
 
 _Bool isIntLiteral(const record *rec)

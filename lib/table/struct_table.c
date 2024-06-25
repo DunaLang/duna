@@ -94,7 +94,6 @@ struct StructTableNode *newStructTableNode(char *key, struct StructField *fields
     for (size_t i = 0; i < length; i++)
     {
         insertStructField(node, &fields[i]);
-        printf("Adding into struct %s, field: %s %s\n", key, fields[i].key, fields[i].type);
     }
     node->next = NULL;
     return node;
@@ -119,7 +118,6 @@ void insertStructTable(struct StructTable *this, char *key, struct StructField *
     {
         previous->next = newStructTableNode(key, fields, length);
     }
-    printf("Struct: %s created successfully! Fields: %d\n", key, length);
 }
 
 struct StructField newField(char *key, char *type)
