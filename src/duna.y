@@ -65,7 +65,7 @@ struct StructTable structTable;
 %left PERCENTAGE SLASH ASTERISK
 
 %type <rec> declarations declaration varDecl
-%type <rec> block type expr pointer statements statement literal primary assignment compound_assignment derreferencing
+%type <rec> block type expr pointer statements statement literal primary assignment derreferencing
 %type <rec> ifStatement if else elseifs elseif
 %type <rec> while for
 %type <rec> arrayDef commaSeparatedExpr arrayIndex
@@ -333,7 +333,7 @@ statement : varDecl
     freeRecord($1);
     free(code);
   }
-  | compound_assignment ';' {
+  | assignment ';' {
     char *code = formatStr("%s;", $1->code);
     $$ = createRecord(code, "", $1->prefix);
     free(code);
@@ -504,8 +504,6 @@ assignment : IDENTIFIER ASSIGN expr
   }
   ;
 
-compound_assignment : assignment {$$ = $1;} ;
-
 while : WHILE '(' expr ')' block
 {
   if (!isBoolean($3))
@@ -542,7 +540,7 @@ for : FOR '(' ';' ';' ')' block
     freeRecord($6);
     free(code);
   }
-  | FOR '(' statement expr ';' compound_assignment ')' block
+  | FOR '(' statement expr ';' assignment ')' block
   {
     if (!isBoolean($4))
     {
@@ -566,7 +564,7 @@ for : FOR '(' ';' ';' ')' block
     freeRecord($8);
     free(code);
   }
-  | FOR '(' ';' expr ';' compound_assignment ')' block
+  | FOR '(' ';' expr ';' assignment ')' block
   {
     if (!isBoolean($4))
     {
@@ -589,7 +587,7 @@ for : FOR '(' ';' ';' ')' block
     freeRecord($8);
     free(code);
   }
-  | FOR '(' ';' ';' compound_assignment ')' block
+  | FOR '(' ';' ';' assignment ')' block
   {
     Scope *scope = top(&scopeStack, 0);
     char *scopeName = scope->name;
