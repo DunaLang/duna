@@ -139,7 +139,7 @@ varDecl : type IDENTIFIER ';'
   }
   | type IDENTIFIER ASSIGN expr ';'
   {
-    if (isNumeric(createRecord("", $1->opt1, "")))
+    if (isNumeric(createRecord("", $1->opt1, "")) && !isIntLiteral($4))
     {
       check_coerce_to_expected_numeric($1->opt1, $4->opt1);
     }
@@ -982,8 +982,7 @@ literal : CHAR_LITERAL { char *code = formatStr("'%c'", $1); $$ = createRecord(c
   | STRING_LITERAL { $$ = createRecord($1, "string", ""); free($1); }
   | FLOAT_LITERAL { $$ = createRecord($1, "f32", ""); free($1); }
   | INT_LITERAL { 
-    char *type = typeByNumberBitRange($1);
-    $$ = createRecord($1, type, ""); 
+    $$ = createRecord($1, "int_literal", ""); 
     free($1);
   }
   | BOOLEAN_LITERAL { $$ = createRecord($1, "bool", ""); free($1); }

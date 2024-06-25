@@ -8,6 +8,7 @@ static size_t counter = 0;
 _Bool equalTypes(record *r1, record *r2);
 _Bool isBoolean(const record *rec);
 _Bool isNumeric(const record *rec);
+_Bool isIntLiteral(const record *rec);
 _Bool isInteger(const record *rec);
 _Bool isString(const record *rec);
 _Bool isArray(const record *rec);
@@ -22,7 +23,6 @@ char *formatScanDecimalNumber(char *type);
 char *itoa(int i);
 char *formatStr(const char *fmt, ...);
 char *generateVariable();
-char *typeByNumberBitRange(const char *number);
 record *castR(record *castTo, record *castFrom);
 
 int countCharacter(char *str, char c);

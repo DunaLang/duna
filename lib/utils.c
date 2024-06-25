@@ -3,6 +3,7 @@
 #include "checks.h"
 #include <inttypes.h>
 #include <string.h>
+#include <stdbool.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdarg.h>
@@ -42,11 +43,16 @@ _Bool isNumeric(const record *rec)
     return isFloat || isInteger(rec);
 }
 
+_Bool isIntLiteral(const record *rec)
+{
+    return strcmp(rec->opt1, "int_literal") == 0;
+}
+
 _Bool isInteger(const record *rec)
 {
     _Bool isUnsigned = strcmp(rec->opt1, "u8") == 0 || strcmp(rec->opt1, "u16") == 0 || strcmp(rec->opt1, "u32") == 0 || strcmp(rec->opt1, "u64") == 0;
     _Bool isSigned = strcmp(rec->opt1, "i8") == 0 || strcmp(rec->opt1, "i16") == 0 || strcmp(rec->opt1, "i32") == 0 || strcmp(rec->opt1, "i64") == 0;
-    return isUnsigned || isSigned;
+    return isUnsigned || isSigned || isIntLiteral(rec);
 }
 
 _Bool isString(const record *rec)
@@ -189,6 +195,16 @@ char *formatStr(const char *fmt, ...)
 // somente utilizar quando ambos os types forem numericos (i, u, f)
 char *resultNumericType(char *type1, char *type2)
 {
+    if (strcmp(type1, "int_literal") == 0)
+    {
+        return type2;
+    }
+
+    if (strcmp(type2, "int_literal") == 0)
+    {
+        return type1;
+    }
+
     int size1 = sizeNumericType(type1);
     int size2 = sizeNumericType(type2);
 
@@ -198,54 +214,44 @@ char *resultNumericType(char *type1, char *type2)
     }
 
     // f32 -> f64
-    if (strcmp(type1, "f32") == 0 || strcmp(type2, "f32") == 0)
+    if ((strcmp(type1, "f32") == 0 || strcmp(type2, "f32") == 0) && (strcmp(type1, "f64") == 0 || strcmp(type2, "f64") == 0))
     {
-        if (strcmp(type1, "f64") == 0 || strcmp(type2, "f64") == 0)
-        {
-            return "f64";
-        }
+        return "f64";
     }
     // u8 -> i16
-    else if (strcmp(type1, "u8") == 0 || strcmp(type2, "u8") == 0)
+    if ((strcmp(type1, "u8") == 0 || strcmp(type2, "u8") == 0) && (strcmp(type1, "i16") == 0 || strcmp(type2, "i16") == 0))
     {
-        if (strcmp(type1, "i16") == 0 || strcmp(type2, "i16") == 0)
-        {
-            return "i16";
-        }
+        return "i16";
     }
     // u16 -> i32
-    else if (strcmp(type1, "u16") == 0 || strcmp(type2, "u16") == 0)
+    if ((strcmp(type1, "u16") == 0 || strcmp(type2, "u16") == 0) && (strcmp(type1, "i32") == 0 || strcmp(type2, "i32") == 0))
     {
-        if (strcmp(type1, "i32") == 0 || strcmp(type2, "i32") == 0)
-        {
-            return "i32";
-        }
+        return "i32";
     }
     // u32 -> i64
-    else if (strcmp(type1, "u32") == 0 || strcmp(type2, "u32") == 0)
+    if ((strcmp(type1, "u32") == 0 || strcmp(type2, "u32") == 0) && (strcmp(type1, "i64") == 0 || strcmp(type2, "i64") == 0))
     {
-        if (strcmp(type1, "i64") == 0 || strcmp(type2, "i64") == 0)
-        {
-            return "i64";
-        }
+        return "i64";
     }
     // i8 -> i16 -> i32 -> i64
     // u8 -> u16 -> u32 -> u64
-    else if (type1[0] == 'u' && type2[0] == 'i')
+    if (type1[0] == 'u' && type2[0] == 'i')
     {
         if (size1 < size2)
         {
             return type2;
         }
     }
-    else if (type1[0] == 'i' && type2[0] == 'u')
+
+    if (type1[0] == 'i' && type2[0] == 'u')
     {
         if (size1 > size2)
         {
             return type1;
         }
     }
-    else if (type1[0] == type2[0] && type1[0] != 'f')
+
+    if (type1[0] == type2[0] && type1[0] != 'f')
     {
         if (size1 > size2)
         {
@@ -258,31 +264,6 @@ char *resultNumericType(char *type1, char *type2)
     }
 
     return NULL;
-}
-
-char *typeByNumberBitRange(const char *number)
-{
-    int64_t n = atoi(number);
-    if (n >= INT8_MIN && n <= INT8_MAX)
-    {
-        return "i8";
-    }
-    else if (n >= INT16_MIN && n <= INT16_MAX)
-    {
-        return "i16";
-    }
-    else if (n >= INT32_MIN && n <= INT32_MAX)
-    {
-        return "i32";
-    }
-    else if (n >= INT64_MIN && n <= INT64_MAX)
-    {
-        return "i64";
-    }
-    else
-    {
-        return "Unreachable";
-    }
 }
 
 record *castR(record *castTo, record *castFrom)
